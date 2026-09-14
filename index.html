@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0F">
+<title>Gambit — Connect through chess</title>
+<meta name="description" content="The LinkedIn chess game that makes professional connections natural. Play. Win. Connect.">
+<meta property="og:title" content="Gambit — Chess for LinkedIn">
+<meta property="og:description" content="Stop cold messaging. Start playing. Connect with founders, investors, and professionals through chess.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<!-- Chess.js for game logic -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<!-- Firebase for real-time matchmaking -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+import { getDatabase, ref, set, get, onValue, remove, push, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+
+const FB_CONFIG = {
+  apiKey: "AIzaSyDemo-replace-with-real-key",
+  authDomain: "gambit-app.firebaseapp.com",
+  databaseURL: "https://gambit-app-default-rtdb.firebaseio.com",
+  projectId: "gambit-app"
+};
+// Will use localStorage demo mode until Firebase is connected
+window.FB_READY = false;
+</script>
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --bg:    #0A0A0F;
+  --bg2:   #13131A;
+  --bg3:   #1C1C26;
+  --bd:    rgba(255,255,255,.08);
+  --gold:  #E8C568;
+  --gold2: #C9A94A;
+  --blue:  #4A9EFF;
+  --text:  #F0EDE8;
+  --text2: rgba(240,237,232,.55);
+  --text3: rgba(240,237,232,.28);
+  --fd:    'Space Grotesk', system-ui, sans-serif;
+  --fb:    'Inter', system-ui, sans-serif;
+  --r:     12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:hidden;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);
+  -webkit-font-smoothing:antialiased;min-height:100svh}
+a{color:inherit;text-decoration:none}
+
+/* ── SCREENS ─────────────────────────────────────────────── */
+.screen{display:none;min-height:100svh;flex-direction:column;align-items:center;
+  justify-content:center;padding:clamp(24px,5vw,60px)}
+.screen.active{display:flex}
+
+/* ── NAV ──────────────────────────────────────────────────── */
+nav{position:fixed;inset-inline:0;top:0;z-index:100;height:52px;
+  background:rgba(10,10,15,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,4vw,48px)}
+.nav-mark{font-family:var(--fd);font-size:16px;font-weight:700;
+  letter-spacing:-.01em;color:var(--text);display:flex;align-items:center;gap:8px}
+.nav-mark .crown{font-size:18px}
+.nav-badge{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold);border:1px solid rgba(232,197,104,.3);
+  padding:3px 8px;border-radius:50px}
+
+/* ── LANDING ──────────────────────────────────────────────── */
+#s-landing{padding-top:52px;text-align:center;
+  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(232,197,104,.12),transparent)}
+.landing-inner{max-width:680px;width:100%;padding:clamp(48px,8vw,96px) 0}
+.l-eye{font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:clamp(20px,3vw,32px);
+  display:flex;align-items:center;justify-content:center;gap:10px}
+.l-eye::before,.l-eye::after{content:'';width:24px;height:1px;background:var(--gold);opacity:.4}
+.l-h1{font-family:var(--fd);font-weight:700;
+  font-size:clamp(44px,9vw,88px);line-height:.92;
+  letter-spacing:-.04em;color:var(--text);margin-bottom:clamp(16px,2.5vw,24px)}
+.l-h1 .g{color:var(--gold)}
+.l-sub{font-size:clamp(15px,2vw,18px);font-weight:300;color:var(--text2);
+  line-height:1.75;max-width:48ch;margin:0 auto clamp(32px,4vw,48px)}
+.l-board-preview{
+  display:grid;grid-template-columns:repeat(8,1fr);
+  width:min(320px,80vw);margin:0 auto clamp(32px,4vw,48px);
+  border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;
+  box-shadow:0 24px 60px -16px rgba(232,197,104,.2);
+}
+.l-sq{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,2vw,20px)}
+.l-sq.light{background:#2A2420}
+.l-sq.dark{background:#1A1510}
+.l-sq.gold{background:rgba(232,197,104,.25)}
+.l-actions{display:flex;flex-direction:column;gap:12px;align-items:center}
+.btn-main{height:52px;padding:0 36px;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#0A0A0F;font-family:var(--fd);font-size:15px;font-weight:700;
+  border-radius:50px;border:none;cursor:pointer;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 12px 40px -8px rgba(232,197,104,.45);
+  transition:transform .15s,filter .15s}
+.btn-main:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.l-note{font-size:12px;color:var(--text3)}
+.l-types{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:clamp(32px,4vw,48px)}
+.l-type{font-size:11px;font-weight:500;color:var(--text2);
+  border:1px solid var(--bd);padding:6px 14px;border-radius:50px}
+
+/* ── SETUP ────────────────────────────────────────────────── */
+#s-setup{padding-top:52px;max-width:480px;width:100%}
+.setup-inner{width:100%;padding:clamp(32px,5vw,56px) 0}
+.setup-h{font-family:var(--fd);font-size:clamp(24px,4vw,36px);font-weight:700;
+  letter-spacing:-.02em;margin-bottom:8px}
+.setup-sub{font-size:14px;color:var(--text2);margin-bottom:clamp(24px,3vw,36px)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--text2);margin-bottom:8px}
+.field input{width:100%;height:48px;padding:0 16px;
+  background:var(--bg2);border:1px solid var(--bd);
+  color:var(--text);font-family:var(--fb);font-size:14px;
+  border-radius:var(--r);outline:none;transition:border-color .18s}
+.field input:focus{border-color:rgba(232,197,104,.5)}
+.field input::placeholder{color:var(--text3)}
+.type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+.type-btn{padding:14px 12px;background:var(--bg2);border:1.5px solid var(--bd);
+  border-radius:var(--r);cursor:pointer;text-align:center;transition:all .18s;color:var(--text2)}
+.type-btn:hover{border-color:rgba(232,197,104,.3);color:var(--text)}
+.type-btn.selected{border-color:var(--gold);background:rgba(232,197,104,.08);color:var(--gold)}
+.type-btn .t-icon{font-size:24px;margin-bottom:6px}
+.type-btn .t-label{font-size:12px;font-weight:700;letter-spacing:.04em}
+.type-btn .t-desc{font-size:10px;color:inherit;margin-top:2px;opacity:.7}
+.btn-sec{height:48px;padding:0 28px;background:var(--bg2);border:1px solid var(--bd);
+  color:var(--text2);font-family:var(--fd);font-size:14px;font-weight:500;
+  border-radius:50px;border:none;cursor:pointer;transition:color .18s}
+.btn-sec:hover{color:var(--text)}
+
+/* ── LOBBY ────────────────────────────────────────────────── */
+#s-lobby{padding-top:52px;text-align:center;max-width:480px;width:100%}
+.lobby-inner{width:100%;padding:clamp(32px,5vw,56px) 0}
+.lobby-h{font-family:var(--fd);font-size:clamp(22px,3.5vw,32px);font-weight:700;margin-bottom:8px}
+.lobby-sub{font-size:14px;color:var(--text2);margin-bottom:32px}
+.lobby-spinner{width:64px;height:64px;border:3px solid var(--bd);
+  border-top-color:var(--gold);border-radius:50%;margin:0 auto 24px;
+  animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lobby-player{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px;text-align:left}
+.lobby-avatar{width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0}
+.lobby-name{font-family:var(--fd);font-size:15px;font-weight:700}
+.lobby-role{font-size:11px;color:var(--text2);margin-top:2px}
+.vs-divider{font-family:var(--fd);font-size:24px;font-weight:700;
+  color:var(--gold);margin:8px 0}
+.opponent-slot{background:var(--bg2);border:1.5px dashed var(--bd);border-radius:var(--r);
+  padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px;
+  opacity:.5}
+.demo-btn{margin-top:20px;font-size:13px;color:var(--gold);cursor:pointer;
+  text-decoration:underline;background:none;border:none}
+
+/* ── GAME ─────────────────────────────────────────────────── */
+#s-game{padding-top:52px;max-width:600px;width:100%;align-items:stretch}
+.game-inner{width:100%;padding:clamp(16px,3vw,32px) 0}
+.game-header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;gap:12px}
+.g-player{display:flex;align-items:center;gap:10px;flex:1}
+.g-player.right{flex-direction:row-reverse;text-align:right}
+.g-avatar{width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.g-avatar.opp{background:linear-gradient(135deg,#4A6EFF,#6A8EFF)}
+.g-name{font-family:var(--fd);font-size:13px;font-weight:700}
+.g-role{font-size:10px;color:var(--text3)}
+.g-vs{font-family:var(--fd);font-size:18px;font-weight:700;color:var(--gold);flex-shrink:0}
+
+/* CHESS BOARD */
+.board-wrap{position:relative;width:100%;max-width:480px;margin:0 auto}
+.board{display:grid;grid-template-columns:repeat(8,1fr);
+  border:2px solid var(--bd);border-radius:8px;overflow:hidden;
+  box-shadow:0 20px 60px -16px rgba(0,0,0,.6)}
+.sq{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .1s;position:relative;font-size:clamp(20px,5vw,36px)}
+.sq.light{background:#2A2420}
+.sq.dark{background:#1A1510}
+.sq.selected{background:rgba(232,197,104,.35)!important}
+.sq.legal{background:rgba(232,197,104,.15)!important}
+.sq.legal::after{content:'';position:absolute;width:28%;height:28%;
+  border-radius:50%;background:rgba(232,197,104,.5)}
+.sq.check{background:rgba(255,60,60,.25)!important}
+.sq.last-move{background:rgba(232,197,104,.12)!important}
+
+/* Piece notation */
+.piece{font-style:normal;line-height:1;user-select:none;pointer-events:none}
+
+/* Status bar */
+.game-status{text-align:center;padding:10px;margin:12px 0;
+  background:var(--bg2);border-radius:var(--r);
+  font-family:var(--fd);font-size:14px;font-weight:500;color:var(--text2)}
+.game-status.your-turn{color:var(--gold);border:1px solid rgba(232,197,104,.2)}
+.game-status.opp-turn{color:var(--blue)}
+
+/* Move history */
+.moves-wrap{margin-top:12px;background:var(--bg2);border-radius:var(--r);
+  padding:12px;max-height:120px;overflow-y:auto}
+.moves-grid{display:grid;grid-template-columns:auto 1fr 1fr;gap:4px 12px}
+.move-num{font-size:11px;color:var(--text3);font-family:var(--fd)}
+.move-cell{font-size:12px;font-family:var(--fd);font-weight:500;color:var(--text2)}
+.move-cell.latest{color:var(--gold)}
+
+.game-actions{display:flex;gap:8px;margin-top:12px}
+.btn-resign{flex:1;height:40px;background:none;border:1px solid var(--bd);
+  color:var(--text2);border-radius:50px;font-family:var(--fd);font-size:13px;cursor:pointer}
+
+/* ── RESULT ───────────────────────────────────────────────── */
+#s-result{padding-top:52px;text-align:center;max-width:480px;width:100%}
+.result-inner{width:100%;padding:clamp(32px,5vw,56px) 0}
+.result-icon{font-size:56px;margin-bottom:16px}
+.result-h{font-family:var(--fd);font-size:clamp(28px,5vw,44px);font-weight:700;
+  letter-spacing:-.02em;margin-bottom:8px}
+.result-sub{font-size:15px;color:var(--text2);line-height:1.65;margin-bottom:32px;max-width:36ch;margin-inline:auto}
+.connect-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;text-align:left}
+.cc-avatar{width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,#4A6EFF,#6A8EFF);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.cc-name{font-family:var(--fd);font-size:17px;font-weight:700}
+.cc-role{font-size:12px;color:var(--text2);margin-top:2px}
+.cc-company{font-size:11px;color:var(--text3);margin-top:1px}
+.btn-connect{width:100%;height:52px;
+  background:linear-gradient(135deg,#0077B5,#0A66C2);
+  color:#fff;font-family:var(--fd);font-size:14px;font-weight:700;
+  border-radius:50px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 8px 32px -8px rgba(0,119,181,.5);
+  transition:filter .18s,transform .15s;margin-bottom:12px}
+.btn-connect:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-play-again{height:44px;padding:0 24px;
+  background:none;border:1px solid var(--bd);
+  color:var(--text2);font-family:var(--fd);font-size:13px;
+  border-radius:50px;cursor:pointer;transition:color .18s}
+.btn-play-again:hover{color:var(--text)}
+
+/* ── MOBILE ───────────────────────────────────────────────── */
+@media(max-width:480px){
+  .type-grid{grid-template-columns:1fr 1fr}
+  .sq{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-mark"><span class="crown">♟</span> Gambit</div>
+  <div class="nav-badge">Beta</div>
+</nav>
+
+<!-- SCREEN: LANDING -->
+<div class="screen active" id="s-landing">
+  <div class="landing-inner">
+    <div class="l-eye">The professional chess network</div>
+    <h1 class="l-h1">Your next great<br>connection starts<br>with a <span class="g">move.</span></h1>
+    <p class="l-sub">Stop cold messaging. Play chess with someone worth knowing — founder, investor, recruiter, peer. The game breaks the ice. LinkedIn handles the rest.</p>
+
+    <!-- Mini chess board preview -->
+    <div class="l-board-preview" id="preview-board"></div>
+
+    <div class="l-actions">
+      <button class="btn-main" onclick="goTo('s-setup')">
+        ♟ Find your match
+      </button>
+      <div class="l-note">Free · No download · LinkedIn profile used to connect</div>
+    </div>
+
+    <div class="l-types">
+      <span class="l-type">🚀 Founders</span>
+      <span class="l-type">💼 Investors</span>
+      <span class="l-type">🔍 Job Seekers</span>
+      <span class="l-type">📋 Recruiters</span>
+      <span class="l-type">🤝 Professionals</span>
+      <span class="l-type">🎓 Students</span>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: SETUP -->
+<div class="screen" id="s-setup">
+  <div class="setup-inner">
+    <h2 class="setup-h">Who are you?</h2>
+    <p class="setup-sub">We'll match you with someone worth knowing.</p>
+
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="inp-name" placeholder="Dave Markovich">
+    </div>
+
+    <div class="field">
+      <label>LinkedIn profile URL</label>
+      <input type="url" id="inp-linkedin" placeholder="linkedin.com/in/yourname">
+    </div>
+
+    <div class="field">
+      <label>I am a…</label>
+      <div class="type-grid">
+        <div class="type-btn" data-type="founder" onclick="selectType(this)">
+          <div class="t-icon">🚀</div>
+          <div class="t-label">Founder</div>
+          <div class="t-desc">Building something</div>
+        </div>
+        <div class="type-btn" data-type="investor" onclick="selectType(this)">
+          <div class="t-icon">💼</div>
+          <div class="t-label">Investor</div>
+          <div class="t-desc">Backing great ideas</div>
+        </div>
+        <div class="type-btn" data-type="jobseeker" onclick="selectType(this)">
+          <div class="t-icon">🔍</div>
+          <div class="t-label">Job Seeker</div>
+          <div class="t-desc">Open to opportunities</div>
+        </div>
+        <div class="type-btn" data-type="recruiter" onclick="selectType(this)">
+          <div class="t-icon">📋</div>
+          <div class="t-label">Recruiter</div>
+          <div class="t-desc">Finding great people</div>
+        </div>
+        <div class="type-btn" data-type="professional" onclick="selectType(this)">
+          <div class="t-icon">🤝</div>
+          <div class="t-label">Professional</div>
+          <div class="t-desc">Expanding my network</div>
+        </div>
+        <div class="type-btn" data-type="student" onclick="selectType(this)">
+          <div class="t-icon">🎓</div>
+          <div class="t-label">Student</div>
+          <div class="t-desc">Learning & growing</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn-sec" onclick="goTo('s-landing')">← Back</button>
+      <button class="btn-main" style="flex:1" onclick="findMatch()">Find my match →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: LOBBY -->
+<div class="screen" id="s-lobby">
+  <div class="lobby-inner">
+    <h2 class="lobby-h">Finding your match…</h2>
+    <p class="lobby-sub" id="lobby-msg">Looking for a compatible player</p>
+    <div class="lobby-spinner"></div>
+
+    <div class="lobby-player" id="lobby-me">
+      <div class="lobby-avatar" id="lobby-my-avatar">♙</div>
+      <div>
+        <div class="lobby-name" id="lobby-my-name">—</div>
+        <div class="lobby-role" id="lobby-my-role">—</div>
+      </div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="opponent-slot">
+      <div class="lobby-avatar" style="background:var(--bg3);opacity:.3">?</div>
+      <div>
+        <div class="lobby-name">Searching…</div>
+        <div class="lobby-role">Finding your match</div>
+      </div>
+    </div>
+
+    <button class="demo-btn" onclick="startDemoGame()">
+      → Demo: play against AI opponent
+    </button>
+  </div>
+</div>
+
+<!-- SCREEN: GAME -->
+<div class="screen" id="s-game">
+  <div class="game-inner">
+    <div class="game-header">
+      <div class="g-player">
+        <div class="g-avatar">♙</div>
+        <div>
+          <div class="g-name" id="g-my-name">You</div>
+          <div class="g-role" id="g-my-role">—</div>
+        </div>
+      </div>
+      <div class="g-vs">vs</div>
+      <div class="g-player right">
+        <div class="g-avatar opp">♟</div>
+        <div>
+          <div class="g-name" id="g-opp-name">Opponent</div>
+          <div class="g-role" id="g-opp-role">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="chess-board"></div>
+    </div>
+
+    <div class="game-status your-turn" id="game-status">Your turn — White</div>
+
+    <div class="moves-wrap">
+      <div class="moves-grid" id="moves-list"></div>
+    </div>
+
+    <div class="game-actions">
+      <button class="btn-resign" onclick="resign()">Resign</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: RESULT -->
+<div class="screen" id="s-result">
+  <div class="result-inner">
+    <div class="result-icon" id="result-icon">🤝</div>
+    <h2 class="result-h" id="result-h">Good game.</h2>
+    <p class="result-sub" id="result-sub">You played well. Now connect and continue the conversation on LinkedIn.</p>
+
+    <div class="connect-card">
+      <div class="cc-avatar">♟</div>
+      <div>
+        <div class="cc-name" id="cc-name">Alex Chen</div>
+        <div class="cc-role" id="cc-role">Investor · Tel Aviv</div>
+        <div class="cc-company" id="cc-company">Looking for B2B SaaS opportunities</div>
+      </div>
+    </div>
+
+    <button class="btn-connect" id="btn-connect-li" onclick="connectOnLinkedIn()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      Connect on LinkedIn
+    </button>
+    <button class="btn-play-again" onclick="playAgain()">Play another match</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   GAMBIT — Chess matchmaking app
+   State machine: landing → setup → lobby → game → result
+══════════════════════════════════════════════════════════════ */
+
+// ── State ───────────────────────────────────────────────────
+var G = {
+  me: { name:'', linkedin:'', type:'' },
+  opponent: { name:'', linkedin:'', type:'', role:'' },
+  chess: null,
+  selectedSq: null,
+  legalMoves: [],
+  lastMove: null,
+  isMyTurn: true,
+  isDemo: false,
+  moveHistory: []
+};
+
+// Piece unicode
+var PIECES = {
+  wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',
+  bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'
+};
+
+// Demo opponents by type
+var DEMO_OPPONENTS = {
+  founder:     { name:'Maya Levi',    role:'Angel Investor · Tel Aviv',       company:'Previously Waze · Now backing founders',  emoji:'💼', li:'mayalevi' },
+  investor:    { name:'Roi Ben-David',role:'Founder & CEO · HealthTech',      company:'Looking for smart money',                 emoji:'🚀', li:'roi-bd' },
+  jobseeker:   { name:'Noa Cohen',    role:'Senior Product Recruiter · FAANG',company:'Opening for PM & Design roles',           emoji:'📋', li:'noaCohen' },
+  recruiter:   { name:'Ido Shapiro',  role:'Product Designer seeking role',   company:'6 yrs UX · Open to new opportunities',   emoji:'🔍', li:'ido-s' },
+  professional:{ name:'Dana Gur',     role:'Founder · B2B SaaS',             company:'Built 2 exits · now seed stage',          emoji:'🤝', li:'danagur' },
+  student:     { name:'Tal Mizrahi',  role:'Mentor · Career Coach',           company:'Helping new grads land their first role', emoji:'🎓', li:'tal-m' },
+};
+
+// ── Navigation ──────────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── Type selection ──────────────────────────────────────────
+function selectType(el) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  G.me.type = el.dataset.type;
+}
+
+// ── Find match ──────────────────────────────────────────────
+function findMatch() {
+  var name = document.getElementById('inp-name').value.trim();
+  var li = document.getElementById('inp-linkedin').value.trim();
+  if (!name || !G.me.type) {
+    alert('Please enter your name and select your role.');
+    return;
+  }
+  G.me.name = name;
+  G.me.linkedin = li;
+
+  // Update lobby UI
+  document.getElementById('lobby-my-name').textContent = G.me.name;
+  var typeLabels = {
+    founder:'Founder',investor:'Investor',jobseeker:'Job Seeker',
+    recruiter:'Recruiter',professional:'Professional',student:'Student'
+  };
+  var typeEmojis = {
+    founder:'🚀',investor:'💼',jobseeker:'🔍',
+    recruiter:'📋',professional:'🤝',student:'🎓'
+  };
+  document.getElementById('lobby-my-role').textContent = typeLabels[G.me.type] || G.me.type;
+  document.getElementById('lobby-my-avatar').textContent = typeEmojis[G.me.type] || '♙';
+  document.getElementById('lobby-msg').textContent = 'Matching you with a relevant ' + getMatchType(G.me.type) + '…';
+
+  goTo('s-lobby');
+
+  // Simulate real matchmaking (3-6 sec delay)
+  setTimeout(startDemoGame, 2500 + Math.random() * 3000);
+}
+
+function getMatchType(type) {
+  var map = {
+    founder:'investor',investor:'founder',
+    jobseeker:'recruiter',recruiter:'job seeker',
+    professional:'professional',student:'mentor'
+  };
+  return map[type] || 'professional';
+}
+
+// ── Start game ──────────────────────────────────────────────
+function startDemoGame() {
+  G.isDemo = true;
+  var opp = DEMO_OPPONENTS[G.me.type] || DEMO_OPPONENTS.professional;
+  G.opponent = { name: opp.name, role: opp.role, company: opp.company, emoji: opp.emoji, li: opp.li };
+
+  document.getElementById('g-my-name').textContent = G.me.name || 'You';
+  document.getElementById('g-my-role').textContent = G.me.type || '—';
+  document.getElementById('g-opp-name').textContent = G.opponent.name;
+  document.getElementById('g-opp-role').textContent = G.opponent.role;
+
+  G.chess = new Chess();
+  G.selectedSq = null;
+  G.legalMoves = [];
+  G.lastMove = null;
+  G.isMyTurn = true;
+  G.moveHistory = [];
+
+  renderBoard();
+  updateStatus();
+  goTo('s-game');
+}
+
+// ── Chess board ──────────────────────────────────────────────
+var FILES = ['a','b','c','d','e','f','g','h'];
+
+function squareId(file, rank) { return FILES[file] + rank; }
+
+function renderBoard() {
+  var board = document.getElementById('chess-board');
+  board.innerHTML = '';
+  for (var rank = 8; rank >= 1; rank--) {
+    for (var file = 0; file < 8; file++) {
+      var sqId = squareId(file, rank);
+      var sq = document.createElement('div');
+      var isLight = (file + rank) % 2 === 1;
+      sq.className = 'sq ' + (isLight ? 'light' : 'dark');
+      sq.dataset.sq = sqId;
+
+      // Highlights
+      if (G.selectedSq === sqId) sq.classList.add('selected');
+      if (G.legalMoves.indexOf(sqId) !== -1) sq.classList.add('legal');
+      if (G.lastMove && (G.lastMove.from === sqId || G.lastMove.to === sqId)) sq.classList.add('last-move');
+
+      // Check highlight
+      if (G.chess.in_check()) {
+        var turn = G.chess.turn();
+        var kingPos = findKing(turn);
+        if (kingPos === sqId) sq.classList.add('check');
+      }
+
+      // Piece
+      var piece = G.chess.get(sqId);
+      if (piece) {
+        var span = document.createElement('span');
+        span.className = 'piece';
+        var key = piece.color + piece.type.toUpperCase();
+        span.textContent = PIECES[key] || '?';
+        sq.appendChild(span);
+      }
+
+      sq.addEventListener('click', onSquareClick);
+      board.appendChild(sq);
+    }
+  }
+}
+
+function findKing(color) {
+  for (var r = 1; r <= 8; r++) {
+    for (var f = 0; f < 8; f++) {
+      var sq = squareId(f, r);
+      var p = G.chess.get(sq);
+      if (p && p.type === 'k' && p.color === color) return sq;
+    }
+  }
+  return null;
+}
+
+function onSquareClick(e) {
+  if (!G.isMyTurn) return;
+  var sq = e.currentTarget.dataset.sq;
+  var piece = G.chess.get(sq);
+
+  if (G.selectedSq) {
+    // Try to make the move
+    if (G.legalMoves.indexOf(sq) !== -1) {
+      makeMove(G.selectedSq, sq);
+      return;
+    }
+    // Deselect or select new piece
+    G.selectedSq = null;
+    G.legalMoves = [];
+    if (piece && piece.color === 'w') {
+      G.selectedSq = sq;
+      G.legalMoves = G.chess.moves({square:sq, verbose:true}).map(m => m.to);
+    }
+  } else {
+    if (piece && piece.color === 'w') {
+      G.selectedSq = sq;
+      G.legalMoves = G.chess.moves({square:sq, verbose:true}).map(m => m.to);
+    }
+  }
+  renderBoard();
+}
+
+function makeMove(from, to) {
+  // Handle pawn promotion auto-queen
+  var piece = G.chess.get(from);
+  var move = { from:from, to:to };
+  if (piece && piece.type === 'p' && (to[1] === '8' || to[1] === '1')) move.promotion = 'q';
+
+  var result = G.chess.move(move);
+  if (!result) return;
+
+  G.lastMove = { from:from, to:to };
+  G.selectedSq = null;
+  G.legalMoves = [];
+  G.isMyTurn = false;
+  G.moveHistory.push(result);
+
+  updateMoveList();
+  renderBoard();
+  updateStatus();
+  checkGameOver();
+
+  if (!G.chess.game_over()) {
+    // AI responds after short delay
+    setTimeout(aiMove, 600 + Math.random() * 800);
+  }
+}
+
+function aiMove() {
+  var moves = G.chess.moves({verbose:true});
+  if (moves.length === 0) return;
+
+  // Simple AI: prefer captures, then center control, else random
+  var captures = moves.filter(m => m.flags.indexOf('c') !== -1);
+  var checks   = moves.filter(m => {
+    G.chess.move(m); var inCheck = G.chess.in_check(); G.chess.undo(); return inCheck;
+  });
+  var chosen = (checks.length > 0 && Math.random() > 0.5) ? checks[Math.floor(Math.random()*checks.length)]
+             : (captures.length > 0 && Math.random() > 0.3) ? captures[Math.floor(Math.random()*captures.length)]
+             : moves[Math.floor(Math.random()*moves.length)];
+
+  G.chess.move(chosen);
+  G.lastMove = { from:chosen.from, to:chosen.to };
+  G.isMyTurn = true;
+  G.moveHistory.push(chosen);
+
+  updateMoveList();
+  renderBoard();
+  updateStatus();
+  checkGameOver();
+}
+
+function updateStatus() {
+  var el = document.getElementById('game-status');
+  if (G.chess.in_checkmate()) { el.textContent = 'Checkmate!'; el.className='game-status'; return; }
+  if (G.chess.in_draw()) { el.textContent = 'Draw — well played'; el.className='game-status'; return; }
+  if (G.isMyTurn) {
+    el.textContent = G.chess.in_check() ? '⚠️ Check — your move' : 'Your turn (White)';
+    el.className = 'game-status your-turn';
+  } else {
+    el.textContent = G.opponent.name + ' is thinking…';
+    el.className = 'game-status opp-turn';
+  }
+}
+
+function updateMoveList() {
+  var list = document.getElementById('moves-list');
+  list.innerHTML = '';
+  for (var i = 0; i < G.moveHistory.length; i += 2) {
+    var num = document.createElement('div');
+    num.className = 'move-num'; num.textContent = (i/2+1) + '.';
+    var w = document.createElement('div');
+    w.className = 'move-cell' + (i === G.moveHistory.length-2 ? ' latest':'');
+    w.textContent = G.moveHistory[i] ? G.moveHistory[i].san : '';
+    var b = document.createElement('div');
+    b.className = 'move-cell' + (i+1 === G.moveHistory.length-1 ? ' latest':'');
+    b.textContent = G.moveHistory[i+1] ? G.moveHistory[i+1].san : '';
+    list.appendChild(num); list.appendChild(w); list.appendChild(b);
+  }
+  list.scrollTop = list.scrollHeight;
+}
+
+function checkGameOver() {
+  if (G.chess.game_over()) {
+    setTimeout(showResult, 800);
+  }
+}
+
+function resign() {
+  if (!confirm('Resign this game?')) return;
+  showResult(false);
+}
+
+// ── Result screen ───────────────────────────────────────────
+function showResult(won) {
+  var opp = G.opponent;
+  var checkmate = G.chess.in_checkmate();
+  var draw = G.chess.in_draw();
+
+  var icon, heading, sub;
+  if (draw) {
+    icon = '🤝'; heading = 'A draw!';
+    sub = 'Perfectly matched. Connect with ' + opp.name + ' and continue the conversation.';
+  } else if ((checkmate && G.chess.turn() === 'b') || won === true) {
+    icon = '🏆'; heading = 'You won!';
+    sub = opp.name + ' is a strong player. Strong players make strong connections.';
+  } else {
+    icon = '♟'; heading = 'Good game.';
+    sub = opp.name + ' played well. The best connections come from worthy opponents.';
+  }
+
+  document.getElementById('result-icon').textContent = icon;
+  document.getElementById('result-h').textContent = heading;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('cc-name').textContent = opp.name;
+  document.getElementById('cc-role').textContent = opp.role;
+  document.getElementById('cc-company').textContent = opp.company;
+
+  // Build LinkedIn connect URL
+  var li = opp.li || 'search/results/people';
+  document.getElementById('btn-connect-li').dataset.url = 'https://www.linkedin.com/in/' + li;
+
+  goTo('s-result');
+}
+
+function connectOnLinkedIn() {
+  var url = document.getElementById('btn-connect-li').dataset.url || 'https://www.linkedin.com';
+  window.open(url, '_blank');
+}
+
+function playAgain() { goTo('s-landing'); }
+
+// ── Preview board on landing ─────────────────────────────────
+function renderPreview() {
+  var board = document.getElementById('preview-board');
+  if (!board) return;
+  var startFen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR';
+  var chess = new Chess(startFen + ' b KQkq e3 0 1');
+  var pieces = {
+    wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',
+    bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'
+  };
+  board.innerHTML = '';
+  // Highlight squares
+  var highlight = ['e2','e4'];
+  for (var rank = 8; rank >= 1; rank--) {
+    for (var f = 0; f < 8; f++) {
+      var sqId = FILES[f] + rank;
+      var sq = document.createElement('div');
+      var isLight = (f + rank) % 2 === 1;
+      sq.className = 'l-sq ' + (highlight.indexOf(sqId) !== -1 ? 'gold' : isLight ? 'light' : 'dark');
+      var piece = chess.get(sqId);
+      if (piece) sq.textContent = pieces[piece.color + piece.type.toUpperCase()] || '';
+      board.appendChild(sq);
+    }
+  }
+}
+renderPreview();
+</script>
+</body>
+</html>
