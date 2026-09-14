@@ -3,882 +3,509 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#FAFAF8">
-<title>Gambit — Connect through chess</title>
-<meta name="description" content="The professional chess network. Play with someone worth knowing. Connect on LinkedIn.">
+<meta name="theme-color" content="#F8F8F6">
+<title>Gambit — Play Chess. Make Connections.</title>
+<meta name="description" content="Chess for professionals. Play with someone worth knowing. Connect after the game.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
-/* ── 3SDS LIGHT TOKENS ──────────────────────────────────── */
-:root{
-  --bg:    #FAFAF8;
-  --bg2:   #FFFFFF;
-  --bg3:   #F4F2EE;
-  --bd:    #E4E0D8;
-  --bd2:   #D0CCBF;
-  --navy:  #1d2b3a;
-  --navy2: #2d3f54;
-  --green: #3dbb66;
-  --green2:#2da855;
-  --greenL:#EAF7EE;
-  --text:  #1d2b3a;
-  --text2: rgba(29,43,58,.55);
-  --text3: rgba(29,43,58,.3);
-  --r:     14px;
-  --r-sm:  8px;
-  --r-pill:999px;
-  --fd:    'Space Grotesk',system-ui,sans-serif;
-  --fb:    'Inter',system-ui,sans-serif;
-  --shadow:0 1px 3px rgba(29,43,58,.06),0 8px 24px -4px rgba(29,43,58,.08);
-  --shadow-lg:0 4px 6px rgba(29,43,58,.04),0 16px 48px -8px rgba(29,43,58,.12);
+:root {
+  --bg:     #F8F8F6;
+  --white:  #FFFFFF;
+  --border: #E4E0D8;
+  --border2:#CCCAB8;
+  --navy:   #1D2B3A;
+  --navy2:  #2D3F54;
+  --green:  #3DBB66;
+  --greenL: #EAF7EE;
+  --green2: #2DA855;
+  --text:   #1D2B3A;
+  --text2:  rgba(29,43,58,.5);
+  --text3:  rgba(29,43,58,.28);
+  --r:      12px;
+  --pill:   999px;
+  --fd:     'Space Grotesk', system-ui, sans-serif;
+  --fb:     'Inter', system-ui, sans-serif;
+  --sh:     0 1px 2px rgba(29,43,58,.05), 0 4px 16px rgba(29,43,58,.08);
+  --sh2:    0 2px 4px rgba(29,43,58,.04), 0 12px 40px rgba(29,43,58,.10);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{overflow-x:hidden;scroll-behavior:smooth;height:100%}
-body{background:var(--bg);color:var(--text);font-family:var(--fb);
-  -webkit-font-smoothing:antialiased;min-height:100svh}
-a{color:inherit;text-decoration:none}
-button{font-family:var(--fb);cursor:pointer}
-svg{display:block;flex-shrink:0}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+html { height:100%; overflow-x:hidden }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:var(--fb); -webkit-font-smoothing:antialiased;
+  min-height:100svh;
+}
+a { color:inherit; text-decoration:none }
+button { font-family:var(--fb); cursor:pointer; border:none }
 
-/* ── SCREENS ────────────────────────────────────────────── */
-.screen{display:none;min-height:100svh;flex-direction:column;align-items:center}
-.screen.active{display:flex}
+/* Screens */
+.scr { display:none; min-height:100svh; flex-direction:column; align-items:center }
+.scr.on { display:flex }
 
-/* ── NAV ────────────────────────────────────────────────── */
-nav{
-  position:fixed;inset-inline:0;top:0;z-index:100;
-  height:56px;background:rgba(250,250,248,.92);
-  backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--bd);
-  display:flex;align-items:center;
-  padding:0 clamp(16px,4vw,48px);
-  justify-content:space-between;
+/* ── NAV ── */
+.nav {
+  position:fixed; top:0; inset-inline:0; z-index:50;
+  height:52px; background:rgba(248,248,246,.94);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 clamp(16px,4vw,40px);
 }
-.nav-mark{
-  display:flex;align-items:center;gap:10px;
-  font-family:var(--fd);font-size:17px;font-weight:700;
-  letter-spacing:-.02em;color:var(--navy);
+.nav-logo {
+  display:flex; align-items:center; gap:9px;
+  font-family:var(--fd); font-size:16px; font-weight:700;
+  letter-spacing:-.02em; color:var(--navy);
 }
-.nav-pawn{
-  width:32px;height:32px;border-radius:var(--r-sm);
-  background:var(--navy);display:flex;align-items:center;justify-content:center;
+.nav-icon {
+  width:28px; height:28px; background:var(--navy); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
 }
-.nav-beta{
-  font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--green);border:1px solid rgba(61,187,102,.35);
-  padding:3px 8px;border-radius:var(--r-pill);
-  background:var(--greenL);
+.nav-stat {
+  font-size:11px; color:var(--text3);
+  display:flex; align-items:center; gap:5px;
+}
+.nav-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── HOME ── */
+#s-home {
+  padding-top:52px;
+  background: linear-gradient(180deg, var(--bg) 0%, #F0F5F2 100%);
+}
+.home-inner {
+  width:100%; max-width:440px;
+  padding:clamp(40px,7vw,72px) clamp(20px,4vw,32px);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+}
+.home-badge {
+  display:inline-flex; align-items:center; gap:7px;
+  background:var(--white); border:1px solid var(--border);
+  padding:6px 14px; border-radius:var(--pill);
+  font-size:12px; font-weight:500; color:var(--text2);
+  margin-bottom:clamp(24px,3.5vw,36px);
+  box-shadow:var(--sh);
+}
+.home-h1 {
+  font-family:var(--fd); font-weight:700;
+  font-size:clamp(38px,9vw,60px);
+  line-height:.95; letter-spacing:-.04em;
+  color:var(--navy); margin-bottom:clamp(14px,2vw,20px);
+}
+.home-h1 span { color:var(--green) }
+.home-sub {
+  font-size:clamp(15px,3.5vw,16px); font-weight:300;
+  color:var(--text2); line-height:1.7;
+  max-width:32ch; margin-bottom:clamp(28px,4vw,40px);
 }
 
-/* ── LANDING ────────────────────────────────────────────── */
-#s-landing{padding-top:56px;align-items:stretch;background:var(--bg)}
-.land-wrap{
-  max-width:1100px;margin:0 auto;width:100%;
-  padding:clamp(48px,7vw,96px) clamp(20px,4vw,56px);
-  display:grid;grid-template-columns:1fr 480px;gap:clamp(40px,5vw,80px);
-  align-items:center;
+/* Play button — hero element */
+.btn-play {
+  width:100%; max-width:320px; height:64px;
+  background:var(--navy); color:#fff;
+  font-family:var(--fd); font-size:17px; font-weight:700;
+  border-radius:var(--pill);
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  box-shadow:0 8px 32px -8px rgba(29,43,58,.45);
+  transition:transform .12s, box-shadow .12s;
+  margin-bottom:14px;
 }
-.land-copy{}
-.l-tag{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--green);margin-bottom:clamp(20px,2.5vw,28px);
+.btn-play:hover { transform:translateY(-2px); box-shadow:0 14px 40px -8px rgba(29,43,58,.5) }
+.btn-play:active { transform:translateY(0) }
+.btn-play-random {
+  width:100%; max-width:320px; height:48px;
+  background:var(--white); color:var(--text2);
+  font-family:var(--fd); font-size:14px; font-weight:500;
+  border-radius:var(--pill); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  box-shadow:var(--sh);
+  transition:border-color .15s, color .15s;
+  margin-bottom:clamp(32px,5vw,48px);
 }
-.l-tag::before{content:'';width:16px;height:1.5px;background:var(--green)}
-.land-h1{
-  font-family:var(--fd);font-weight:700;
-  font-size:clamp(40px,5.5vw,68px);
-  line-height:.95;letter-spacing:-.04em;
-  color:var(--navy);margin-bottom:clamp(16px,2vw,24px);
-}
-.land-h1 .accent{color:var(--green)}
-.land-sub{
-  font-size:clamp(15px,1.7vw,17px);font-weight:300;
-  color:var(--text2);line-height:1.75;
-  max-width:46ch;margin-bottom:clamp(28px,3.5vw,40px);
-}
-.land-cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:clamp(32px,4vw,48px)}
-.btn-primary{
-  height:48px;padding:0 28px;
-  background:var(--navy);color:#fff;
-  font-family:var(--fd);font-size:14px;font-weight:500;
-  border-radius:var(--r-pill);border:none;
-  display:inline-flex;align-items:center;gap:8px;
-  transition:background .18s,transform .12s;
-}
-.btn-primary:hover{background:var(--navy2);transform:translateY(-1px)}
-.btn-outline{
-  height:48px;padding:0 24px;
-  background:transparent;color:var(--text2);
-  font-family:var(--fd);font-size:14px;font-weight:400;
-  border-radius:var(--r-pill);border:1px solid var(--bd);
-  display:inline-flex;align-items:center;gap:8px;
-  transition:border-color .18s,color .18s;
-}
-.btn-outline:hover{border-color:var(--bd2);color:var(--text)}
-.land-how{
-  display:flex;flex-direction:column;gap:16px;
-}
-.how-step{
-  display:flex;align-items:flex-start;gap:14px;
-  padding:14px;background:var(--bg2);border:1px solid var(--bd);
-  border-radius:var(--r);
-}
-.how-step-icon{
-  width:36px;height:36px;border-radius:var(--r-sm);
-  background:var(--bg3);display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-}
-.how-step-text{}
-.how-step-title{font-family:var(--fd);font-size:14px;font-weight:500;margin-bottom:2px}
-.how-step-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.btn-play-random:hover { border-color:var(--border2); color:var(--text) }
 
-/* Landing chess preview */
-.land-visual{
-  background:var(--bg2);border:1px solid var(--bd);
-  border-radius:clamp(16px,2vw,24px);padding:24px;
-  box-shadow:var(--shadow-lg);
+/* Mini board preview on home */
+.home-board-wrap {
+  width:100%; max-width:280px;
+  background:var(--white); border:1px solid var(--border);
+  border-radius:16px; padding:16px; box-shadow:var(--sh2);
+  margin-bottom:clamp(24px,4vw,36px);
 }
-.lv-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:16px;
+.home-board-label {
+  font-size:10px; font-weight:500; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;
 }
-.lv-player{display:flex;align-items:center;gap:10px}
-.lv-avatar{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;
-}
-.lv-avatar.w{background:var(--greenL);color:var(--green2)}
-.lv-avatar.b{background:var(--bg3);color:var(--navy)}
-.lv-name{font-family:var(--fd);font-size:13px;font-weight:500}
-.lv-role{font-size:11px;color:var(--text3)}
-.lv-vs{font-size:12px;font-weight:500;color:var(--text3)}
-.mini-board{
-  display:grid;grid-template-columns:repeat(8,1fr);
-  border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--bd);
-  margin-bottom:16px;
-}
-.mini-sq{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-  font-size:clamp(14px,2.8vw,22px)}
-.mini-sq.L{background:#F0E9DC}
-.mini-sq.D{background:#B5896A}
-.mini-sq.HL{background:rgba(61,187,102,.25)}
-.lv-footer{
-  background:var(--greenL);border:1px solid rgba(61,187,102,.2);
-  border-radius:var(--r-sm);padding:10px 14px;
-  display:flex;align-items:center;gap:10px;
-}
-.lv-footer-text{font-size:12px;color:var(--green2);font-weight:500}
+.home-board { display:grid; grid-template-columns:repeat(8,1fr); border-radius:8px; overflow:hidden; border:1px solid var(--border) }
+.home-sq { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:14px }
+.home-sq.L { background:#F2EBE1 }
+.home-sq.D { background:#B5896A }
+.home-sq.H { background:rgba(61,187,102,.3) }
 
-/* ── SETUP ──────────────────────────────────────────────── */
-#s-setup{padding-top:56px;align-items:stretch;background:var(--bg)}
-.setup-wrap{
-  max-width:640px;margin:0 auto;width:100%;
-  padding:clamp(32px,5vw,56px) clamp(20px,4vw,40px);
+/* Stats row */
+.home-stats {
+  display:flex; gap:24px; justify-content:center;
 }
-.setup-progress{
-  display:flex;align-items:center;gap:8px;margin-bottom:clamp(28px,3.5vw,40px);
+.hstat { text-align:center }
+.hstat-n { font-family:var(--fd); font-size:22px; font-weight:700; color:var(--navy) }
+.hstat-l { font-size:11px; color:var(--text3); margin-top:2px }
+
+/* ── ONBOARD ── */
+#s-onboard { padding-top:52px; background:var(--bg) }
+.onboard-inner {
+  width:100%; max-width:400px;
+  padding:clamp(32px,5vw,52px) clamp(20px,4vw,32px);
 }
-.prog-step{
-  height:3px;flex:1;border-radius:2px;background:var(--bd);
-  transition:background .3s;
+.ob-h { font-family:var(--fd); font-size:clamp(22px,4vw,28px); font-weight:700; letter-spacing:-.02em; margin-bottom:6px }
+.ob-sub { font-size:14px; color:var(--text2); margin-bottom:clamp(24px,3.5vw,32px); line-height:1.6 }
+
+/* LinkedIn login option */
+.btn-li-login {
+  width:100%; height:50px;
+  background:#0A66C2; color:#fff;
+  font-family:var(--fd); font-size:14px; font-weight:500;
+  border-radius:var(--pill);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:16px; transition:background .15s;
 }
-.prog-step.done{background:var(--green)}
-.prog-step.active{background:var(--navy)}
-.setup-step{display:none}
-.setup-step.active{display:block}
-.step-h{font-family:var(--fd);font-size:clamp(22px,3.5vw,30px);font-weight:700;
-  letter-spacing:-.02em;margin-bottom:6px}
-.step-sub{font-size:14px;color:var(--text2);margin-bottom:clamp(20px,3vw,28px)}
+.btn-li-login:hover { background:#004182 }
+.divider {
+  display:flex; align-items:center; gap:12px;
+  font-size:12px; color:var(--text3); margin-bottom:16px;
+}
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border) }
 
 /* Fields */
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11px;font-weight:500;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--text2);margin-bottom:7px}
-.field input{
-  width:100%;height:46px;padding:0 14px;
-  background:var(--bg2);border:1px solid var(--bd);
-  color:var(--text);font-family:var(--fb);font-size:14px;
-  border-radius:var(--r);outline:none;transition:border-color .18s;
+.field { margin-bottom:12px }
+.field label { display:block; font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); margin-bottom:6px }
+.field input {
+  width:100%; height:46px; padding:0 14px;
+  background:var(--white); border:1px solid var(--border);
+  color:var(--text); font-family:var(--fb); font-size:14px;
+  border-radius:var(--r); outline:none; transition:border-color .15s;
 }
-.field input:focus{border-color:var(--green)}
-.field input::placeholder{color:var(--text3)}
+.field input:focus { border-color:var(--green) }
+.field input::placeholder { color:var(--text3) }
 
-/* Grid selectors */
-.sel-grid{display:grid;gap:8px}
-.sel-grid.cols-3{grid-template-columns:repeat(3,1fr)}
-.sel-grid.cols-4{grid-template-columns:repeat(4,1fr)}
-.sel-btn{
-  padding:14px 10px;background:var(--bg2);border:1.5px solid var(--bd);
-  border-radius:var(--r);text-align:center;transition:all .18s;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
+/* Role chips */
+.role-chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:24px }
+.role-chip {
+  height:36px; padding:0 14px;
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:var(--pill); font-size:13px; font-weight:400; color:var(--text2);
+  display:inline-flex; align-items:center; gap:6px;
+  transition:all .15s;
 }
-.sel-btn:hover{border-color:var(--bd2)}
-.sel-btn.sel{border-color:var(--green);background:var(--greenL)}
-.sel-btn.sel .sb-label{color:var(--green2)}
-.sb-icon{width:32px;height:32px;color:var(--text2);transition:color .18s}
-.sel-btn.sel .sb-icon{color:var(--green)}
-.sb-label{font-family:var(--fd);font-size:12px;font-weight:500;color:var(--text);transition:color .18s}
-.sb-desc{font-size:10px;color:var(--text3);line-height:1.4;transition:color .18s}
+.role-chip:hover { border-color:var(--border2); color:var(--text) }
+.role-chip.sel { border-color:var(--green); background:var(--greenL); color:var(--green2); font-weight:500 }
 
-/* Chips for industries */
-.chip-grid{display:flex;flex-wrap:wrap;gap:8px}
-.chip{
-  height:36px;padding:0 14px;
-  background:var(--bg2);border:1px solid var(--bd);
-  border-radius:var(--r-pill);
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:13px;font-weight:400;color:var(--text2);
-  transition:all .18s;
+.btn-join {
+  width:100%; height:48px;
+  background:var(--navy); color:#fff;
+  font-family:var(--fd); font-size:15px; font-weight:500;
+  border-radius:var(--pill); transition:background .15s;
 }
-.chip:hover{border-color:var(--bd2);color:var(--text)}
-.chip.sel{border-color:var(--green);background:var(--greenL);color:var(--green2);font-weight:500}
-.chip svg{color:var(--text3);transition:color .18s;flex-shrink:0}
-.chip.sel svg{color:var(--green)}
+.btn-join:hover { background:var(--navy2) }
 
-/* Step nav */
-.step-nav{display:flex;gap:10px;margin-top:clamp(20px,3vw,32px)}
-.btn-back{
-  height:44px;padding:0 20px;
-  background:transparent;border:1px solid var(--bd);
-  color:var(--text2);border-radius:var(--r-pill);
-  font-family:var(--fd);font-size:14px;font-weight:400;
-  transition:border-color .18s,color .18s;
+/* ── MATCHING ── */
+#s-match { padding-top:52px; background:var(--bg) }
+.match-inner {
+  width:100%; max-width:360px;
+  padding:clamp(48px,8vw,72px) clamp(20px,4vw,32px);
+  text-align:center; display:flex; flex-direction:column; align-items:center;
 }
-.btn-back:hover{border-color:var(--bd2);color:var(--text)}
-.btn-next{
-  flex:1;height:44px;background:var(--navy);color:#fff;
-  border:none;border-radius:var(--r-pill);
-  font-family:var(--fd);font-size:14px;font-weight:500;
-  transition:background .18s;
+.match-ring {
+  width:80px; height:80px; border-radius:50%;
+  border:3px solid var(--border); border-top-color:var(--green);
+  animation:spin 1s linear infinite; margin-bottom:24px;
 }
-.btn-next:hover{background:var(--navy2)}
-.btn-next:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed}
+@keyframes spin { to { transform:rotate(360deg) } }
+.match-h { font-family:var(--fd); font-size:22px; font-weight:700; margin-bottom:8px }
+.match-sub { font-size:14px; color:var(--text2); line-height:1.6; margin-bottom:32px }
+.match-card {
+  width:100%; background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px;
+  display:flex; align-items:center; gap:14px; text-align:left;
+  box-shadow:var(--sh);
+}
+.match-av {
+  width:44px; height:44px; border-radius:50%; flex-shrink:0;
+  background:var(--greenL); display:flex; align-items:center; justify-content:center;
+}
+.match-name { font-family:var(--fd); font-size:14px; font-weight:600 }
+.match-role { font-size:12px; color:var(--text2); margin-top:2px }
 
-/* ── LOBBY ──────────────────────────────────────────────── */
-#s-lobby{padding-top:56px;background:var(--bg)}
-.lobby-wrap{
-  max-width:440px;margin:0 auto;width:100%;
-  padding:clamp(40px,6vw,72px) clamp(20px,4vw,40px);
-  text-align:center;
-}
-.lobby-h{font-family:var(--fd);font-size:clamp(22px,3vw,28px);font-weight:700;margin-bottom:8px}
-.lobby-sub{font-size:14px;color:var(--text2);margin-bottom:32px}
-.lobby-anim{
-  width:56px;height:56px;margin:0 auto 28px;
-  border:2px solid var(--bd);border-top-color:var(--green);
-  border-radius:50%;animation:spin 1s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.lobby-card{
-  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
-  padding:16px;display:flex;align-items:center;gap:14px;text-align:left;
-  margin-bottom:8px;box-shadow:var(--shadow);
-}
-.lc-avatar{
-  width:40px;height:40px;border-radius:50%;
-  background:var(--greenL);display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-}
-.lc-name{font-family:var(--fd);font-size:14px;font-weight:500}
-.lc-role{font-size:11px;color:var(--text2);margin-top:2px}
-.lobby-vs{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--text3);margin:4px 0 4px;display:flex;align-items:center;gap:8px;justify-content:center}
-.lobby-vs::before,.lobby-vs::after{content:'';flex:1;height:1px;background:var(--bd)}
-.opp-placeholder{
-  background:var(--bg);border:1.5px dashed var(--bd);border-radius:var(--r);
-  padding:16px;display:flex;align-items:center;gap:14px;text-align:left;margin-bottom:16px;
-}
-.opp-placeholder .lc-name{color:var(--text3)}
-.btn-demo{
-  font-size:13px;color:var(--green);background:none;border:none;
-  display:inline-flex;align-items:center;gap:6px;
-  text-decoration:underline;text-underline-offset:3px;
+/* ── GAME ── */
+#s-game { padding-top:52px; background:var(--bg) }
+.game-wrap {
+  width:100%; max-width:520px;
+  padding:clamp(12px,2vw,20px) clamp(12px,3vw,20px);
 }
 
-/* ── GAME ───────────────────────────────────────────────── */
-#s-game{padding-top:56px;background:var(--bg);align-items:stretch}
-.game-wrap{
-  max-width:560px;margin:0 auto;width:100%;
-  padding:clamp(16px,2.5vw,28px) clamp(16px,3vw,24px);
+/* Player bars */
+.g-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r); margin-bottom:8px; box-shadow:var(--sh);
 }
-.game-header{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;margin-bottom:14px;
+.g-bar.active { border-color:var(--green); background:var(--greenL) }
+.g-bar-left { display:flex; align-items:center; gap:10px }
+.g-av {
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  background:var(--bg); display:flex; align-items:center; justify-content:center;
 }
-.g-player{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.g-player.right{flex-direction:row-reverse;text-align:right}
-.g-avatar{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--greenL);
+.g-name { font-family:var(--fd); font-size:13px; font-weight:600 }
+.g-role { font-size:11px; color:var(--text2) }
+.g-indicator {
+  width:8px; height:8px; border-radius:50%; background:var(--green);
+  animation:pulse 1.5s infinite;
 }
-.g-avatar.opp{background:var(--bg3)}
-.g-name{font-family:var(--fd);font-size:13px;font-weight:500;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.g-role{font-size:10px;color:var(--text3)}
-.g-vs{font-size:11px;font-weight:500;color:var(--text3);flex-shrink:0}
 
 /* Board */
-.board-wrap{position:relative;width:100%;max-width:520px;margin:0 auto}
-.board{
-  display:grid;grid-template-columns:repeat(8,1fr);
-  border-radius:var(--r);overflow:hidden;
-  border:1px solid var(--bd);box-shadow:var(--shadow-lg);
+.board {
+  display:grid; grid-template-columns:repeat(8,1fr);
+  border-radius:var(--r); overflow:hidden; border:1px solid var(--border);
+  box-shadow:var(--sh2); margin:8px 0;
 }
-.sq{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:background .1s;position:relative;
-  font-size:clamp(18px,4.5vw,34px);}
-.sq.L{background:#F0E9DC}
-.sq.D{background:#C49A6C}
-.sq.sel{background:rgba(61,187,102,.3)!important}
-.sq.legal{background:rgba(61,187,102,.15)!important}
-.sq.legal::after{content:'';position:absolute;width:30%;height:30%;
-  border-radius:50%;background:rgba(61,187,102,.45);pointer-events:none}
-.sq.chk{background:rgba(220,60,60,.2)!important}
-.sq.lm{box-shadow:inset 0 0 0 2px rgba(61,187,102,.4)}
-.piece{user-select:none;pointer-events:none;line-height:1}
+.sq {
+  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; position:relative; font-size:clamp(18px,5vw,32px);
+  transition:background .1s;
+}
+.sq.L { background:#F2EBE1 }
+.sq.D { background:#C49A6C }
+.sq.sel { background:rgba(61,187,102,.35) !important }
+.sq.mv { background:rgba(61,187,102,.18) !important }
+.sq.mv::after {
+  content:''; position:absolute;
+  width:32%; height:32%; border-radius:50%;
+  background:rgba(61,187,102,.5); pointer-events:none;
+}
+.sq.lm { box-shadow:inset 0 0 0 2px rgba(61,187,102,.5) }
+.sq.chk { background:rgba(220,60,60,.22) !important }
+.piece { user-select:none; pointer-events:none; line-height:1 }
 
 /* Status */
-.game-status{
-  text-align:center;padding:9px;margin:12px 0;
-  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r-sm);
-  font-family:var(--fd);font-size:13px;font-weight:500;color:var(--text2);
+.g-status {
+  text-align:center; padding:8px;
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r); font-family:var(--fd); font-size:13px; color:var(--text2);
+  margin-bottom:8px;
 }
-.game-status.yours{color:var(--green2);border-color:rgba(61,187,102,.3);background:var(--greenL)}
-.game-status.theirs{color:var(--navy2)}
+.g-status.you { border-color:rgba(61,187,102,.4); background:var(--greenL); color:var(--green2) }
 
 /* Moves */
-.moves-wrap{
-  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r-sm);
-  padding:10px;max-height:100px;overflow-y:auto;margin-bottom:10px;
+.g-moves {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r); padding:10px 12px;
+  max-height:88px; overflow-y:auto; margin-bottom:8px;
 }
-.moves-grid{display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 10px}
-.mn{font-size:11px;color:var(--text3);font-family:var(--fd)}
-.mc{font-size:12px;font-family:var(--fd);color:var(--text2)}
-.mc.new{color:var(--navy);font-weight:500}
-.btn-resign{
-  width:100%;height:38px;background:transparent;border:1px solid var(--bd);
-  color:var(--text2);border-radius:var(--r-pill);
-  font-family:var(--fd);font-size:13px;transition:all .18s;
+.moves-grid { display:grid; grid-template-columns:auto 1fr 1fr; gap:3px 12px }
+.mn { font-size:11px; color:var(--text3); font-family:var(--fd) }
+.mc { font-size:12px; font-family:var(--fd); color:var(--text2) }
+.mc.new { color:var(--navy); font-weight:600 }
+.g-resign {
+  width:100%; height:38px; background:transparent;
+  border:1px solid var(--border); color:var(--text3);
+  border-radius:var(--pill); font-family:var(--fd); font-size:13px;
+  transition:all .15s;
 }
-.btn-resign:hover{border-color:rgba(220,60,60,.4);color:#DC3C3C}
+.g-resign:hover { border-color:rgba(220,60,60,.4); color:#C03030 }
 
-/* ── RESULT ─────────────────────────────────────────────── */
-#s-result{padding-top:56px;background:var(--bg)}
-.result-wrap{
-  max-width:440px;margin:0 auto;width:100%;
-  padding:clamp(32px,5vw,56px) clamp(20px,4vw,40px);
-  text-align:center;
+/* ── RESULT ── */
+#s-result { padding-top:52px; background:var(--bg) }
+.result-inner {
+  width:100%; max-width:400px;
+  padding:clamp(40px,6vw,64px) clamp(20px,4vw,32px);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
 }
-.result-icon-wrap{
-  width:72px;height:72px;border-radius:50%;margin:0 auto 20px;
-  background:var(--greenL);border:1px solid rgba(61,187,102,.2);
-  display:flex;align-items:center;justify-content:center;
+.result-badge {
+  width:72px; height:72px; border-radius:50%;
+  background:var(--greenL); border:1px solid rgba(61,187,102,.25);
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:20px;
 }
-.result-h{font-family:var(--fd);font-size:clamp(26px,4vw,36px);font-weight:700;
-  letter-spacing:-.02em;margin-bottom:8px}
-.result-sub{font-size:14px;color:var(--text2);line-height:1.65;
-  max-width:36ch;margin:0 auto 28px}
-.connect-card{
-  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
-  padding:18px;margin-bottom:16px;display:flex;align-items:center;
-  gap:14px;text-align:left;box-shadow:var(--shadow);
+.result-h { font-family:var(--fd); font-size:clamp(26px,5vw,36px); font-weight:700; letter-spacing:-.02em; margin-bottom:8px }
+.result-sub { font-size:14px; color:var(--text2); line-height:1.7; max-width:34ch; margin-bottom:28px }
+.result-opp {
+  width:100%; background:var(--white); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px 18px;
+  display:flex; align-items:center; gap:14px; text-align:left;
+  box-shadow:var(--sh); margin-bottom:16px;
 }
-.cc-avatar{
-  width:48px;height:48px;border-radius:50%;flex-shrink:0;
-  background:var(--bg3);display:flex;align-items:center;justify-content:center;
+.ro-av {
+  width:48px; height:48px; border-radius:50%; flex-shrink:0;
+  background:var(--bg); display:flex; align-items:center; justify-content:center;
 }
-.cc-name{font-family:var(--fd);font-size:15px;font-weight:600}
-.cc-role{font-size:12px;color:var(--text2);margin-top:2px}
-.cc-company{font-size:11px;color:var(--text3);margin-top:1px}
-.btn-li{
-  width:100%;height:48px;
-  background:#0A66C2;color:#fff;
-  font-family:var(--fd);font-size:14px;font-weight:500;
-  border-radius:var(--r-pill);border:none;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  margin-bottom:10px;transition:background .18s,transform .12s;
+.ro-name { font-family:var(--fd); font-size:15px; font-weight:600 }
+.ro-role { font-size:12px; color:var(--text2); margin-top:2px }
+.ro-co { font-size:11px; color:var(--text3); margin-top:1px }
+.btn-connect {
+  width:100%; height:52px; background:#0A66C2; color:#fff;
+  font-family:var(--fd); font-size:15px; font-weight:600;
+  border-radius:var(--pill);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:10px; transition:background .15s, transform .12s;
+  box-shadow:0 6px 24px -8px rgba(10,102,194,.45);
 }
-.btn-li:hover{background:#004182;transform:translateY(-1px)}
-.btn-again{
-  width:100%;height:44px;background:transparent;
-  border:1px solid var(--bd);color:var(--text2);
-  border-radius:var(--r-pill);font-family:var(--fd);font-size:13px;
-  transition:all .18s;
+.btn-connect:hover { background:#004182; transform:translateY(-1px) }
+.btn-again {
+  width:100%; height:46px; background:var(--white);
+  border:1px solid var(--border); color:var(--text2);
+  border-radius:var(--pill); font-family:var(--fd); font-size:14px;
+  transition:all .15s;
 }
-.btn-again:hover{border-color:var(--bd2);color:var(--text)}
+.btn-again:hover { border-color:var(--border2); color:var(--text) }
 
-/* ── MOBILE ─────────────────────────────────────────────── */
-@media(max-width:900px){
-  .land-wrap{grid-template-columns:1fr;padding-top:clamp(32px,5vw,48px)}
-  .land-visual{display:none}
-  .sel-grid.cols-3{grid-template-columns:1fr 1fr}
-  .sel-grid.cols-4{grid-template-columns:1fr 1fr}
-}
-@media(max-width:480px){
-  .sel-grid.cols-3,.sel-grid.cols-4{grid-template-columns:1fr 1fr}
-  .sq{font-size:18px}
-}
+/* Responsive */
+@media(max-width:480px) { .sq { font-size:16px } }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
-  <div class="nav-mark">
-    <div class="nav-pawn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
-        <circle cx="12" cy="6" r="3"/><path d="M9 9c0 4 2 6 3 9H9l1 3h4l1-3h-3c1-3 3-5 3-9"/>
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="12" cy="6" r="3"/>
+        <path d="M9.5 9C9.5 13.5 11 15.5 12 18.5H9L10 21.5H14L15 18.5H12C13 15.5 14.5 13.5 14.5 9"/>
       </svg>
     </div>
     Gambit
   </div>
-  <div class="nav-beta">Beta</div>
+  <div class="nav-stat">
+    <div class="nav-dot"></div>
+    <span id="nav-count">1,284 connections made</span>
+  </div>
 </nav>
 
-<!-- ══ LANDING ══════════════════════════════════════════ -->
-<div class="screen active" id="s-landing">
-<div class="land-wrap">
-  <div class="land-copy">
-    <div class="l-tag">Professional chess network</div>
-    <h1 class="land-h1">
-      The connection<br>starts with a<br><span class="accent">move.</span>
-    </h1>
-    <p class="land-sub">
-      Stop cold messaging. Play chess with someone worth knowing — a founder, investor, recruiter, or peer in your field. The game creates the introduction. LinkedIn handles the rest.
-    </p>
-    <div class="land-cta-row">
-      <button class="btn-primary" onclick="goTo('s-setup')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="6" r="3"/><path d="M9 9c0 4 2 6 3 9H9l1 3h4l1-3h-3c1-3 3-5 3-9"/></svg>
-        Find your match
-      </button>
-      <button class="btn-outline" onclick="document.getElementById('how-section').scrollIntoView({behavior:'smooth'})">
-        How it works
-      </button>
-    </div>
-    <div id="how-section" class="land-how">
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </div>
-        <div class="how-step-text">
-          <div class="how-step-title">Build your profile</div>
-          <div class="how-step-desc">Tell us your role, industry, and what kind of connection you're looking for.</div>
-        </div>
-      </div>
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-        </div>
-        <div class="how-step-text">
-          <div class="how-step-title">Get matched</div>
-          <div class="how-step-desc">Our algorithm pairs you with a relevant professional — never random, always relevant.</div>
-        </div>
-      </div>
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="6" r="3"/><path d="M9 9c0 4 2 6 3 9H9l1 3h4l1-3h-3c1-3 3-5 3-9"/>
-          </svg>
-        </div>
-        <div class="how-step-text">
-          <div class="how-step-title">Play chess</div>
-          <div class="how-step-desc">A real game. No small talk. You learn how someone thinks under pressure.</div>
-        </div>
-      </div>
-      <div class="how-step">
-        <div class="how-step-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
-            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-            <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
-          </svg>
-        </div>
-        <div class="how-step-text">
-          <div class="how-step-title">Connect on LinkedIn</div>
-          <div class="how-step-desc">One click to connect after the game. The conversation has already started.</div>
-        </div>
-      </div>
-    </div>
+<!-- ══ HOME ══ -->
+<div class="scr on" id="s-home">
+<div class="home-inner">
+
+  <div class="home-badge">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+    </svg>
+    Chess for LinkedIn professionals
   </div>
 
-  <!-- Visual -->
-  <div class="land-visual">
-    <div class="lv-header">
-      <div class="lv-player">
-        <div class="lv-avatar w">DM</div>
-        <div>
-          <div class="lv-name">Dave M.</div>
-          <div class="lv-role">Founder · DesignTech</div>
-        </div>
-      </div>
-      <div class="lv-vs">vs</div>
-      <div class="lv-player" style="text-align:right;flex-direction:row-reverse">
-        <div class="lv-avatar b">RC</div>
-        <div>
-          <div class="lv-name">Rachel C.</div>
-          <div class="lv-role">Investor · SaaS</div>
-        </div>
-      </div>
+  <h1 class="home-h1">Play chess.<br>Make <span>real</span><br>connections.</h1>
+  <p class="home-sub">Skip the cold message. Play a quick game with a relevant professional and connect for real.</p>
+
+  <!-- Mini board -->
+  <div class="home-board-wrap">
+    <div class="home-board-label">
+      <span>Live game</span>
+      <span style="color:var(--green);display:flex;align-items:center;gap:4px">
+        <svg width="8" height="8"><circle cx="4" cy="4" r="4" fill="var(--green)"/></svg>
+        In progress
+      </span>
     </div>
-    <div class="mini-board" id="preview-board"></div>
-    <div class="lv-footer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-      <div class="lv-footer-text">Game ends · Connect on LinkedIn?</div>
-    </div>
+    <div class="home-board" id="home-board"></div>
   </div>
+
+  <button class="btn-play" onclick="goOnboard('relevant')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <circle cx="12" cy="6" r="3"/>
+      <path d="M9.5 9C9.5 13.5 11 15.5 12 18.5H9L10 21.5H14L15 18.5H12C13 15.5 14.5 13.5 14.5 9"/>
+    </svg>
+    Find my match
+  </button>
+
+  <button class="btn-play-random" onclick="goOnboard('random')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <polyline points="16 3 21 3 21 8"/>
+      <line x1="4" y1="20" x2="21" y2="3"/>
+      <polyline points="21 16 21 21 16 21"/>
+      <line x1="15" y1="15" x2="21" y2="21"/>
+    </svg>
+    Play with anyone — random match
+  </button>
+
+  <div class="home-stats">
+    <div class="hstat"><div class="hstat-n">4,800+</div><div class="hstat-l">Players</div></div>
+    <div class="hstat"><div class="hstat-n">1,284</div><div class="hstat-l">Connections</div></div>
+    <div class="hstat"><div class="hstat-n">142</div><div class="hstat-l">Today</div></div>
+  </div>
+
 </div>
 </div>
 
-<!-- ══ SETUP ════════════════════════════════════════════ -->
-<div class="screen" id="s-setup">
-<div class="setup-wrap">
-  <div class="setup-progress">
-    <div class="prog-step active" id="prog-1"></div>
-    <div class="prog-step" id="prog-2"></div>
-    <div class="prog-step" id="prog-3"></div>
-    <div class="prog-step" id="prog-4"></div>
+<!-- ══ ONBOARD ══ -->
+<div class="scr" id="s-onboard">
+<div class="onboard-inner">
+  <h2 class="ob-h">Quick setup</h2>
+  <p class="ob-sub">Sign in with LinkedIn so your profile auto-fills, or enter your details manually.</p>
+
+  <button class="btn-li-login" onclick="simulateLinkedIn()">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+    Continue with LinkedIn
+  </button>
+
+  <div class="divider">or enter manually</div>
+
+  <div class="field">
+    <label>Your name</label>
+    <input type="text" id="inp-name" placeholder="First Last">
   </div>
 
-  <!-- Step 1: Basics -->
-  <div class="setup-step active" id="step-1">
-    <h2 class="step-h">Your details</h2>
-    <p class="step-sub">How you'll appear to your opponent after the game.</p>
-    <div class="field"><label>Full name</label>
-      <input type="text" id="inp-name" placeholder="Your name"></div>
-    <div class="field"><label>LinkedIn profile URL</label>
-      <input type="url" id="inp-li" placeholder="linkedin.com/in/yourname"></div>
-    <div class="step-nav">
-      <button class="btn-back" onclick="goTo('s-landing')">← Back</button>
-      <button class="btn-next" onclick="nextStep(1)">Continue →</button>
-    </div>
+  <div class="field">
+    <label>LinkedIn URL <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input type="url" id="inp-li" placeholder="linkedin.com/in/yourname">
   </div>
 
-  <!-- Step 2: Role -->
-  <div class="setup-step" id="step-2">
-    <h2 class="step-h">Your role</h2>
-    <p class="step-sub">We'll match you with complementary professionals.</p>
-    <div class="sel-grid cols-3" id="role-grid">
-
-      <button class="sel-btn" data-val="founder" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-        </svg>
-        <div class="sb-label">Founder</div>
-        <div class="sb-desc">Building a company</div>
-      </button>
-
-      <button class="sel-btn" data-val="investor" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
-        </svg>
-        <div class="sb-label">Investor</div>
-        <div class="sb-desc">Angel · VC · Family office</div>
-      </button>
-
-      <button class="sel-btn" data-val="executive" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-          <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
-        </svg>
-        <div class="sb-label">Executive</div>
-        <div class="sb-desc">C-suite · Director · VP</div>
-      </button>
-
-      <button class="sel-btn" data-val="jobseeker" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          <path d="M11 8v3l2 2"/>
-        </svg>
-        <div class="sb-label">Job Seeker</div>
-        <div class="sb-desc">Open to opportunities</div>
-      </button>
-
-      <button class="sel-btn" data-val="recruiter" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <div class="sb-label">Recruiter</div>
-        <div class="sb-desc">Finding talent</div>
-      </button>
-
-      <button class="sel-btn" data-val="consultant" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 16v-4"/><path d="M12 8h.01"/>
-        </svg>
-        <div class="sb-label">Consultant</div>
-        <div class="sb-desc">Advisor · Freelancer</div>
-      </button>
-
-      <button class="sel-btn" data-val="student" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-        </svg>
-        <div class="sb-label">Student</div>
-        <div class="sb-desc">Graduate · Early career</div>
-      </button>
-
-      <button class="sel-btn" data-val="professional" onclick="selectItem('role',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <rect x="2" y="3" width="20" height="14" rx="2"/>
-          <path d="M8 21h8M12 17v4"/>
-        </svg>
-        <div class="sb-label">Professional</div>
-        <div class="sb-desc">Industry expert</div>
-      </button>
-
-    </div>
-    <div class="step-nav">
-      <button class="btn-back" onclick="prevStep(2)">← Back</button>
-      <button class="btn-next" id="next-2" onclick="nextStep(2)" disabled>Continue →</button>
+  <div class="field">
+    <label>I am a…</label>
+    <div class="role-chips" id="role-chips">
+      <button class="role-chip" data-r="Founder" onclick="pickRole(this)">Founder</button>
+      <button class="role-chip" data-r="Investor" onclick="pickRole(this)">Investor</button>
+      <button class="role-chip" data-r="Executive" onclick="pickRole(this)">Executive</button>
+      <button class="role-chip" data-r="Job Seeker" onclick="pickRole(this)">Job Seeker</button>
+      <button class="role-chip" data-r="Recruiter" onclick="pickRole(this)">Recruiter</button>
+      <button class="role-chip" data-r="Consultant" onclick="pickRole(this)">Consultant</button>
+      <button class="role-chip" data-r="Student" onclick="pickRole(this)">Student</button>
     </div>
   </div>
 
-  <!-- Step 3: Industry -->
-  <div class="setup-step" id="step-3">
-    <h2 class="step-h">Your industry</h2>
-    <p class="step-sub">You'll only play with people in your sector or adjacent ones.</p>
-    <div class="chip-grid" id="industry-grid">
+  <button class="btn-join" onclick="startMatching()">
+    Find my match →
+  </button>
 
-      <button class="chip" data-val="tech" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-        </svg>
-        Technology
-      </button>
-      <button class="chip" data-val="healthtech" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-        HealthTech
-      </button>
-      <button class="chip" data-val="fintech" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-        FinTech
-      </button>
-      <button class="chip" data-val="saas" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-        </svg>
-        SaaS / B2B
-      </button>
-      <button class="chip" data-val="cleantech" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M2 22a8 8 0 0 1 8-8h12"/><path d="M6 18a6 6 0 0 1 6-6h6"/>
-          <path d="M10 14a4 4 0 0 1 4-4h4"/>
-        </svg>
-        CleanTech
-      </button>
-      <button class="chip" data-val="realestate" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        Real Estate
-      </button>
-      <button class="chip" data-val="legaltech" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        Legal / LegalTech
-      </button>
-      <button class="chip" data-val="marketing" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        Marketing / Growth
-      </button>
-      <button class="chip" data-val="design" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-        </svg>
-        Design / Creative
-      </button>
-      <button class="chip" data-val="edtech" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-        </svg>
-        Education / EdTech
-      </button>
-      <button class="chip" data-val="defense" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        Defense / Gov
-      </button>
-      <button class="chip" data-val="other" onclick="selectChip('industry',this)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-        </svg>
-        Other
-      </button>
-
-    </div>
-    <div class="step-nav">
-      <button class="btn-back" onclick="prevStep(3)">← Back</button>
-      <button class="btn-next" id="next-3" onclick="nextStep(3)" disabled>Continue →</button>
-    </div>
-  </div>
-
-  <!-- Step 4: Goal -->
-  <div class="setup-step" id="step-4">
-    <h2 class="step-h">Your goal</h2>
-    <p class="step-sub">What kind of connection are you looking for?</p>
-    <div class="sel-grid cols-4" id="goal-grid" style="grid-template-columns:1fr 1fr">
-
-      <button class="sel-btn" data-val="raise" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-        <div class="sb-label">Raise funding</div>
-        <div class="sb-desc">Connect with investors</div>
-      </button>
-
-      <button class="sel-btn" data-val="invest" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <div class="sb-label">Find deals</div>
-        <div class="sb-desc">Discover founders to back</div>
-      </button>
-
-      <button class="sel-btn" data-val="hire" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <div class="sb-label">Hire talent</div>
-        <div class="sb-desc">Find the right people</div>
-      </button>
-
-      <button class="sel-btn" data-val="job" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <rect x="2" y="7" width="20" height="14" rx="2"/>
-          <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-        </svg>
-        <div class="sb-label">Get hired</div>
-        <div class="sb-desc">Find your next role</div>
-      </button>
-
-      <button class="sel-btn" data-val="partner" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
-          <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/>
-          <line x1="14" y1="1" x2="14" y2="4"/>
-        </svg>
-        <div class="sb-label">Find clients</div>
-        <div class="sb-desc">Business development</div>
-      </button>
-
-      <button class="sel-btn" data-val="cofounder" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/>
-        </svg>
-        <div class="sb-label">Co-founder</div>
-        <div class="sb-desc">Find your co-builder</div>
-      </button>
-
-      <button class="sel-btn" data-val="advise" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <div class="sb-label">Get advice</div>
-        <div class="sb-desc">Find mentors & advisors</div>
-      </button>
-
-      <button class="sel-btn" data-val="network" onclick="selectItem('goal',this)">
-        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-        <div class="sb-label">Network</div>
-        <div class="sb-desc">Expand your circle</div>
-      </button>
-
-    </div>
-    <div class="step-nav">
-      <button class="btn-back" onclick="prevStep(4)">← Back</button>
-      <button class="btn-next" id="next-4" onclick="findMatch()" disabled>Find my match →</button>
-    </div>
-  </div>
 </div>
 </div>
 
-<!-- ══ LOBBY ════════════════════════════════════════════ -->
-<div class="screen" id="s-lobby">
-<div class="lobby-wrap">
-  <h2 class="lobby-h">Finding your match</h2>
-  <p class="lobby-sub" id="lobby-msg">Searching for a relevant connection in your field…</p>
-  <div class="lobby-anim"></div>
-  <div class="lobby-card">
-    <div class="lc-avatar">
+<!-- ══ MATCHING ══ -->
+<div class="scr" id="s-match">
+<div class="match-inner">
+  <div class="match-ring"></div>
+  <h2 class="match-h" id="match-h">Finding your game…</h2>
+  <p class="match-sub" id="match-sub">Looking for a relevant player in your area</p>
+  <div class="match-card" id="match-you" style="margin-bottom:8px">
+    <div class="match-av">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
     </div>
     <div>
-      <div class="lc-name" id="lobby-my-name">—</div>
-      <div class="lc-role" id="lobby-my-role">—</div>
+      <div class="match-name" id="match-my-name">—</div>
+      <div class="match-role" id="match-my-role">—</div>
     </div>
   </div>
-  <div class="lobby-vs">vs</div>
-  <div class="opp-placeholder">
-    <div class="lc-avatar" style="background:var(--bg3)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
-    </div>
-    <div>
-      <div class="lc-name">Searching…</div>
-      <div class="lc-role" id="lobby-match-type">Finding your match</div>
-    </div>
-  </div>
-  <button class="btn-demo" onclick="startGame()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <polygon points="5 3 19 12 5 21 5 3"/>
-    </svg>
-    Demo: play now against AI
-  </button>
 </div>
 </div>
 
-<!-- ══ GAME ═════════════════════════════════════════════ -->
-<div class="screen" id="s-game">
+<!-- ══ GAME ══ -->
+<div class="scr" id="s-game">
 <div class="game-wrap">
-  <div class="game-header">
-    <div class="g-player">
-      <div class="g-avatar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
-      </div>
-      <div>
-        <div class="g-name" id="g-my-name">You</div>
-        <div class="g-role" id="g-my-role">—</div>
-      </div>
-    </div>
-    <div class="g-vs">vs</div>
-    <div class="g-player right">
-      <div class="g-avatar opp">
+
+  <!-- Opponent bar -->
+  <div class="g-bar" id="bar-opp">
+    <div class="g-bar-left">
+      <div class="g-av">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
@@ -888,21 +515,38 @@ nav{
         <div class="g-role" id="g-opp-role">—</div>
       </div>
     </div>
+    <div class="g-indicator" id="ind-opp" style="opacity:0"></div>
   </div>
-  <div class="board-wrap">
-    <div class="board" id="chess-board"></div>
+
+  <div class="board" id="board"></div>
+
+  <!-- My bar -->
+  <div class="g-bar active" id="bar-me">
+    <div class="g-bar-left">
+      <div class="g-av">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="g-name" id="g-my-name">You</div>
+        <div class="g-role" id="g-my-role">White</div>
+      </div>
+    </div>
+    <div class="g-indicator" id="ind-me"></div>
   </div>
-  <div class="game-status yours" id="game-status">Your turn — White</div>
-  <div class="moves-wrap"><div class="moves-grid" id="moves-list"></div></div>
-  <button class="btn-resign" onclick="resign()">Resign</button>
+
+  <div class="g-status you" id="g-status">Your turn</div>
+  <div class="g-moves"><div class="moves-grid" id="moves-list"></div></div>
+  <button class="g-resign" onclick="resign()">Resign game</button>
 </div>
 </div>
 
-<!-- ══ RESULT ════════════════════════════════════════════ -->
-<div class="screen" id="s-result">
-<div class="result-wrap">
-  <div class="result-icon-wrap" id="result-icon-wrap">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
+<!-- ══ RESULT ══ -->
+<div class="scr" id="s-result">
+<div class="result-inner">
+  <div class="result-badge">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
       <circle cx="9" cy="7" r="4"/>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -910,251 +554,333 @@ nav{
     </svg>
   </div>
   <h2 class="result-h" id="result-h">Good game.</h2>
-  <p class="result-sub" id="result-sub">The game is over. Now make it count.</p>
-  <div class="connect-card">
-    <div class="cc-avatar">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
+  <p class="result-sub" id="result-sub">Now make it count.</p>
+
+  <div class="result-opp">
+    <div class="ro-av">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8" stroke-linecap="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
     </div>
     <div>
-      <div class="cc-name" id="cc-name">—</div>
-      <div class="cc-role" id="cc-role">—</div>
-      <div class="cc-company" id="cc-company">—</div>
+      <div class="ro-name" id="ro-name">—</div>
+      <div class="ro-role" id="ro-role">—</div>
+      <div class="ro-co" id="ro-co">—</div>
     </div>
   </div>
-  <button class="btn-li" onclick="connectLinkedIn()">
+
+  <button class="btn-connect" onclick="doConnect()">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
     </svg>
     Connect on LinkedIn
   </button>
-  <button class="btn-again" onclick="playAgain()">Find another match</button>
+  <button class="btn-again" onclick="goTo('s-home')">Play another game</button>
 </div>
 </div>
 
 <script>
-/* ══ STATE ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   GAMBIT v3 — Zynga-style, LinkedIn purpose
+══════════════════════════════════════ */
+
 var G = {
-  me: {name:'',li:'',role:'',industry:'',goal:''},
-  opp: {name:'',li:'',role:'',company:''},
-  chess: null, sel: null, legal: [], lastMove: null,
-  myTurn: true, history: [], step: 1
+  me: { name:'', li:'', role:'' },
+  opp: { name:'', li:'', role:'', company:'' },
+  mode: 'relevant',  // 'relevant' or 'random'
+  chess: null,
+  sel: null, legal: [], lastMove: null,
+  myTurn: true, history: []
 };
+
 var FILES = ['a','b','c','d','e','f','g','h'];
 var PIECES = {
   wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',
   bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'
 };
 
-/* Demo opponent library */
-var OPPS = {
-  founder_raise: [{name:'Yael Hoffman',role:'Angel Investor · Early-stage SaaS',company:'3 exits · Looking for B2B founders',li:'yaelhoffman'},{name:'Amit Sarel',role:'VC Partner · JVP',company:'Seed to Series B · Enterprise tech',li:'amitsarel'}],
-  investor_invest: [{name:'Tal Doron',role:'Founder & CEO · FinTech',company:'Series A · Revenue operations platform',li:'taldoron'}],
-  executive_partner: [{name:'Roni Cohen',role:'CMO · Scale-up',company:'Looking for GTM consultants & agencies',li:'ronicohen'}],
-  jobseeker_job: [{name:'Lior Ben-David',role:'Head of Talent · Unicorn',company:'Hiring Senior Product & Engineering',li:'liorbendavid'}],
-  recruiter_hire: [{name:'Maya Katz',role:'Senior Product Manager',company:'7 yrs product · Open to senior IC / lead',li:'mayakatz'}],
-  default: [{name:'Oren Mizrahi',role:'Founder & Serial Entrepreneur',company:'3 successful exits · Angel investor',li:'orenmizrahi'}]
-};
-function getOpp() {
-  var key = G.me.role + '_' + G.me.goal;
-  var pool = OPPS[key] || OPPS.default;
-  return pool[Math.floor(Math.random()*pool.length)];
+/* Opponent pool */
+var OPP_POOL = [
+  {name:'Yael Hoffman',    role:'Angel Investor',      company:'Early-stage SaaS & HealthTech',       li:'yaelhoffman'},
+  {name:'Amit Sarel',      role:'VC Partner · JVP',    company:'Seed to Series B · Enterprise',       li:'amitsarel'},
+  {name:'Roni Cohen',      role:'CMO · Scale-up',      company:'GTM & growth strategy',               li:'ronicohen'},
+  {name:'Tal Doron',       role:'Founder & CEO',       company:'FinTech · Revenue operations',        li:'taldoron'},
+  {name:'Lior Ben-David',  role:'Head of Talent',      company:'Hiring Product & Engineering leads',  li:'liorbendavid'},
+  {name:'Maya Katz',       role:'Senior Product Lead',  company:'7 yrs PM · Open to opportunities',   li:'mayakatz'},
+  {name:'Oren Mizrahi',    role:'Serial Founder',       company:'3 exits · Now angel investing',       li:'orenmizrahi'},
+  {name:'Dana Gur',        role:'Strategy Consultant',  company:'Growth & partnerships',               li:'danagur'},
+  {name:'Noa Shapiro',     role:'BD Director',          company:'Partnerships & enterprise sales',     li:'noashapiro'},
+  {name:'Eyal Bar',        role:'CTO · B2B SaaS',       company:'Looking for design & GTM partners',   li:'eyalbar'},
+];
+
+function pickOpp() {
+  return OPP_POOL[Math.floor(Math.random() * OPP_POOL.length)];
 }
 
-/* ══ NAVIGATION ══════════════════════════════════════════ */
+/* ── Navigation ── */
 function goTo(id) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0, 0);
 }
 
-/* ══ SETUP STEPS ════════════════════════════════════════ */
-function nextStep(from) {
-  if (from===1) {
-    G.me.name = document.getElementById('inp-name').value.trim();
-    G.me.li = document.getElementById('inp-li').value.trim();
-    if (!G.me.name) { document.getElementById('inp-name').focus(); return; }
+function goOnboard(mode) {
+  G.mode = mode;
+  goTo('s-onboard');
+}
+
+/* ── LinkedIn simulation ── */
+function simulateLinkedIn() {
+  // In production: real OAuth flow
+  // For demo: simulate with a short delay
+  var btn = event.target.closest('button');
+  btn.textContent = 'Connecting…';
+  btn.style.opacity = '.7';
+  setTimeout(function() {
+    G.me.name = 'Dave Markovich';
+    G.me.li = 'linkedin.com/in/davemarkovich';
+    G.me.role = 'Founder';
+    startMatching();
+  }, 1400);
+}
+
+/* ── Role selection ── */
+function pickRole(el) {
+  document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  G.me.role = el.dataset.r;
+}
+
+/* ── Start matching ── */
+function startMatching() {
+  if (!G.me.name) {
+    G.me.name = document.getElementById('inp-name').value.trim() || 'Player';
   }
-  var to = from+1;
-  document.getElementById('step-'+from).classList.remove('active');
-  document.getElementById('step-'+to).classList.add('active');
-  updateProgress(to);
-  G.step = to;
-}
-function prevStep(from) {
-  var to = from-1;
-  if (to<1){goTo('s-landing');return;}
-  document.getElementById('step-'+from).classList.remove('active');
-  document.getElementById('step-'+to).classList.add('active');
-  updateProgress(to);
-  G.step = to;
-}
-function updateProgress(step) {
-  [1,2,3,4].forEach(i=>{
-    var el=document.getElementById('prog-'+i);
-    el.className='prog-step'+(i<step?' done':i===step?' active':'');
-  });
+  if (!G.me.li) {
+    G.me.li = document.getElementById('inp-li').value.trim();
+  }
+  if (!G.me.role) {
+    G.me.role = 'Professional';
+  }
+
+  document.getElementById('match-my-name').textContent = G.me.name;
+  document.getElementById('match-my-role').textContent = G.me.role;
+
+  var msgs = G.mode === 'random'
+    ? ['Finding a random opponent…', 'Matching you with a player…', 'Almost ready…']
+    : ['Scanning your network…', 'Finding a relevant match…', 'Almost ready…'];
+  var mi = 0;
+  var interval = setInterval(function() {
+    if (mi < msgs.length) {
+      document.getElementById('match-sub').textContent = msgs[mi++];
+    }
+  }, 900);
+
+  goTo('s-match');
+
+  setTimeout(function() {
+    clearInterval(interval);
+    G.opp = pickOpp();
+    startGame();
+  }, 2600 + Math.random() * 1400);
 }
 
-function selectItem(type, el) {
-  var grid = type==='role'?'role-grid':'goal-grid';
-  document.querySelectorAll('#'+grid+' .sel-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  G.me[type] = el.dataset.val;
-  var nextId = type==='role'?'next-2':'next-4';
-  document.getElementById(nextId).disabled = false;
-}
-function selectChip(type, el) {
-  document.querySelectorAll('#industry-grid .chip').forEach(c=>c.classList.remove('sel'));
-  el.classList.add('sel');
-  G.me.industry = el.dataset.val;
-  document.getElementById('next-3').disabled = false;
-}
-
-/* ══ MATCHMAKING ════════════════════════════════════════ */
-function findMatch() {
-  // Lobby
-  document.getElementById('lobby-my-name').textContent = G.me.name;
-  var roleLabels={founder:'Founder',investor:'Investor',executive:'Executive',jobseeker:'Job Seeker',recruiter:'Recruiter',consultant:'Consultant',student:'Student',professional:'Professional'};
-  var matchTypes={founder:'an investor',investor:'a founder to back',executive:'a business partner',jobseeker:'a recruiter',recruiter:'a job seeker',consultant:'a client',student:'a mentor',professional:'a peer'};
-  document.getElementById('lobby-my-role').textContent = (roleLabels[G.me.role]||G.me.role) + (G.me.industry ? ' · '+G.me.industry:'');
-  document.getElementById('lobby-msg').textContent = 'Finding you '+( matchTypes[G.me.goal] || matchTypes[G.me.role] || 'a relevant connection')+'…';
-  document.getElementById('lobby-match-type').textContent = 'Matching by role + industry + goal';
-  goTo('s-lobby');
-  setTimeout(startGame, 2000 + Math.random()*2500);
-}
-
-/* ══ GAME ═══════════════════════════════════════════════ */
+/* ── Game ── */
 function startGame() {
-  var opp = getOpp(); G.opp = opp;
-  document.getElementById('g-my-name').textContent = G.me.name || 'You';
-  document.getElementById('g-my-role').textContent = (G.me.role||'') + (G.me.industry ? ' · '+G.me.industry:'');
-  document.getElementById('g-opp-name').textContent = opp.name;
-  document.getElementById('g-opp-role').textContent = opp.role;
+  document.getElementById('g-my-name').textContent = G.me.name;
+  document.getElementById('g-my-role').textContent = G.me.role + ' · White';
+  document.getElementById('g-opp-name').textContent = G.opp.name;
+  document.getElementById('g-opp-role').textContent = G.opp.role;
+
   G.chess = new Chess();
-  G.sel=null;G.legal=[];G.lastMove=null;G.myTurn=true;G.history=[];
-  renderBoard(); updateStatus();
+  G.sel = null; G.legal = []; G.lastMove = null;
+  G.myTurn = true; G.history = [];
+
+  renderBoard();
+  setStatus(true);
   goTo('s-game');
 }
 
-function sqId(f,r){return FILES[f]+r}
+function sq(f, r) { return FILES[f] + r; }
+
 function renderBoard() {
-  var b = document.getElementById('chess-board'); b.innerHTML='';
-  for (var r=8;r>=1;r--) {
-    for (var f=0;f<8;f++) {
-      var sq=sqId(f,r);
-      var div=document.createElement('div');
-      var light=(f+r)%2===1;
-      div.className='sq '+(light?'L':'D');
-      div.dataset.sq=sq;
-      if(G.sel===sq) div.classList.add('sel');
-      if(G.legal.indexOf(sq)!==-1) div.classList.add('legal');
-      if(G.lastMove&&(G.lastMove.from===sq||G.lastMove.to===sq)) div.classList.add('lm');
-      if(G.chess.in_check()){var k=findKing(G.chess.turn());if(k===sq)div.classList.add('chk');}
-      var p=G.chess.get(sq);
-      if(p){var s=document.createElement('span');s.className='piece';
-        s.textContent=PIECES[p.color+p.type.toUpperCase()]||'?';div.appendChild(s);}
-      div.addEventListener('click',onSqClick);
-      b.appendChild(div);
+  var b = document.getElementById('board');
+  b.innerHTML = '';
+  for (var r = 8; r >= 1; r--) {
+    for (var f = 0; f < 8; f++) {
+      var id = sq(f, r);
+      var el = document.createElement('div');
+      el.className = 'sq ' + ((f + r) % 2 === 1 ? 'L' : 'D');
+      el.dataset.sq = id;
+      if (G.sel === id) el.classList.add('sel');
+      if (G.legal.indexOf(id) !== -1) el.classList.add('mv');
+      if (G.lastMove && (G.lastMove.from === id || G.lastMove.to === id)) el.classList.add('lm');
+      if (G.chess.in_check()) {
+        var k = findKing(G.chess.turn());
+        if (k === id) el.classList.add('chk');
+      }
+      var p = G.chess.get(id);
+      if (p) {
+        var sp = document.createElement('span');
+        sp.className = 'piece';
+        sp.textContent = PIECES[p.color + p.type.toUpperCase()] || '';
+        el.appendChild(sp);
+      }
+      el.addEventListener('click', onSq);
+      b.appendChild(el);
     }
   }
 }
-function findKing(c){
-  for(var r=1;r<=8;r++) for(var f=0;f<8;f++){
-    var sq=sqId(f,r);var p=G.chess.get(sq);
-    if(p&&p.type==='k'&&p.color===c)return sq;
-  }
+
+function findKing(color) {
+  for (var r = 1; r <= 8; r++)
+    for (var f = 0; f < 8; f++) {
+      var id = sq(f, r);
+      var p = G.chess.get(id);
+      if (p && p.type === 'k' && p.color === color) return id;
+    }
   return null;
 }
-function onSqClick(e) {
-  if(!G.myTurn)return;
-  var sq=e.currentTarget.dataset.sq;
-  var p=G.chess.get(sq);
-  if(G.sel) {
-    if(G.legal.indexOf(sq)!==-1){makeMove(G.sel,sq);return;}
-    G.sel=null;G.legal=[];
-    if(p&&p.color==='w'){G.sel=sq;G.legal=G.chess.moves({square:sq,verbose:true}).map(m=>m.to);}
+
+function onSq(e) {
+  if (!G.myTurn) return;
+  var id = e.currentTarget.dataset.sq;
+  var p = G.chess.get(id);
+  if (G.sel) {
+    if (G.legal.indexOf(id) !== -1) { doMove(G.sel, id); return; }
+    G.sel = null; G.legal = [];
+    if (p && p.color === 'w') {
+      G.sel = id;
+      G.legal = G.chess.moves({ square: id, verbose: true }).map(m => m.to);
+    }
   } else {
-    if(p&&p.color==='w'){G.sel=sq;G.legal=G.chess.moves({square:sq,verbose:true}).map(m=>m.to);}
+    if (p && p.color === 'w') {
+      G.sel = id;
+      G.legal = G.chess.moves({ square: id, verbose: true }).map(m => m.to);
+    }
   }
   renderBoard();
 }
-function makeMove(from,to) {
-  var p=G.chess.get(from);
-  var mv={from,to};
-  if(p&&p.type==='p'&&(to[1]==='8'||to[1]==='1'))mv.promotion='q';
-  var r=G.chess.move(mv); if(!r)return;
-  G.lastMove={from,to};G.sel=null;G.legal=[];G.myTurn=false;G.history.push(r);
-  updateMoves();renderBoard();updateStatus();
-  if(!G.chess.game_over())setTimeout(aiMove,600+Math.random()*700);
-  else setTimeout(showResult,700);
-}
-function aiMove() {
-  var moves=G.chess.moves({verbose:true});if(!moves.length)return;
-  var caps=moves.filter(m=>m.flags.includes('c'));
-  var c=caps.length&&Math.random()>0.35?caps[Math.floor(Math.random()*caps.length)]:moves[Math.floor(Math.random()*moves.length)];
-  G.chess.move(c);G.lastMove={from:c.from,to:c.to};G.myTurn=true;G.history.push(c);
-  updateMoves();renderBoard();updateStatus();
-  if(G.chess.game_over())setTimeout(showResult,600);
-}
-function updateStatus() {
-  var el=document.getElementById('game-status');
-  if(G.chess.in_checkmate()){el.textContent='Checkmate.';el.className='game-status';return;}
-  if(G.chess.in_draw()){el.textContent='Draw — well played.';el.className='game-status';return;}
-  if(G.myTurn){el.textContent=G.chess.in_check()?'Check — your move':'Your turn (White)';el.className='game-status yours';}
-  else{el.textContent=G.opp.name+' is thinking…';el.className='game-status theirs';}
-}
-function updateMoves() {
-  var list=document.getElementById('moves-list');list.innerHTML='';
-  for(var i=0;i<G.history.length;i+=2){
-    var n=document.createElement('div');n.className='mn';n.textContent=(i/2+1)+'.';
-    var w=document.createElement('div');w.className='mc'+(i===G.history.length-1?' new':'');
-    w.textContent=G.history[i]?G.history[i].san:'';
-    var b=document.createElement('div');b.className='mc'+(i+1===G.history.length-1?' new':'');
-    b.textContent=G.history[i+1]?G.history[i+1].san:'';
-    list.appendChild(n);list.appendChild(w);list.appendChild(b);
-  }
-  list.scrollTop=list.scrollHeight;
-}
-function resign(){if(!confirm('Resign this game?'))return;showResult();}
 
-/* ══ RESULT ══════════════════════════════════════════════ */
+function doMove(from, to) {
+  var p = G.chess.get(from);
+  var mv = { from: from, to: to };
+  if (p && p.type === 'p' && (to[1] === '8' || to[1] === '1')) mv.promotion = 'q';
+  var result = G.chess.move(mv);
+  if (!result) return;
+  G.lastMove = { from, to }; G.sel = null; G.legal = [];
+  G.myTurn = false; G.history.push(result);
+  updateMoves(); renderBoard(); setStatus(false);
+  if (!G.chess.game_over()) setTimeout(aiMove, 500 + Math.random() * 800);
+  else setTimeout(showResult, 700);
+}
+
+function aiMove() {
+  var moves = G.chess.moves({ verbose: true });
+  if (!moves.length) return;
+  var caps = moves.filter(m => m.flags.includes('c'));
+  var chks = moves.filter(m => {
+    G.chess.move(m); var c = G.chess.in_check(); G.chess.undo(); return c;
+  });
+  var chosen = (chks.length && Math.random() > .6) ? chks[~~(Math.random() * chks.length)]
+             : (caps.length && Math.random() > .4) ? caps[~~(Math.random() * caps.length)]
+             : moves[~~(Math.random() * moves.length)];
+  G.chess.move(chosen);
+  G.lastMove = { from: chosen.from, to: chosen.to };
+  G.myTurn = true; G.history.push(chosen);
+  updateMoves(); renderBoard(); setStatus(true);
+  if (G.chess.game_over()) setTimeout(showResult, 700);
+}
+
+function setStatus(myTurn) {
+  var el = document.getElementById('g-status');
+  var barMe = document.getElementById('bar-me');
+  var barOpp = document.getElementById('bar-opp');
+  var indMe = document.getElementById('ind-me');
+  var indOpp = document.getElementById('ind-opp');
+
+  if (G.chess.in_checkmate()) {
+    el.textContent = 'Checkmate'; el.className = 'g-status'; return;
+  }
+  if (G.chess.in_draw()) {
+    el.textContent = 'Draw'; el.className = 'g-status'; return;
+  }
+  if (myTurn) {
+    el.textContent = G.chess.in_check() ? 'Check — your move' : 'Your turn';
+    el.className = 'g-status you';
+    barMe.classList.add('active'); barOpp.classList.remove('active');
+    indMe.style.opacity = '1'; indOpp.style.opacity = '0';
+  } else {
+    el.textContent = G.opp.name + ' is thinking…';
+    el.className = 'g-status';
+    barOpp.classList.add('active'); barMe.classList.remove('active');
+    indOpp.style.opacity = '1'; indMe.style.opacity = '0';
+  }
+}
+
+function updateMoves() {
+  var list = document.getElementById('moves-list');
+  list.innerHTML = '';
+  for (var i = 0; i < G.history.length; i += 2) {
+    var n = document.createElement('div'); n.className = 'mn'; n.textContent = (i / 2 + 1) + '.';
+    var w = document.createElement('div');
+    w.className = 'mc' + (i === G.history.length - 1 ? ' new' : '');
+    w.textContent = G.history[i] ? G.history[i].san : '';
+    var b = document.createElement('div');
+    b.className = 'mc' + (i + 1 === G.history.length - 1 ? ' new' : '');
+    b.textContent = G.history[i + 1] ? G.history[i + 1].san : '';
+    list.appendChild(n); list.appendChild(w); list.appendChild(b);
+  }
+  list.scrollTop = list.scrollHeight;
+}
+
+function resign() {
+  if (!confirm('Resign this game?')) return;
+  showResult();
+}
+
+/* ── Result ── */
 function showResult() {
-  var checkmate=G.chess.in_checkmate();
-  var draw=G.chess.in_draw();
-  var iWon=checkmate&&G.chess.turn()==='b';
-  var h,sub;
-  if(draw){h='A draw.';sub='Perfectly matched. Connect with '+G.opp.name+' and keep the conversation going.';}
-  else if(iWon){h='Well played.';sub='Now make it count. '+G.opp.name+' is a connection worth having.';}
-  else{h='Good game.';sub='The best connections come from worthy opponents. '+ G.opp.name+' is one of them.';}
-  document.getElementById('result-h').textContent=h;
-  document.getElementById('result-sub').textContent=sub;
-  document.getElementById('cc-name').textContent=G.opp.name;
-  document.getElementById('cc-role').textContent=G.opp.role;
-  document.getElementById('cc-company').textContent=G.opp.company;
+  var draw = G.chess.in_draw();
+  var mat = G.chess.in_checkmate();
+  var iWon = mat && G.chess.turn() === 'b';
+
+  var h = draw ? 'Well matched.' : iWon ? 'Well played.' : 'Good game.';
+  var sub = draw
+    ? 'A draw means you think alike. ' + G.opp.name + ' is worth knowing.'
+    : iWon
+    ? G.opp.name + ' played hard. Now connect and keep the conversation going.'
+    : 'The best connections come from worthy opponents. Connect with ' + G.opp.name + '.';
+
+  document.getElementById('result-h').textContent = h;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('ro-name').textContent = G.opp.name;
+  document.getElementById('ro-role').textContent = G.opp.role;
+  document.getElementById('ro-co').textContent = G.opp.company;
   goTo('s-result');
 }
-function connectLinkedIn(){
-  window.open('https://www.linkedin.com/in/'+(G.opp.li||'feed'),'_blank');
-}
-function playAgain(){goTo('s-landing');}
 
-/* ══ PREVIEW BOARD ═══════════════════════════════════════ */
-(function(){
-  var b=document.getElementById('preview-board');if(!b)return;
-  var chess=new Chess();chess.move('e4');chess.move('e5');chess.move('Nf3');chess.move('Nc6');
-  var HL=['e4','e5','f3','c6'];
-  for(var r=8;r>=1;r--){
-    for(var f=0;f<8;f++){
-      var sq=FILES[f]+r;
-      var div=document.createElement('div');
-      var light=(f+r)%2===1;
-      var isHL=HL.indexOf(sq)!==-1;
-      div.className='mini-sq '+(isHL?'HL':light?'L':'D');
-      var p=chess.get(sq);
-      if(p)div.textContent=PIECES[p.color+p.type.toUpperCase()]||'';
-      b.appendChild(div);
+function doConnect() {
+  var li = G.opp.li ? 'https://www.linkedin.com/in/' + G.opp.li : 'https://www.linkedin.com/mynetwork/';
+  window.open(li, '_blank');
+}
+
+/* ── Home board (animated preview) ── */
+(function() {
+  var board = document.getElementById('home-board');
+  if (!board) return;
+  var chess = new Chess();
+  ['e4','e5','Nf3','Nc6','Bc4','Bc5'].forEach(m => chess.move(m));
+  var HL = ['e4','e5','f3','c6','c4','c5'];
+  for (var r = 8; r >= 1; r--) {
+    for (var f = 0; f < 8; f++) {
+      var id = FILES[f] + r;
+      var el = document.createElement('div');
+      var light = (f + r) % 2 === 1;
+      el.className = 'home-sq ' + (HL.indexOf(id) !== -1 ? 'H' : light ? 'L' : 'D');
+      var p = chess.get(id);
+      if (p) el.textContent = PIECES[p.color + p.type.toUpperCase()] || '';
+      board.appendChild(el);
     }
   }
 })();
