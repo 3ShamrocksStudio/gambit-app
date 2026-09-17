@@ -1,6 +1,22 @@
-/* ── BRAND COLOR PALETTES ────────────────────────────────── */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ROOKIE & KING | Executive Chess</title>
 
-/* 1. MONOCHROME VAULT (Flagship Executive Dark) */
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Chess Rules Engine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+<style>
+/* ── BRAND PALETTES ──────────────────────────────────────── */
+
+/* 1. MONOCHROME VAULT (Flagship Dark) */
 :root {
   --bg-gradient: radial-gradient(circle at 50% 0%, #151922 0%, #090a0f 100%);
   --panel-bg: rgba(255, 255, 255, 0.035);
@@ -38,10 +54,10 @@ body.theme-emerald {
 body.theme-light {
   --bg-gradient: #f1f5f9;
   --panel-bg: #ffffff;
-  --panel-border: #e2e8f0;
+  --panel-border: #cbd5e1;
   --accent-primary: #0f172a;      /* Midnight Navy */
   --accent-secondary: #b45309;    /* Warm Amber Gold */
-  --accent-glow: rgba(15, 23, 42, 0.15);
+  --accent-glow: rgba(15, 23, 42, 0.12);
   --text-main: #0f172a;
   --text-muted: #64748b;
   
@@ -50,3 +66,473 @@ body.theme-light {
   --square-highlight: rgba(180, 83, 9, 0.5);
   --move-dot: #b45309;
 }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ──────────────────────────────────────────────── */
+.app-header {
+  height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(9, 10, 15, 0.7);
+  backdrop-filter: blur(16px);
+}
+
+.brand-container { display: flex; align-items: center; gap: 12px; }
+.brand-logo-emblem {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+.brand-logo-emblem svg { width: 22px; height: 22px; fill: #000; }
+
+.brand-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+.header-stats { display: flex; align-items: center; gap: 16px; }
+
+.coin-badge {
+  background: rgba(226, 192, 141, 0.1);
+  border: 1px solid var(--accent-secondary);
+  color: var(--accent-secondary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── DASHBOARD LAYOUT ────────────────────────────────────── */
+.dashboard-container {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.controls-hud {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hud-group { display: flex; align-items: center; gap: 12px; }
+
+.hud-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-secondary);
+  white-space: nowrap;
+}
+
+.input-select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--panel-border);
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  color: #000; border: none; padding: 9px 18px; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 13px;
+  cursor: pointer; transition: transform 0.15s; white-space: nowrap;
+}
+.btn-primary:hover { transform: translateY(-1px); }
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(auto, 480px) 340px;
+  justify-content: center;
+  gap: 24px;
+}
+
+@media (max-width: 860px) {
+  .game-layout { grid-template-columns: 1fr; }
+}
+
+/* ── BOARD ───────────────────────────────────────────────── */
+.board-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-strip {
+  width: 100%;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.player-info { display: flex; align-items: center; gap: 12px; }
+.avatar-ring {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+  padding: 2px;
+}
+.avatar-inner {
+  width: 100%; height: 100%; background: #000; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 10px; color: #fff;
+}
+
+#chessboard {
+  width: min(100%, 480px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid var(--panel-border);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+  position: relative;
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+}
+.square.light { background-color: var(--board-light); }
+.square.dark { background-color: var(--board-dark); }
+.square.selected { background-color: var(--square-highlight) !important; }
+
+.square.valid-move::after {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  background: var(--move-dot); border-radius: 50%; opacity: 0.9;
+  box-shadow: 0 0 10px var(--move-dot);
+}
+
+.piece {
+  width: 86%; height: 86%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.piece.wP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'); }
+.piece.wR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg'); }
+.piece.wN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg'); }
+.piece.wB { background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg'); }
+.piece.wQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg'); }
+.piece.wK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg'); }
+
+.piece.bP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'); }
+.piece.bR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/ff/ff/Chess_rdt45.svg'); }
+.piece.bN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/ef/ef/Chess_ndt45.svg'); }
+.piece.bB { background-image: url('https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg'); }
+.piece.bQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg'); }
+.piece.bK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'); }
+
+/* ── SIDE PANEL ─────────────────────────────────────────── */
+.match-panel { display: flex; flex-direction: column; gap: 16px; }
+
+.card-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.milestone-box {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px; padding: 12px;
+  font-size: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.milestone-item { display: flex; align-items: center; gap: 8px; opacity: 0.45; }
+.milestone-item.unlocked { opacity: 1; color: var(--accent-secondary); font-weight: 700; }
+
+.reaction-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  color: var(--text-main); padding: 6px 12px; border-radius: 16px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.pill-btn:hover { background: rgba(255, 255, 255, 0.15); }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand-container">
+    <div class="brand-logo-emblem">
+      <svg viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+    </div>
+    <div class="brand-text">ROOKIE & KING</div>
+  </div>
+
+  <div class="header-stats">
+    <div class="coin-badge">🪙 <span id="coin-balance">250</span> Coins</div>
+    <select class="input-select" style="width:auto;" onchange="switchTheme(this.value)">
+      <option value="vault">Champagne Vault</option>
+      <option value="emerald">Terminal Emerald</option>
+      <option value="light">Boardroom Ivory (Light)</option>
+    </select>
+  </div>
+</header>
+
+<main class="dashboard-container">
+
+  <section class="controls-hud">
+    <div class="hud-group">
+      <span class="hud-label">Mode:</span>
+      <select class="input-select" id="game-mode-select">
+        <option value="ai">vs Practice AI Engine</option>
+        <option value="invite">LinkedIn Challenge Link</option>
+      </select>
+    </div>
+
+    <div class="hud-group">
+      <span class="hud-label">Difficulty:</span>
+      <select class="input-select" id="ai-difficulty">
+        <option value="1">Lvl 1 - Intern</option>
+        <option value="2" selected>Lvl 2 - Associate</option>
+        <option value="3">Lvl 3 - Board Member</option>
+      </select>
+    </div>
+
+    <div class="hud-group">
+      <button class="btn-primary" onclick="startNewGame()">New Match</button>
+      <button class="btn-primary" style="background: rgba(255,255,255,0.08); color: var(--text-main);" onclick="copyInviteLink()">Copy Link</button>
+    </div>
+  </section>
+
+  <div class="game-layout">
+    
+    <section class="board-stage" id="board-stage">
+      <div class="player-strip">
+        <div class="player-info">
+          <div class="avatar-ring"><div class="avatar-inner">AI</div></div>
+          <div>
+            <div style="font-weight:700; font-size:13px;" id="opponent-name">AI Practice Engine</div>
+            <div style="font-size:10px; color:var(--text-muted);" id="opponent-level">Level 2 Associate</div>
+          </div>
+        </div>
+        <div style="font-family:'Outfit'; font-weight:800; font-size:14px;">10:00</div>
+      </div>
+
+      <div id="chessboard"></div>
+
+      <div class="player-strip">
+        <div class="player-info">
+          <div class="avatar-ring"><div class="avatar-inner">YOU</div></div>
+          <div>
+            <div style="font-weight:700; font-size:13px;">Executive Profile</div>
+            <div style="font-size:10px; color:var(--text-muted);">Verified Member</div>
+          </div>
+        </div>
+        <div style="font-family:'Outfit'; font-weight:800; font-size:14px;">10:00</div>
+      </div>
+    </section>
+
+    <aside class="match-panel">
+      
+      <div class="card-panel">
+        <div class="hud-label">Match Progression</div>
+        <div class="milestone-box">
+          <div class="milestone-item unlocked" id="m1">
+            <span>✅ Move 1:</span> Match Disclosed
+          </div>
+          <div class="milestone-item" id="m2">
+            <span>🔒 Move 5:</span> Elevator Pitch Unlocked
+          </div>
+          <div class="milestone-item" id="m3">
+            <span>🔒 Piece Capture:</span> Calendar Link Unlocked
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="hud-label">Quick Reactions</div>
+        <div class="reaction-pills">
+          <button class="pill-btn" onclick="alert('🔥 Bold Move sent!')">🔥 Bold Move</button>
+          <button class="pill-btn" onclick="alert('💡 Genius sent!')">💡 Genius</button>
+          <button class="pill-btn" onclick="alert('☕ Coffee sent!')">☕ Coffee?</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="hud-label">Coin Marketplace</div>
+        <p style="font-size:11px; color:var(--text-muted);">Trade accumulated coins for verified executive contact passes.</p>
+        <button class="btn-primary" style="background: rgba(226,192,141,0.15); border: 1px solid var(--accent-secondary); color: var(--accent-secondary);" onclick="redeemInMail()">
+          Redeem InMail Pass (150 Coins)
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<script>
+const game = new Chess();
+let selectedSquare = null;
+let moveCount = 0;
+let userCoins = 250;
+
+function renderBoard() {
+  const boardEl = document.getElementById('chessboard');
+  boardEl.innerHTML = '';
+  const board = game.board();
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sqName = String.fromCharCode(97 + c) + (8 - r);
+      const squareEl = document.createElement('div');
+      squareEl.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+      squareEl.dataset.square = sqName;
+
+      const piece = board[r][c];
+      if (piece) {
+        const pieceEl = document.createElement('div');
+        pieceEl.className = `piece ${piece.color}${piece.type.toUpperCase()}`;
+        squareEl.appendChild(pieceEl);
+      }
+
+      squareEl.addEventListener('click', () => handleSquareClick(sqName));
+      boardEl.appendChild(squareEl);
+    }
+  }
+}
+
+function handleSquareClick(sq) {
+  if (selectedSquare === sq) {
+    clearHighlights();
+    selectedSquare = null;
+    return;
+  }
+
+  if (selectedSquare) {
+    const move = game.move({ from: selectedSquare, to: sq, promotion: 'q' });
+    if (move) {
+      selectedSquare = null;
+      moveCount++;
+      clearHighlights();
+      renderBoard();
+      updateMilestones(move);
+      if (!game.game_over()) setTimeout(executeAIMove, 400);
+      return;
+    }
+  }
+
+  const piece = game.get(sq);
+  if (piece && piece.color === game.turn()) {
+    selectedSquare = sq;
+    highlightSquare(sq);
+  }
+}
+
+function highlightSquare(sq) {
+  clearHighlights();
+  document.querySelector(`[data-square="${sq}"]`)?.classList.add('selected');
+  game.moves({ square: sq, verbose: true }).forEach(m => {
+    document.querySelector(`[data-square="${m.to}"]`)?.classList.add('valid-move');
+  });
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.square').forEach(el => el.classList.remove('selected', 'valid-move'));
+}
+
+function executeAIMove() {
+  const moves = game.moves({ verbose: true });
+  if (moves.length === 0) return;
+  game.move(moves[Math.floor(Math.random() * moves.length)]);
+  moveCount++;
+  renderBoard();
+}
+
+function updateMilestones(move) {
+  if (moveCount >= 5) {
+    const m2 = document.getElementById('m2');
+    m2.classList.add('unlocked');
+    m2.innerHTML = '<span>✅ Move 5 Reached:</span> Elevator Pitch Unlocked!';
+  }
+  if (move && move.captured) {
+    const m3 = document.getElementById('m3');
+    m3.classList.add('unlocked');
+    m3.innerHTML = '<span>✅ Piece Captured:</span> Calendar Link Unlocked!';
+  }
+}
+
+function switchTheme(theme) {
+  document.body.className = theme === 'vault' ? '' : `theme-${theme}`;
+}
+
+function redeemInMail() {
+  if (userCoins >= 150) {
+    userCoins -= 150;
+    document.getElementById('coin-balance').innerText = userCoins;
+    alert('InMail Pass Unlocked!');
+  } else {
+    alert('Need 150 coins to redeem!');
+  }
+}
+
+function copyInviteLink() {
+  navigator.clipboard.writeText('https://rookieandking.app/play?invite=rk_9921');
+  alert('Challenge link copied to clipboard!');
+}
+
+function startNewGame() {
+  game.reset();
+  moveCount = 0;
+  renderBoard();
+}
+
+renderBoard();
+</script>
+</body>
+</html>
