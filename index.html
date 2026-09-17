@@ -2,888 +2,579 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#F8F8F6">
-<title>Gambit — Play Chess. Make Connections.</title>
-<meta name="description" content="Chess for professionals. Play with someone worth knowing. Connect after the game.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GAMBIT | LinkedIn Professional Chess Ice-Breaker</title>
+<meta name="description" content="Connect with founders, investors, and talent through real-time tactical chess gameplay. No LinkedIn Premium required.">
+
+<!-- 3SDS Brand Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Strict Chess Rules Engine (Chess.js) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
 <style>
+/* ── 3SDS DESIGN SYSTEM VARIABLES ─────────────────────── */
 :root {
-  --bg:     #F8F8F6;
-  --white:  #FFFFFF;
-  --border: #E4E0D8;
-  --border2:#CCCAB8;
-  --navy:   #1D2B3A;
-  --navy2:  #2D3F54;
-  --green:  #3DBB66;
-  --greenL: #EAF7EE;
-  --green2: #2DA855;
-  --text:   #1D2B3A;
-  --text2:  rgba(29,43,58,.5);
-  --text3:  rgba(29,43,58,.28);
-  --r:      12px;
-  --pill:   999px;
-  --fd:     'Space Grotesk', system-ui, sans-serif;
-  --fb:     'Inter', system-ui, sans-serif;
-  --sh:     0 1px 2px rgba(29,43,58,.05), 0 4px 16px rgba(29,43,58,.08);
-  --sh2:    0 2px 4px rgba(29,43,58,.04), 0 12px 40px rgba(29,43,58,.10);
+  --bg-deep: #030806;
+  --bg-surface: #0a140f;
+  --bg-glass: rgba(14, 26, 20, 0.75);
+  --emerald-neon: #8ae87f;
+  --mint-glow: #00ffaa;
+  --gold-accent: #f59e0b;
+  --cyan-neon: #00e5ff;
+  --pink-accent: #ff4d8d;
+  --text-main: #f0f7f2;
+  --text-muted: rgba(240, 247, 242, 0.65);
+  --border-glass: rgba(138, 232, 127, 0.18);
+  --font-head: 'Space Grotesk', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --board-light: #2a3a30;
+  --board-dark: #111d16;
+  --highlight-move: rgba(138, 232, 127, 0.4);
+  --highlight-select: rgba(0, 229, 255, 0.5);
 }
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
-html { height:100%; overflow-x:hidden }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  background:var(--bg); color:var(--text);
-  font-family:var(--fb); -webkit-font-smoothing:antialiased;
-  min-height:100svh;
-}
-a { color:inherit; text-decoration:none }
-button { font-family:var(--fb); cursor:pointer; border:none }
-
-/* Screens */
-.scr { display:none; min-height:100svh; flex-direction:column; align-items:center }
-.scr.on { display:flex }
-
-/* ── NAV ── */
-.nav {
-  position:fixed; top:0; inset-inline:0; z-index:50;
-  height:52px; background:rgba(248,248,246,.94);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 clamp(16px,4vw,40px);
-}
-.nav-logo {
-  display:flex; align-items:center; gap:9px;
-  font-family:var(--fd); font-size:16px; font-weight:700;
-  letter-spacing:-.02em; color:var(--navy);
-}
-.nav-icon {
-  width:28px; height:28px; background:var(--navy); border-radius:8px;
-  display:flex; align-items:center; justify-content:center;
-}
-.nav-stat {
-  font-size:11px; color:var(--text3);
-  display:flex; align-items:center; gap:5px;
-}
-.nav-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-/* ── HOME ── */
-#s-home {
-  padding-top:52px;
-  background: linear-gradient(180deg, var(--bg) 0%, #F0F5F2 100%);
-}
-.home-inner {
-  width:100%; max-width:440px;
-  padding:clamp(40px,7vw,72px) clamp(20px,4vw,32px);
-  display:flex; flex-direction:column; align-items:center; text-align:center;
-}
-.home-badge {
-  display:inline-flex; align-items:center; gap:7px;
-  background:var(--white); border:1px solid var(--border);
-  padding:6px 14px; border-radius:var(--pill);
-  font-size:12px; font-weight:500; color:var(--text2);
-  margin-bottom:clamp(24px,3.5vw,36px);
-  box-shadow:var(--sh);
-}
-.home-h1 {
-  font-family:var(--fd); font-weight:700;
-  font-size:clamp(38px,9vw,60px);
-  line-height:.95; letter-spacing:-.04em;
-  color:var(--navy); margin-bottom:clamp(14px,2vw,20px);
-}
-.home-h1 span { color:var(--green) }
-.home-sub {
-  font-size:clamp(15px,3.5vw,16px); font-weight:300;
-  color:var(--text2); line-height:1.7;
-  max-width:32ch; margin-bottom:clamp(28px,4vw,40px);
+  font-family: var(--font-body);
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Play button — hero element */
-.btn-play {
-  width:100%; max-width:320px; height:64px;
-  background:var(--navy); color:#fff;
-  font-family:var(--fd); font-size:17px; font-weight:700;
-  border-radius:var(--pill);
-  display:flex; align-items:center; justify-content:center; gap:12px;
-  box-shadow:0 8px 32px -8px rgba(29,43,58,.45);
-  transition:transform .12s, box-shadow .12s;
-  margin-bottom:14px;
+/* ── HEADER & NAVIGATION ────────────────────────────── */
+.app-header {
+  height: 72px;
+  background: rgba(3, 8, 6, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-.btn-play:hover { transform:translateY(-2px); box-shadow:0 14px 40px -8px rgba(29,43,58,.5) }
-.btn-play:active { transform:translateY(0) }
-.btn-play-random {
-  width:100%; max-width:320px; height:48px;
-  background:var(--white); color:var(--text2);
-  font-family:var(--fd); font-size:14px; font-weight:500;
-  border-radius:var(--pill); border:1px solid var(--border);
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  box-shadow:var(--sh);
-  transition:border-color .15s, color .15s;
-  margin-bottom:clamp(32px,5vw,48px);
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
 }
-.btn-play-random:hover { border-color:var(--border2); color:var(--text) }
-
-/* Mini board preview on home */
-.home-board-wrap {
-  width:100%; max-width:280px;
-  background:var(--white); border:1px solid var(--border);
-  border-radius:16px; padding:16px; box-shadow:var(--sh2);
-  margin-bottom:clamp(24px,4vw,36px);
+.brand-badge {
+  background: linear-gradient(135deg, var(--emerald-neon), var(--mint-glow));
+  color: #030806;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 99px;
+  text-transform: uppercase;
 }
-.home-board-label {
-  font-size:10px; font-weight:500; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--text3); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
-.home-board { display:grid; grid-template-columns:repeat(8,1fr); border-radius:8px; overflow:hidden; border:1px solid var(--border) }
-.home-sq { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:14px }
-.home-sq.L { background:#F2EBE1 }
-.home-sq.D { background:#B5896A }
-.home-sq.H { background:rgba(61,187,102,.3) }
-
-/* Stats row */
-.home-stats {
-  display:flex; gap:24px; justify-content:center;
+.mode-toggle, .btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
 }
-.hstat { text-align:center }
-.hstat-n { font-family:var(--fd); font-size:22px; font-weight:700; color:var(--navy) }
-.hstat-l { font-size:11px; color:var(--text3); margin-top:2px }
-
-/* ── ONBOARD ── */
-#s-onboard { padding-top:52px; background:var(--bg) }
-.onboard-inner {
-  width:100%; max-width:400px;
-  padding:clamp(32px,5vw,52px) clamp(20px,4vw,32px);
-}
-.ob-h { font-family:var(--fd); font-size:clamp(22px,4vw,28px); font-weight:700; letter-spacing:-.02em; margin-bottom:6px }
-.ob-sub { font-size:14px; color:var(--text2); margin-bottom:clamp(24px,3.5vw,32px); line-height:1.6 }
-
-/* LinkedIn login option */
-.btn-li-login {
-  width:100%; height:50px;
-  background:#0A66C2; color:#fff;
-  font-family:var(--fd); font-size:14px; font-weight:500;
-  border-radius:var(--pill);
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  margin-bottom:16px; transition:background .15s;
-}
-.btn-li-login:hover { background:#004182 }
-.divider {
-  display:flex; align-items:center; gap:12px;
-  font-size:12px; color:var(--text3); margin-bottom:16px;
-}
-.divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border) }
-
-/* Fields */
-.field { margin-bottom:12px }
-.field label { display:block; font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); margin-bottom:6px }
-.field input {
-  width:100%; height:46px; padding:0 14px;
-  background:var(--white); border:1px solid var(--border);
-  color:var(--text); font-family:var(--fb); font-size:14px;
-  border-radius:var(--r); outline:none; transition:border-color .15s;
-}
-.field input:focus { border-color:var(--green) }
-.field input::placeholder { color:var(--text3) }
-
-/* Role chips */
-.role-chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:24px }
-.role-chip {
-  height:36px; padding:0 14px;
-  background:var(--white); border:1.5px solid var(--border);
-  border-radius:var(--pill); font-size:13px; font-weight:400; color:var(--text2);
-  display:inline-flex; align-items:center; gap:6px;
-  transition:all .15s;
-}
-.role-chip:hover { border-color:var(--border2); color:var(--text) }
-.role-chip.sel { border-color:var(--green); background:var(--greenL); color:var(--green2); font-weight:500 }
-
-.btn-join {
-  width:100%; height:48px;
-  background:var(--navy); color:#fff;
-  font-family:var(--fd); font-size:15px; font-weight:500;
-  border-radius:var(--pill); transition:background .15s;
-}
-.btn-join:hover { background:var(--navy2) }
-
-/* ── MATCHING ── */
-#s-match { padding-top:52px; background:var(--bg) }
-.match-inner {
-  width:100%; max-width:360px;
-  padding:clamp(48px,8vw,72px) clamp(20px,4vw,32px);
-  text-align:center; display:flex; flex-direction:column; align-items:center;
-}
-.match-ring {
-  width:80px; height:80px; border-radius:50%;
-  border:3px solid var(--border); border-top-color:var(--green);
-  animation:spin 1s linear infinite; margin-bottom:24px;
-}
-@keyframes spin { to { transform:rotate(360deg) } }
-.match-h { font-family:var(--fd); font-size:22px; font-weight:700; margin-bottom:8px }
-.match-sub { font-size:14px; color:var(--text2); line-height:1.6; margin-bottom:32px }
-.match-card {
-  width:100%; background:var(--white); border:1px solid var(--border);
-  border-radius:var(--r); padding:16px;
-  display:flex; align-items:center; gap:14px; text-align:left;
-  box-shadow:var(--sh);
-}
-.match-av {
-  width:44px; height:44px; border-radius:50%; flex-shrink:0;
-  background:var(--greenL); display:flex; align-items:center; justify-content:center;
-}
-.match-name { font-family:var(--fd); font-size:14px; font-weight:600 }
-.match-role { font-size:12px; color:var(--text2); margin-top:2px }
-
-/* ── GAME ── */
-#s-game { padding-top:52px; background:var(--bg) }
-.game-wrap {
-  width:100%; max-width:520px;
-  padding:clamp(12px,2vw,20px) clamp(12px,3vw,20px);
+.mode-toggle:hover, .btn-secondary:hover {
+  border-color: var(--emerald-neon);
+  box-shadow: 0 0 16px rgba(138, 232, 127, 0.2);
 }
 
-/* Player bars */
-.g-bar {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:10px 12px; background:var(--white); border:1px solid var(--border);
-  border-radius:var(--r); margin-bottom:8px; box-shadow:var(--sh);
+/* ── MAIN WORKSPACE LAYOUT ───────────────────────────── */
+.main-workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr 340px;
+  gap: 24px;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
 }
-.g-bar.active { border-color:var(--green); background:var(--greenL) }
-.g-bar-left { display:flex; align-items:center; gap:10px }
-.g-av {
-  width:34px; height:34px; border-radius:50%; flex-shrink:0;
-  background:var(--bg); display:flex; align-items:center; justify-content:center;
-}
-.g-name { font-family:var(--fd); font-size:13px; font-weight:600 }
-.g-role { font-size:11px; color:var(--text2) }
-.g-indicator {
-  width:8px; height:8px; border-radius:50%; background:var(--green);
-  animation:pulse 1.5s infinite;
+@media (max-width: 1100px) {
+  .main-workspace { grid-template-columns: 1fr; }
 }
 
-/* Board */
-.board {
-  display:grid; grid-template-columns:repeat(8,1fr);
-  border-radius:var(--r); overflow:hidden; border:1px solid var(--border);
-  box-shadow:var(--sh2); margin:8px 0;
+/* ── SIDE PANELS & CARD STYLING ──────────────────────── */
+.panel-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
-.sq {
-  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
-  cursor:pointer; position:relative; font-size:clamp(18px,5vw,32px);
-  transition:background .1s;
+.panel-title {
+  font-family: var(--font-head);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--emerald-neon);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.sq.L { background:#F2EBE1 }
-.sq.D { background:#C49A6C }
-.sq.sel { background:rgba(61,187,102,.35) !important }
-.sq.mv { background:rgba(61,187,102,.18) !important }
-.sq.mv::after {
-  content:''; position:absolute;
-  width:32%; height:32%; border-radius:50%;
-  background:rgba(61,187,102,.5); pointer-events:none;
-}
-.sq.lm { box-shadow:inset 0 0 0 2px rgba(61,187,102,.5) }
-.sq.chk { background:rgba(220,60,60,.22) !important }
-.piece { user-select:none; pointer-events:none; line-height:1 }
 
-/* Status */
-.g-status {
-  text-align:center; padding:8px;
-  background:var(--white); border:1px solid var(--border);
-  border-radius:var(--r); font-family:var(--fd); font-size:13px; color:var(--text2);
-  margin-bottom:8px;
+/* Matchmaking Filters */
+.filter-group { display: flex; flex-direction: column; gap: 8px; }
+.filter-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.filter-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
 }
-.g-status.you { border-color:rgba(61,187,102,.4); background:var(--greenL); color:var(--green2) }
+.btn-primary {
+  background: linear-gradient(135deg, var(--emerald-neon), #3dbb66);
+  color: #030806;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(138, 232, 127, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(138, 232, 127, 0.5);
+}
 
-/* Moves */
-.g-moves {
-  background:var(--white); border:1px solid var(--border);
-  border-radius:var(--r); padding:10px 12px;
-  max-height:88px; overflow-y:auto; margin-bottom:8px;
+/* ── CHESSBOARD CENTER STAGE ─────────────────────────── */
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
 }
-.moves-grid { display:grid; grid-template-columns:auto 1fr 1fr; gap:3px 12px }
-.mn { font-size:11px; color:var(--text3); font-family:var(--fd) }
-.mc { font-size:12px; font-family:var(--fd); color:var(--text2) }
-.mc.new { color:var(--navy); font-weight:600 }
-.g-resign {
-  width:100%; height:38px; background:transparent;
-  border:1px solid var(--border); color:var(--text3);
-  border-radius:var(--pill); font-family:var(--fd); font-size:13px;
-  transition:all .15s;
+.player-profile-strip {
+  width: 100%;
+  max-width: 560px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  padding: 12px 18px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.g-resign:hover { border-color:rgba(220,60,60,.4); color:#C03030 }
+.player-info { display: flex; align-items: center; gap: 12px; }
+.player-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan-neon), var(--purple-accent, #a855f7));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; color: #fff;
+  border: 2px solid var(--border-glass);
+}
+.player-name { font-family: var(--font-head); font-weight: 700; font-size: 15px; }
+.player-role { font-size: 12px; color: var(--text-muted); }
+.timer-badge {
+  font-family: var(--font-head); font-weight: 700; font-size: 16px;
+  background: rgba(0, 0, 0, 0.5); padding: 6px 12px; border-radius: 8px;
+  border: 1px solid var(--border-glass);
+}
 
-/* ── RESULT ── */
-#s-result { padding-top:52px; background:var(--bg) }
-.result-inner {
-  width:100%; max-width:400px;
-  padding:clamp(40px,6vw,64px) clamp(20px,4vw,32px);
-  display:flex; flex-direction:column; align-items:center; text-align:center;
+/* The Grid Board */
+#chessboard {
+  width: min(100%, 560px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid var(--border-glass);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(138, 232, 127, 0.15);
 }
-.result-badge {
-  width:72px; height:72px; border-radius:50%;
-  background:var(--greenL); border:1px solid rgba(61,187,102,.25);
-  display:flex; align-items:center; justify-content:center;
-  margin-bottom:20px;
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
 }
-.result-h { font-family:var(--fd); font-size:clamp(26px,5vw,36px); font-weight:700; letter-spacing:-.02em; margin-bottom:8px }
-.result-sub { font-size:14px; color:var(--text2); line-height:1.7; max-width:34ch; margin-bottom:28px }
-.result-opp {
-  width:100%; background:var(--white); border:1px solid var(--border);
-  border-radius:var(--r); padding:16px 18px;
-  display:flex; align-items:center; gap:14px; text-align:left;
-  box-shadow:var(--sh); margin-bottom:16px;
+.square.light { background-color: var(--board-light); }
+.square.dark { background-color: var(--board-dark); }
+.square.selected { background-color: var(--highlight-select) !important; }
+.square.valid-move::after {
+  content: ''; position: absolute; width: 16px; height: 16px;
+  background: var(--emerald-neon); border-radius: 50%; opacity: 0.7;
 }
-.ro-av {
-  width:48px; height:48px; border-radius:50%; flex-shrink:0;
-  background:var(--bg); display:flex; align-items:center; justify-content:center;
-}
-.ro-name { font-family:var(--fd); font-size:15px; font-weight:600 }
-.ro-role { font-size:12px; color:var(--text2); margin-top:2px }
-.ro-co { font-size:11px; color:var(--text3); margin-top:1px }
-.btn-connect {
-  width:100%; height:52px; background:#0A66C2; color:#fff;
-  font-family:var(--fd); font-size:15px; font-weight:600;
-  border-radius:var(--pill);
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  margin-bottom:10px; transition:background .15s, transform .12s;
-  box-shadow:0 6px 24px -8px rgba(10,102,194,.45);
-}
-.btn-connect:hover { background:#004182; transform:translateY(-1px) }
-.btn-again {
-  width:100%; height:46px; background:var(--white);
-  border:1px solid var(--border); color:var(--text2);
-  border-radius:var(--pill); font-family:var(--fd); font-size:14px;
-  transition:all .15s;
-}
-.btn-again:hover { border-color:var(--border2); color:var(--text) }
 
-/* Responsive */
-@media(max-width:480px) { .sq { font-size:16px } }
+/* High-Contrast SVG Chess Pieces */
+.piece {
+  width: 80%; height: 80%;
+  transition: transform 0.15s ease-in-out;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+}
+.piece:hover { transform: scale(1.12); }
+
+/* ── NETWORKING & CHAT SIDEBAR ───────────────────────── */
+.chat-box {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.chat-msg { font-size: 13px; line-height: 1.4; }
+.chat-msg span.author { font-weight: 700; color: var(--emerald-neon); }
+.quick-icebreakers {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.ice-chip {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);
+  color: var(--text-main); font-size: 11px; padding: 6px 10px; border-radius: 20px;
+  cursor: pointer; transition: all 0.2s;
+}
+.ice-chip:hover { background: var(--emerald-neon); color: #030806; font-weight: 700; }
+
+.linkedin-reveal-card {
+  background: linear-gradient(135deg, rgba(0, 119, 181, 0.2), rgba(0, 229, 255, 0.1));
+  border: 1px solid rgba(0, 119, 181, 0.4);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+.btn-linkedin {
+  background: #0077b5; color: #fff; border: none; padding: 10px 16px;
+  border-radius: 8px; font-family: var(--font-head); font-weight: 700;
+  font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 10px; text-decoration: none;
+}
+.btn-linkedin:hover { background: #005582; }
+
+/* Status Bar & Notice */
+.status-bar {
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold-accent);
+  text-align: center;
+}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-logo">
-    <div class="nav-icon">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
-        <circle cx="12" cy="6" r="3"/>
-        <path d="M9.5 9C9.5 13.5 11 15.5 12 18.5H9L10 21.5H14L15 18.5H12C13 15.5 14.5 13.5 14.5 9"/>
-      </svg>
+<!-- APP HEADER -->
+<header class="app-header">
+  <div class="brand-logo">
+    <span>GAMBIT</span>
+    <span class="brand-badge">3SDS Studio</span>
+  </div>
+  <div class="user-bar">
+    <button class="mode-toggle" id="privacy-toggle">🔒 Mode: Incognito Pitch</button>
+    <button class="btn-secondary" id="direct-invite-btn">🔗 Invite Connection</button>
+  </div>
+</header>
+
+<!-- MAIN WORKSPACE -->
+<main class="main-workspace">
+  
+  <!-- LEFT PANEL: MATCHMAKING & FILTERS -->
+  <aside class="panel-card">
+    <div class="panel-title">🎯 Professional Filters</div>
+    
+    <div class="filter-group">
+      <label class="filter-label">Target Industry</label>
+      <select class="filter-select" id="industry-filter">
+        <option>All Industries</option>
+        <option>Venture Capital & Seed</option>
+        <option>AI & Tech Founders</option>
+        <option>Product & Design Leaders</option>
+        <option>Marketing & Growth</option>
+      </select>
     </div>
-    Gambit
-  </div>
-  <div class="nav-stat">
-    <div class="nav-dot"></div>
-    <span id="nav-count">1,284 connections made</span>
-  </div>
-</nav>
 
-<!-- ══ HOME ══ -->
-<div class="scr on" id="s-home">
-<div class="home-inner">
-
-  <div class="home-badge">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-    </svg>
-    Chess for LinkedIn professionals
-  </div>
-
-  <h1 class="home-h1">Play chess.<br>Make <span>real</span><br>connections.</h1>
-  <p class="home-sub">Skip the cold message. Play a quick game with a relevant professional and connect for real.</p>
-
-  <!-- Mini board -->
-  <div class="home-board-wrap">
-    <div class="home-board-label">
-      <span>Live game</span>
-      <span style="color:var(--green);display:flex;align-items:center;gap:4px">
-        <svg width="8" height="8"><circle cx="4" cy="4" r="4" fill="var(--green)"/></svg>
-        In progress
-      </span>
+    <div class="filter-group">
+      <label class="filter-label">Match Goal</label>
+      <select class="filter-select" id="goal-filter">
+        <option>Casual Networking & Game</option>
+        <option>Looking for Co-Founders</option>
+        <option>Seeking Investment / Pitching</option>
+        <option>Hiring / Career Opportunities</option>
+      </select>
     </div>
-    <div class="home-board" id="home-board"></div>
-  </div>
 
-  <button class="btn-play" onclick="goOnboard('relevant')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-      <circle cx="12" cy="6" r="3"/>
-      <path d="M9.5 9C9.5 13.5 11 15.5 12 18.5H9L10 21.5H14L15 18.5H12C13 15.5 14.5 13.5 14.5 9"/>
-    </svg>
-    Find my match
-  </button>
+    <button class="btn-primary" id="find-match-btn">⚡ Find Match (Skip Premium)</button>
 
-  <button class="btn-play-random" onclick="goOnboard('random')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <polyline points="16 3 21 3 21 8"/>
-      <line x1="4" y1="20" x2="21" y2="3"/>
-      <polyline points="21 16 21 21 16 21"/>
-      <line x1="15" y1="15" x2="21" y2="21"/>
-    </svg>
-    Play with anyone — random match
-  </button>
-
-  <div class="home-stats">
-    <div class="hstat"><div class="hstat-n">4,800+</div><div class="hstat-l">Players</div></div>
-    <div class="hstat"><div class="hstat-n">1,284</div><div class="hstat-l">Connections</div></div>
-    <div class="hstat"><div class="hstat-n">142</div><div class="hstat-l">Today</div></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ══ ONBOARD ══ -->
-<div class="scr" id="s-onboard">
-<div class="onboard-inner">
-  <h2 class="ob-h">Quick setup</h2>
-  <p class="ob-sub">Sign in with LinkedIn so your profile auto-fills, or enter your details manually.</p>
-
-  <button class="btn-li-login" onclick="simulateLinkedIn()">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-    Continue with LinkedIn
-  </button>
-
-  <div class="divider">or enter manually</div>
-
-  <div class="field">
-    <label>Your name</label>
-    <input type="text" id="inp-name" placeholder="First Last">
-  </div>
-
-  <div class="field">
-    <label>LinkedIn URL <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
-    <input type="url" id="inp-li" placeholder="linkedin.com/in/yourname">
-  </div>
-
-  <div class="field">
-    <label>I am a…</label>
-    <div class="role-chips" id="role-chips">
-      <button class="role-chip" data-r="Founder" onclick="pickRole(this)">Founder</button>
-      <button class="role-chip" data-r="Investor" onclick="pickRole(this)">Investor</button>
-      <button class="role-chip" data-r="Executive" onclick="pickRole(this)">Executive</button>
-      <button class="role-chip" data-r="Job Seeker" onclick="pickRole(this)">Job Seeker</button>
-      <button class="role-chip" data-r="Recruiter" onclick="pickRole(this)">Recruiter</button>
-      <button class="role-chip" data-r="Consultant" onclick="pickRole(this)">Consultant</button>
-      <button class="role-chip" data-r="Student" onclick="pickRole(this)">Student</button>
+    <div style="margin-top: auto; border-top: 1px solid var(--border-glass); padding-top: 14px;">
+      <div class="panel-title" style="font-size: 12px;">🛡️ Safety & Privacy</div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+        Harassment or spamming results in immediate ban. Full control over when to reveal your LinkedIn profile.
+      </p>
     </div>
-  </div>
+  </aside>
 
-  <button class="btn-join" onclick="startMatching()">
-    Find my match →
-  </button>
-
-</div>
-</div>
-
-<!-- ══ MATCHING ══ -->
-<div class="scr" id="s-match">
-<div class="match-inner">
-  <div class="match-ring"></div>
-  <h2 class="match-h" id="match-h">Finding your game…</h2>
-  <p class="match-sub" id="match-sub">Looking for a relevant player in your area</p>
-  <div class="match-card" id="match-you" style="margin-bottom:8px">
-    <div class="match-av">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-    </div>
-    <div>
-      <div class="match-name" id="match-my-name">—</div>
-      <div class="match-role" id="match-my-role">—</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ══ GAME ══ -->
-<div class="scr" id="s-game">
-<div class="game-wrap">
-
-  <!-- Opponent bar -->
-  <div class="g-bar" id="bar-opp">
-    <div class="g-bar-left">
-      <div class="g-av">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linecap="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
+  <!-- CENTER PANEL: CHESS STAGE -->
+  <section class="board-container">
+    <!-- Opponent Profile -->
+    <div class="player-profile-strip">
+      <div class="player-info">
+        <div class="player-avatar" id="opp-avatar">VC</div>
+        <div>
+          <div class="player-name" id="opp-name">Venture Partner [Incognito]</div>
+          <div class="player-role" id="opp-role">Fintech & AI Investor · Seed Stage</div>
+        </div>
       </div>
-      <div>
-        <div class="g-name" id="g-opp-name">Opponent</div>
-        <div class="g-role" id="g-opp-role">—</div>
+      <div class="timer-badge" id="opp-timer">10:00</div>
+    </div>
+
+    <!-- Chess Board -->
+    <div id="chessboard"></div>
+
+    <!-- User Profile -->
+    <div class="player-profile-strip">
+      <div class="player-info">
+        <div class="player-avatar" style="background: linear-gradient(135deg, var(--emerald-neon), #3dbb66); color:#000;">YOU</div>
+        <div>
+          <div class="player-name" id="user-name">Your Profile</div>
+          <div class="player-role" id="user-role">Product Designer & Strategist</div>
+        </div>
       </div>
+      <div class="timer-badge" id="user-timer">10:00</div>
     </div>
-    <div class="g-indicator" id="ind-opp" style="opacity:0"></div>
-  </div>
 
-  <div class="board" id="board"></div>
+    <div class="status-bar" id="game-status">White to move. Select a piece to start.</div>
+  </section>
 
-  <!-- My bar -->
-  <div class="g-bar active" id="bar-me">
-    <div class="g-bar-left">
-      <div class="g-av">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
-      </div>
-      <div>
-        <div class="g-name" id="g-my-name">You</div>
-        <div class="g-role" id="g-my-role">White</div>
-      </div>
+  <!-- RIGHT PANEL: CHAT & CONNECT -->
+  <aside class="panel-card">
+    <div class="panel-title">💬 Game Chat & Ice-Breakers</div>
+    
+    <div class="chat-box" id="chat-messages">
+      <div class="chat-msg"><span class="author">System:</span> Welcome to GAMBIT! Strict chess rules enforced. Move pieces to break the ice.</div>
     </div>
-    <div class="g-indicator" id="ind-me"></div>
-  </div>
 
-  <div class="g-status you" id="g-status">Your turn</div>
-  <div class="g-moves"><div class="moves-grid" id="moves-list"></div></div>
-  <button class="g-resign" onclick="resign()">Resign game</button>
-</div>
-</div>
-
-<!-- ══ RESULT ══ -->
-<div class="scr" id="s-result">
-<div class="result-inner">
-  <div class="result-badge">
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-  </div>
-  <h2 class="result-h" id="result-h">Good game.</h2>
-  <p class="result-sub" id="result-sub">Now make it count.</p>
-
-  <div class="result-opp">
-    <div class="ro-av">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8" stroke-linecap="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
+    <div class="quick-icebreakers">
+      <button class="ice-chip" onclick="sendChat('Good luck with the game!')">👋 Good luck!</button>
+      <button class="ice-chip" onclick="sendChat('Nice tactical move!')">🎯 Nice move!</button>
+      <button class="ice-chip" onclick="sendChat('What projects are you building?')">🚀 What are you building?</button>
     </div>
-    <div>
-      <div class="ro-name" id="ro-name">—</div>
-      <div class="ro-role" id="ro-role">—</div>
-      <div class="ro-co" id="ro-co">—</div>
-    </div>
-  </div>
 
-  <button class="btn-connect" onclick="doConnect()">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-    Connect on LinkedIn
-  </button>
-  <button class="btn-again" onclick="goTo('s-home')">Play another game</button>
-</div>
-</div>
+    <!-- LinkedIn Connection Card -->
+    <div class="linkedin-reveal-card">
+      <div style="font-size: 13px; font-weight: 700; color: #fff;">LinkedIn Networking</div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Connect directly without needing InMail/Premium credits.</p>
+      <a href="https://www.linkedin.com" target="_blank" class="btn-linkedin" id="linkedin-link">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        Connect on LinkedIn
+      </a>
+    </div>
+  </aside>
+
+</main>
 
 <script>
-/* ══════════════════════════════════════
-   GAMBIT v3 — Zynga-style, LinkedIn purpose
-══════════════════════════════════════ */
+/* ── AUDIO SFX ENGINE (WEB AUDIO API - NO EXTERNAL ASSETS) ── */
+class SoundEngine {
+  constructor() {
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  playMove() {
+    let osc = this.ctx.createOscillator();
+    let gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+  }
+  playCapture() {
+    let osc = this.ctx.createOscillator();
+    let gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+  }
+}
+const sfx = new SoundEngine();
 
-var G = {
-  me: { name:'', li:'', role:'' },
-  opp: { name:'', li:'', role:'', company:'' },
-  mode: 'relevant',  // 'relevant' or 'random'
-  chess: null,
-  sel: null, legal: [], lastMove: null,
-  myTurn: true, history: []
+/* ── STRICT CHESS LOGIC WITH CHESS.JS ───────────────── */
+const game = new Chess();
+let selectedSquare = null;
+
+// High-Contrast Vector SVG Icons for Pieces
+const PIECE_SVGS = {
+  w: {
+    p: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"/></svg>',
+    r: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M9 39h27v-3H9v3zm3-3h21v-4H12v4zm0-5h21l-2-12H14l-2 12zm-1-14h23v-4h-4v2h-3v-2h-5v2h-3v-2H9v4z"/></svg>',
+    n: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22 9c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 36h21l-3-12.39C31.26 22.07 32 20.12 32 18c0-4.97-4.03-9-9-9z"/></svg>',
+    b: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22.5 8c-3.04 0-5.5 2.46-5.5 5.5 0 1.22.4 2.34 1.08 3.25C15.68 18.25 14 21.17 14 24.5c0 4.14 2.86 7.6 6.75 8.35L20 36h5l-.75-3.15c3.89-.75 6.75-4.21 6.75-8.35 0-3.33-1.68-6.25-4.08-7.75.68-.91 1.08-2.03 1.08-3.25 0-3.04-2.46-5.5-5.5-5.5z"/></svg>',
+    q: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M9 26c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3S9 24 9 26zm13.5-14c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5 3.5-1.5 3.5-3.5-1.5-3.5-3.5-3.5zm13.5 14c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3-1.5 1-3.5 3zM11 38h23v-4H11v4z"/></svg>',
+    k: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22.5 6v4m-2-2h4m-2 4c-4 0-7 3-7 7 0 3 2 6 5 7v10h8V26c3-1 5-4 5-7 0-4-3-7-7-7z"/></svg>'
+  },
+  b: {
+    p: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"/></svg>',
+    r: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M9 39h27v-3H9v3zm3-3h21v-4H12v4zm0-5h21l-2-12H14l-2 12zm-1-14h23v-4h-4v2h-3v-2h-5v2h-3v-2H9v4z"/></svg>',
+    n: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22 9c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 36h21l-3-12.39C31.26 22.07 32 20.12 32 18c0-4.97-4.03-9-9-9z"/></svg>',
+    b: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22.5 8c-3.04 0-5.5 2.46-5.5 5.5 0 1.22.4 2.34 1.08 3.25C15.68 18.25 14 21.17 14 24.5c0 4.14 2.86 7.6 6.75 8.35L20 36h5l-.75-3.15c3.89-.75 6.75-4.21 6.75-8.35 0-3.33-1.68-6.25-4.08-7.75.68-.91 1.08-2.03 1.08-3.25 0-3.04-2.46-5.5-5.5-5.5z"/></svg>',
+    q: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M9 26c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3S9 24 9 26zm13.5-14c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5 3.5-1.5 3.5-3.5-1.5-3.5-3.5-3.5zm13.5 14c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3-1.5 1-3.5 3zM11 38h23v-4H11v4z"/></svg>',
+    k: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22.5 6v4m-2-2h4m-2 4c-4 0-7 3-7 7 0 3 2 6 5 7v10h8V26c3-1 5-4 5-7 0-4-3-7-7-7z"/></svg>'
+  }
 };
-
-var FILES = ['a','b','c','d','e','f','g','h'];
-var PIECES = {
-  wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',
-  bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'
-};
-
-/* Opponent pool */
-var OPP_POOL = [
-  {name:'Yael Hoffman',    role:'Angel Investor',      company:'Early-stage SaaS & HealthTech',       li:'yaelhoffman'},
-  {name:'Amit Sarel',      role:'VC Partner · JVP',    company:'Seed to Series B · Enterprise',       li:'amitsarel'},
-  {name:'Roni Cohen',      role:'CMO · Scale-up',      company:'GTM & growth strategy',               li:'ronicohen'},
-  {name:'Tal Doron',       role:'Founder & CEO',       company:'FinTech · Revenue operations',        li:'taldoron'},
-  {name:'Lior Ben-David',  role:'Head of Talent',      company:'Hiring Product & Engineering leads',  li:'liorbendavid'},
-  {name:'Maya Katz',       role:'Senior Product Lead',  company:'7 yrs PM · Open to opportunities',   li:'mayakatz'},
-  {name:'Oren Mizrahi',    role:'Serial Founder',       company:'3 exits · Now angel investing',       li:'orenmizrahi'},
-  {name:'Dana Gur',        role:'Strategy Consultant',  company:'Growth & partnerships',               li:'danagur'},
-  {name:'Noa Shapiro',     role:'BD Director',          company:'Partnerships & enterprise sales',     li:'noashapiro'},
-  {name:'Eyal Bar',        role:'CTO · B2B SaaS',       company:'Looking for design & GTM partners',   li:'eyalbar'},
-];
-
-function pickOpp() {
-  return OPP_POOL[Math.floor(Math.random() * OPP_POOL.length)];
-}
-
-/* ── Navigation ── */
-function goTo(id) {
-  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-  window.scrollTo(0, 0);
-}
-
-function goOnboard(mode) {
-  G.mode = mode;
-  goTo('s-onboard');
-}
-
-/* ── LinkedIn simulation ── */
-function simulateLinkedIn() {
-  // In production: real OAuth flow
-  // For demo: simulate with a short delay
-  var btn = event.target.closest('button');
-  btn.textContent = 'Connecting…';
-  btn.style.opacity = '.7';
-  setTimeout(function() {
-    G.me.name = 'Dave Markovich';
-    G.me.li = 'linkedin.com/in/davemarkovich';
-    G.me.role = 'Founder';
-    startMatching();
-  }, 1400);
-}
-
-/* ── Role selection ── */
-function pickRole(el) {
-  document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('sel'));
-  el.classList.add('sel');
-  G.me.role = el.dataset.r;
-}
-
-/* ── Start matching ── */
-function startMatching() {
-  if (!G.me.name) {
-    G.me.name = document.getElementById('inp-name').value.trim() || 'Player';
-  }
-  if (!G.me.li) {
-    G.me.li = document.getElementById('inp-li').value.trim();
-  }
-  if (!G.me.role) {
-    G.me.role = 'Professional';
-  }
-
-  document.getElementById('match-my-name').textContent = G.me.name;
-  document.getElementById('match-my-role').textContent = G.me.role;
-
-  var msgs = G.mode === 'random'
-    ? ['Finding a random opponent…', 'Matching you with a player…', 'Almost ready…']
-    : ['Scanning your network…', 'Finding a relevant match…', 'Almost ready…'];
-  var mi = 0;
-  var interval = setInterval(function() {
-    if (mi < msgs.length) {
-      document.getElementById('match-sub').textContent = msgs[mi++];
-    }
-  }, 900);
-
-  goTo('s-match');
-
-  setTimeout(function() {
-    clearInterval(interval);
-    G.opp = pickOpp();
-    startGame();
-  }, 2600 + Math.random() * 1400);
-}
-
-/* ── Game ── */
-function startGame() {
-  document.getElementById('g-my-name').textContent = G.me.name;
-  document.getElementById('g-my-role').textContent = G.me.role + ' · White';
-  document.getElementById('g-opp-name').textContent = G.opp.name;
-  document.getElementById('g-opp-role').textContent = G.opp.role;
-
-  G.chess = new Chess();
-  G.sel = null; G.legal = []; G.lastMove = null;
-  G.myTurn = true; G.history = [];
-
-  renderBoard();
-  setStatus(true);
-  goTo('s-game');
-}
-
-function sq(f, r) { return FILES[f] + r; }
 
 function renderBoard() {
-  var b = document.getElementById('board');
-  b.innerHTML = '';
-  for (var r = 8; r >= 1; r--) {
-    for (var f = 0; f < 8; f++) {
-      var id = sq(f, r);
-      var el = document.createElement('div');
-      el.className = 'sq ' + ((f + r) % 2 === 1 ? 'L' : 'D');
-      el.dataset.sq = id;
-      if (G.sel === id) el.classList.add('sel');
-      if (G.legal.indexOf(id) !== -1) el.classList.add('mv');
-      if (G.lastMove && (G.lastMove.from === id || G.lastMove.to === id)) el.classList.add('lm');
-      if (G.chess.in_check()) {
-        var k = findKing(G.chess.turn());
-        if (k === id) el.classList.add('chk');
+  const boardEl = document.getElementById('chessboard');
+  boardEl.innerHTML = '';
+  const board = game.board();
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const squareName = String.fromCharCode(97 + c) + (8 - r);
+      const squareEl = document.createElement('div');
+      squareEl.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+      squareEl.dataset.square = squareName;
+
+      const piece = board[r][c];
+      if (piece) {
+        squareEl.innerHTML = PIECE_SVGS[piece.color][piece.type];
       }
-      var p = G.chess.get(id);
-      if (p) {
-        var sp = document.createElement('span');
-        sp.className = 'piece';
-        sp.textContent = PIECES[p.color + p.type.toUpperCase()] || '';
-        el.appendChild(sp);
-      }
-      el.addEventListener('click', onSq);
-      b.appendChild(el);
+
+      squareEl.addEventListener('click', () => handleSquareClick(squareName));
+      boardEl.appendChild(squareEl);
     }
+  }
+  updateStatus();
+}
+
+function handleSquareClick(sq) {
+  if (selectedSquare === sq) {
+    clearHighlights();
+    selectedSquare = null;
+    return;
+  }
+
+  if (selectedSquare) {
+    // Attempt move
+    const move = game.move({ from: selectedSquare, to: sq, promotion: 'q' });
+    if (move) {
+      if (move.captured) sfx.playCapture(); else sfx.playMove();
+      selectedSquare = null;
+      clearHighlights();
+      renderBoard();
+      
+      // Auto-responder AI Move (Simulated LinkedIn Opponent)
+      if (!game.game_over()) {
+        setTimeout(makeAIMove, 800);
+      }
+      return;
+    }
+  }
+
+  // Select piece
+  const piece = game.get(sq);
+  if (piece && piece.color === game.turn()) {
+    selectedSquare = sq;
+    highlightSquare(sq);
   }
 }
 
-function findKing(color) {
-  for (var r = 1; r <= 8; r++)
-    for (var f = 0; f < 8; f++) {
-      var id = sq(f, r);
-      var p = G.chess.get(id);
-      if (p && p.type === 'k' && p.color === color) return id;
-    }
-  return null;
+function highlightSquare(sq) {
+  clearHighlights();
+  const el = document.querySelector(`[data-square="${sq}"]`);
+  if (el) el.classList.add('selected');
+
+  const moves = game.moves({ square: sq, verbose: true });
+  moves.forEach(m => {
+    const validEl = document.querySelector(`[data-square="${m.to}"]`);
+    if (validEl) validEl.classList.add('valid-move');
+  });
 }
 
-function onSq(e) {
-  if (!G.myTurn) return;
-  var id = e.currentTarget.dataset.sq;
-  var p = G.chess.get(id);
-  if (G.sel) {
-    if (G.legal.indexOf(id) !== -1) { doMove(G.sel, id); return; }
-    G.sel = null; G.legal = [];
-    if (p && p.color === 'w') {
-      G.sel = id;
-      G.legal = G.chess.moves({ square: id, verbose: true }).map(m => m.to);
-    }
-  } else {
-    if (p && p.color === 'w') {
-      G.sel = id;
-      G.legal = G.chess.moves({ square: id, verbose: true }).map(m => m.to);
-    }
-  }
+function clearHighlights() {
+  document.querySelectorAll('.square').forEach(el => {
+    el.classList.remove('selected', 'valid-move');
+  });
+}
+
+function makeAIMove() {
+  const moves = game.moves({ verbose: true });
+  if (moves.length === 0) return;
+  const randomMove = moves[Math.floor(Math.random() * moves.length)];
+  const move = game.move(randomMove);
+  if (move.captured) sfx.playCapture(); else sfx.playMove();
   renderBoard();
 }
 
-function doMove(from, to) {
-  var p = G.chess.get(from);
-  var mv = { from: from, to: to };
-  if (p && p.type === 'p' && (to[1] === '8' || to[1] === '1')) mv.promotion = 'q';
-  var result = G.chess.move(mv);
-  if (!result) return;
-  G.lastMove = { from, to }; G.sel = null; G.legal = [];
-  G.myTurn = false; G.history.push(result);
-  updateMoves(); renderBoard(); setStatus(false);
-  if (!G.chess.game_over()) setTimeout(aiMove, 500 + Math.random() * 800);
-  else setTimeout(showResult, 700);
-}
-
-function aiMove() {
-  var moves = G.chess.moves({ verbose: true });
-  if (!moves.length) return;
-  var caps = moves.filter(m => m.flags.includes('c'));
-  var chks = moves.filter(m => {
-    G.chess.move(m); var c = G.chess.in_check(); G.chess.undo(); return c;
-  });
-  var chosen = (chks.length && Math.random() > .6) ? chks[~~(Math.random() * chks.length)]
-             : (caps.length && Math.random() > .4) ? caps[~~(Math.random() * caps.length)]
-             : moves[~~(Math.random() * moves.length)];
-  G.chess.move(chosen);
-  G.lastMove = { from: chosen.from, to: chosen.to };
-  G.myTurn = true; G.history.push(chosen);
-  updateMoves(); renderBoard(); setStatus(true);
-  if (G.chess.game_over()) setTimeout(showResult, 700);
-}
-
-function setStatus(myTurn) {
-  var el = document.getElementById('g-status');
-  var barMe = document.getElementById('bar-me');
-  var barOpp = document.getElementById('bar-opp');
-  var indMe = document.getElementById('ind-me');
-  var indOpp = document.getElementById('ind-opp');
-
-  if (G.chess.in_checkmate()) {
-    el.textContent = 'Checkmate'; el.className = 'g-status'; return;
-  }
-  if (G.chess.in_draw()) {
-    el.textContent = 'Draw'; el.className = 'g-status'; return;
-  }
-  if (myTurn) {
-    el.textContent = G.chess.in_check() ? 'Check — your move' : 'Your turn';
-    el.className = 'g-status you';
-    barMe.classList.add('active'); barOpp.classList.remove('active');
-    indMe.style.opacity = '1'; indOpp.style.opacity = '0';
+function updateStatus() {
+  const statusEl = document.getElementById('game-status');
+  if (game.in_checkmate()) {
+    statusEl.innerText = "Checkmate! Game Over.";
+  } else if (game.in_draw()) {
+    statusEl.innerText = "Draw Game!";
+  } else if (game.in_check()) {
+    statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} is in Check!`;
   } else {
-    el.textContent = G.opp.name + ' is thinking…';
-    el.className = 'g-status';
-    barOpp.classList.add('active'); barMe.classList.remove('active');
-    indOpp.style.opacity = '1'; indMe.style.opacity = '0';
+    statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} to move.`;
   }
 }
 
-function updateMoves() {
-  var list = document.getElementById('moves-list');
-  list.innerHTML = '';
-  for (var i = 0; i < G.history.length; i += 2) {
-    var n = document.createElement('div'); n.className = 'mn'; n.textContent = (i / 2 + 1) + '.';
-    var w = document.createElement('div');
-    w.className = 'mc' + (i === G.history.length - 1 ? ' new' : '');
-    w.textContent = G.history[i] ? G.history[i].san : '';
-    var b = document.createElement('div');
-    b.className = 'mc' + (i + 1 === G.history.length - 1 ? ' new' : '');
-    b.textContent = G.history[i + 1] ? G.history[i + 1].san : '';
-    list.appendChild(n); list.appendChild(w); list.appendChild(b);
-  }
-  list.scrollTop = list.scrollHeight;
+function sendChat(txt) {
+  const box = document.getElementById('chat-messages');
+  box.innerHTML += `<div class="chat-msg"><span class="author">You:</span> ${txt}</div>`;
+  box.scrollTop = box.scrollHeight;
+  
+  // Simulated responses
+  setTimeout(() => {
+    const replies = [
+      "Thanks! Likewise.",
+      "Interesting tactic. Are you open to a quick call next week?",
+      "Great match! Let's definitely connect on LinkedIn."
+    ];
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    box.innerHTML += `<div class="chat-msg"><span class="author" style="color:var(--cyan-neon)">Opponent:</span> ${reply}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }, 1200);
 }
 
-function resign() {
-  if (!confirm('Resign this game?')) return;
-  showResult();
-}
-
-/* ── Result ── */
-function showResult() {
-  var draw = G.chess.in_draw();
-  var mat = G.chess.in_checkmate();
-  var iWon = mat && G.chess.turn() === 'b';
-
-  var h = draw ? 'Well matched.' : iWon ? 'Well played.' : 'Good game.';
-  var sub = draw
-    ? 'A draw means you think alike. ' + G.opp.name + ' is worth knowing.'
-    : iWon
-    ? G.opp.name + ' played hard. Now connect and keep the conversation going.'
-    : 'The best connections come from worthy opponents. Connect with ' + G.opp.name + '.';
-
-  document.getElementById('result-h').textContent = h;
-  document.getElementById('result-sub').textContent = sub;
-  document.getElementById('ro-name').textContent = G.opp.name;
-  document.getElementById('ro-role').textContent = G.opp.role;
-  document.getElementById('ro-co').textContent = G.opp.company;
-  goTo('s-result');
-}
-
-function doConnect() {
-  var li = G.opp.li ? 'https://www.linkedin.com/in/' + G.opp.li : 'https://www.linkedin.com/mynetwork/';
-  window.open(li, '_blank');
-}
-
-/* ── Home board (animated preview) ── */
-(function() {
-  var board = document.getElementById('home-board');
-  if (!board) return;
-  var chess = new Chess();
-  ['e4','e5','Nf3','Nc6','Bc4','Bc5'].forEach(m => chess.move(m));
-  var HL = ['e4','e5','f3','c6','c4','c5'];
-  for (var r = 8; r >= 1; r--) {
-    for (var f = 0; f < 8; f++) {
-      var id = FILES[f] + r;
-      var el = document.createElement('div');
-      var light = (f + r) % 2 === 1;
-      el.className = 'home-sq ' + (HL.indexOf(id) !== -1 ? 'H' : light ? 'L' : 'D');
-      var p = chess.get(id);
-      if (p) el.textContent = PIECES[p.color + p.type.toUpperCase()] || '';
-      board.appendChild(el);
-    }
-  }
-})();
+// Initialize
+renderBoard();
 </script>
 </body>
 </html>
