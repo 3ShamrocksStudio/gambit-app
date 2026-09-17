@@ -3,220 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>GAMBIT | LinkedIn Professional Chess Ice-Breaker</title>
-<meta name="description" content="Connect with founders, investors, and talent through real-time tactical chess gameplay. No LinkedIn Premium required.">
+<title>E4 CONNECT | LinkedIn Professional Tactical Chess</title>
 
-<!-- 3SDS Brand Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
-<!-- Strict Chess Rules Engine (Chess.js) -->
+<!-- Strict Chess Rules Engine -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
 <style>
-/* ── 3SDS DESIGN SYSTEM VARIABLES ─────────────────────── */
+/* ── THEME DEFINITIONS ────────────────────────────────── */
 :root {
+  /* Default Theme: 3SDS Emerald Glass */
   --bg-deep: #030806;
   --bg-surface: #0a140f;
-  --bg-glass: rgba(14, 26, 20, 0.75);
-  --emerald-neon: #8ae87f;
-  --mint-glow: #00ffaa;
-  --gold-accent: #f59e0b;
-  --cyan-neon: #00e5ff;
-  --pink-accent: #ff4d8d;
+  --bg-glass: rgba(14, 26, 20, 0.85);
+  --primary-accent: #8ae87f;
+  --primary-glow: rgba(138, 232, 127, 0.25);
   --text-main: #f0f7f2;
   --text-muted: rgba(240, 247, 242, 0.65);
-  --border-glass: rgba(138, 232, 127, 0.18);
-  --font-head: 'Space Grotesk', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
-  --board-light: #2a3a30;
-  --board-dark: #111d16;
-  --highlight-move: rgba(138, 232, 127, 0.4);
-  --highlight-select: rgba(0, 229, 255, 0.5);
+  --border-glass: rgba(138, 232, 127, 0.2);
+  --board-light: #2b3a31;
+  --board-dark: #121e17;
+  --square-select: rgba(0, 229, 255, 0.45);
+  --square-move: rgba(138, 232, 127, 0.5);
+}
+
+body.theme-executive {
+  --bg-deep: #080c14;
+  --bg-surface: #0f172a;
+  --bg-glass: rgba(15, 23, 42, 0.85);
+  --primary-accent: #f59e0b;
+  --primary-glow: rgba(245, 158, 11, 0.25);
+  --text-main: #f8fafc;
+  --text-muted: rgba(248, 250, 252, 0.65);
+  --border-glass: rgba(245, 158, 11, 0.2);
+  --board-light: #334155;
+  --board-dark: #0f172a;
+  --square-select: rgba(56, 189, 248, 0.45);
+  --square-move: rgba(245, 158, 11, 0.5);
+}
+
+body.theme-monochrome {
+  --bg-deep: #0f0f11;
+  --bg-surface: #18181b;
+  --bg-glass: rgba(24, 24, 27, 0.85);
+  --primary-accent: #ffffff;
+  --primary-glow: rgba(255, 255, 255, 0.15);
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --border-glass: rgba(255, 255, 255, 0.15);
+  --board-light: #3f3f46;
+  --board-dark: #18181b;
+  --square-select: rgba(161, 161, 170, 0.5);
+  --square-move: rgba(255, 255, 255, 0.6);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: var(--font-body);
+  font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: var(--bg-deep);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease;
 }
 
-/* ── HEADER & NAVIGATION ────────────────────────────── */
+/* ── HEADER & CONTROL BAR ────────────────────────────── */
 .app-header {
   height: 72px;
-  background: rgba(3, 8, 6, 0.85);
-  backdrop-filter: blur(20px);
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
 }
 .brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-head);
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 22px;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .brand-badge {
-  background: linear-gradient(135deg, var(--emerald-neon), var(--mint-glow));
-  color: #030806;
+  background: var(--primary-accent);
+  color: #000;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 99px;
   text-transform: uppercase;
 }
-.user-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.mode-toggle, .btn-secondary {
+.controls-group { display: flex; align-items: center; gap: 12px; }
+.theme-select, .btn-secondary {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-glass);
   color: var(--text-main);
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-family: var(--font-head);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s;
-}
-.mode-toggle:hover, .btn-secondary:hover {
-  border-color: var(--emerald-neon);
-  box-shadow: 0 0 16px rgba(138, 232, 127, 0.2);
+  outline: none;
 }
 
-/* ── MAIN WORKSPACE LAYOUT ───────────────────────────── */
-.main-workspace {
+/* ── MAIN LAYOUT ─────────────────────────────────────── */
+.workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: 320px 1fr 340px;
+  grid-template-columns: 300px 1fr 320px;
   gap: 24px;
-  max-width: 1440px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   padding: 24px;
 }
-@media (max-width: 1100px) {
-  .main-workspace { grid-template-columns: 1fr; }
+@media (max-width: 1024px) {
+  .workspace { grid-template-columns: 1fr; }
 }
 
-/* ── SIDE PANELS & CARD STYLING ──────────────────────── */
 .panel-card {
   background: var(--bg-glass);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-glass);
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 .panel-title {
-  font-family: var(--font-head);
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--emerald-neon);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Matchmaking Filters */
-.filter-group { display: flex; flex-direction: column; gap: 8px; }
-.filter-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
-.filter-select {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-family: var(--font-body);
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 13px;
-  outline: none;
-}
-.btn-primary {
-  background: linear-gradient(135deg, var(--emerald-neon), #3dbb66);
-  color: #030806;
-  border: none;
-  padding: 14px;
-  border-radius: 12px;
-  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary-accent);
   font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  box-shadow: 0 0 20px rgba(138, 232, 127, 0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(138, 232, 127, 0.5);
 }
 
-/* ── CHESSBOARD CENTER STAGE ─────────────────────────── */
-.board-container {
+/* ── CHESSBOARD ──────────────────────────────────────── */
+.board-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
 }
-.player-profile-strip {
+.player-strip {
   width: 100%;
-  max-width: 560px;
+  max-width: 540px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-glass);
-  padding: 12px 18px;
-  border-radius: 14px;
+  padding: 10px 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.player-info { display: flex; align-items: center; gap: 12px; }
+.player-info { display: flex; align-items: center; gap: 10px; }
 .player-avatar {
-  width: 42px; height: 42px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan-neon), var(--purple-accent, #a855f7));
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--primary-accent); color: #000;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 16px; color: #fff;
-  border: 2px solid var(--border-glass);
-}
-.player-name { font-family: var(--font-head); font-weight: 700; font-size: 15px; }
-.player-role { font-size: 12px; color: var(--text-muted); }
-.timer-badge {
-  font-family: var(--font-head); font-weight: 700; font-size: 16px;
-  background: rgba(0, 0, 0, 0.5); padding: 6px 12px; border-radius: 8px;
-  border: 1px solid var(--border-glass);
+  font-weight: 700; font-size: 14px;
 }
 
-/* The Grid Board */
 #chessboard {
-  width: min(100%, 560px);
+  width: min(100%, 540px);
   aspect-ratio: 1;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   border: 2px solid var(--border-glass);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(138, 232, 127, 0.15);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px var(--primary-glow);
 }
 .square {
   position: relative;
@@ -225,239 +192,157 @@ body {
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s;
 }
 .square.light { background-color: var(--board-light); }
 .square.dark { background-color: var(--board-dark); }
-.square.selected { background-color: var(--highlight-select) !important; }
+.square.selected { background-color: var(--square-select) !important; }
 .square.valid-move::after {
-  content: ''; position: absolute; width: 16px; height: 16px;
-  background: var(--emerald-neon); border-radius: 50%; opacity: 0.7;
+  content: ''; position: absolute; width: 14px; height: 14px;
+  background: var(--primary-accent); border-radius: 50%; opacity: 0.75;
 }
 
-/* High-Contrast SVG Chess Pieces */
+/* Standard HD Pieces (Cburnett Set) */
 .piece {
-  width: 80%; height: 80%;
-  transition: transform 0.15s ease-in-out;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  width: 85%; height: 85%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: transform 0.12s ease;
 }
-.piece:hover { transform: scale(1.12); }
+.piece:hover { transform: scale(1.08); }
 
-/* ── NETWORKING & CHAT SIDEBAR ───────────────────────── */
+/* White Pieces */
+.piece.wP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'); }
+.piece.wR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg'); }
+.piece.wN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg'); }
+.piece.wB { background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg'); }
+.piece.wQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg'); }
+.piece.wK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg'); }
+
+/* Black Pieces */
+.piece.bP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'); }
+.piece.bR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/ff/ff/Chess_rdt45.svg'); }
+.piece.bN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/ef/ef/Chess_ndt45.svg'); }
+.piece.bB { background-image: url('https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg'); }
+.piece.bQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg'); }
+.piece.bK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'); }
+
+/* ── SIDEBARS & CHAT ─────────────────────────────────── */
+.btn-primary {
+  background: var(--primary-accent);
+  color: #000; border: none; padding: 12px; border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+  cursor: pointer; transition: transform 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); }
+
 .chat-box {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 280px;
-  overflow-y: auto;
+  flex: 1; background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.05); border-radius: 10px;
+  padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  max-height: 240px; overflow-y: auto; font-size: 13px;
 }
-.chat-msg { font-size: 13px; line-height: 1.4; }
-.chat-msg span.author { font-weight: 700; color: var(--emerald-neon); }
-.quick-icebreakers {
-  display: flex; flex-wrap: wrap; gap: 6px;
-}
-.ice-chip {
-  background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);
-  color: var(--text-main); font-size: 11px; padding: 6px 10px; border-radius: 20px;
-  cursor: pointer; transition: all 0.2s;
-}
-.ice-chip:hover { background: var(--emerald-neon); color: #030806; font-weight: 700; }
-
-.linkedin-reveal-card {
-  background: linear-gradient(135deg, rgba(0, 119, 181, 0.2), rgba(0, 229, 255, 0.1));
-  border: 1px solid rgba(0, 119, 181, 0.4);
-  border-radius: 14px;
-  padding: 16px;
-  text-align: center;
-}
-.btn-linkedin {
-  background: #0077b5; color: #fff; border: none; padding: 10px 16px;
-  border-radius: 8px; font-family: var(--font-head); font-weight: 700;
-  font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-  margin-top: 10px; text-decoration: none;
-}
-.btn-linkedin:hover { background: #005582; }
-
-/* Status Bar & Notice */
-.status-bar {
-  font-family: var(--font-head);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gold-accent);
-  text-align: center;
-}
+.status-msg { text-align: center; color: var(--primary-accent); font-weight: 600; font-size: 14px; }
 </style>
 </head>
 <body>
 
-<!-- APP HEADER -->
 <header class="app-header">
   <div class="brand-logo">
-    <span>GAMBIT</span>
+    <span>E4 CONNECT</span>
     <span class="brand-badge">3SDS Studio</span>
   </div>
-  <div class="user-bar">
-    <button class="mode-toggle" id="privacy-toggle">🔒 Mode: Incognito Pitch</button>
-    <button class="btn-secondary" id="direct-invite-btn">🔗 Invite Connection</button>
+  <div class="controls-group">
+    <!-- Theme Switcher -->
+    <select class="theme-select" id="theme-switcher" onchange="changeTheme(this.value)">
+      <option value="emerald">🌿 Emerald Glass</option>
+      <option value="executive">🫐 Midnight Executive</option>
+      <option value="monochrome">⚡ Monochrome Pro</option>
+    </select>
+    <button class="btn-secondary">🔗 Direct Invite</button>
   </div>
 </header>
 
-<!-- MAIN WORKSPACE -->
-<main class="main-workspace">
+<main class="workspace">
   
-  <!-- LEFT PANEL: MATCHMAKING & FILTERS -->
+  <!-- LEFT: MATCHMAKING -->
   <aside class="panel-card">
-    <div class="panel-title">🎯 Professional Filters</div>
+    <div class="panel-title">🎯 Professional Match</div>
     
-    <div class="filter-group">
-      <label class="filter-label">Target Industry</label>
-      <select class="filter-select" id="industry-filter">
-        <option>All Industries</option>
-        <option>Venture Capital & Seed</option>
+    <div>
+      <label style="font-size: 12px; color: var(--text-muted);">Target Industry</label>
+      <select class="theme-select" style="width: 100%; margin-top: 4px;">
         <option>AI & Tech Founders</option>
-        <option>Product & Design Leaders</option>
-        <option>Marketing & Growth</option>
+        <option>Venture Capital</option>
+        <option>Product & Design</option>
       </select>
     </div>
 
-    <div class="filter-group">
-      <label class="filter-label">Match Goal</label>
-      <select class="filter-select" id="goal-filter">
-        <option>Casual Networking & Game</option>
-        <option>Looking for Co-Founders</option>
-        <option>Seeking Investment / Pitching</option>
-        <option>Hiring / Career Opportunities</option>
-      </select>
-    </div>
-
-    <button class="btn-primary" id="find-match-btn">⚡ Find Match (Skip Premium)</button>
-
-    <div style="margin-top: auto; border-top: 1px solid var(--border-glass); padding-top: 14px;">
-      <div class="panel-title" style="font-size: 12px;">🛡️ Safety & Privacy</div>
-      <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
-        Harassment or spamming results in immediate ban. Full control over when to reveal your LinkedIn profile.
-      </p>
-    </div>
+    <button class="btn-primary" style="margin-top: 8px;">⚡ Find Match (Skip InMail)</button>
   </aside>
 
-  <!-- CENTER PANEL: CHESS STAGE -->
-  <section class="board-container">
-    <!-- Opponent Profile -->
-    <div class="player-profile-strip">
+  <!-- CENTER: BOARD -->
+  <section class="board-stage">
+    <div class="player-strip">
       <div class="player-info">
-        <div class="player-avatar" id="opp-avatar">VC</div>
+        <div class="player-avatar" style="background:#38bdf8;">VC</div>
         <div>
-          <div class="player-name" id="opp-name">Venture Partner [Incognito]</div>
-          <div class="player-role" id="opp-role">Fintech & AI Investor · Seed Stage</div>
+          <div style="font-weight: 700; font-size: 14px;">Tech Investor [Incognito]</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Seed & Series A · AI Focus</div>
         </div>
       </div>
-      <div class="timer-badge" id="opp-timer">10:00</div>
+      <div style="font-family: 'Space Grotesk'; font-weight: 700;">10:00</div>
     </div>
 
-    <!-- Chess Board -->
     <div id="chessboard"></div>
 
-    <!-- User Profile -->
-    <div class="player-profile-strip">
+    <div class="player-strip">
       <div class="player-info">
-        <div class="player-avatar" style="background: linear-gradient(135deg, var(--emerald-neon), #3dbb66); color:#000;">YOU</div>
+        <div class="player-avatar">YOU</div>
         <div>
-          <div class="player-name" id="user-name">Your Profile</div>
-          <div class="player-role" id="user-role">Product Designer & Strategist</div>
+          <div style="font-weight: 700; font-size: 14px;">Your Profile</div>
+          <div style="font-size: 11px; color: var(--text-muted);">Product Strategist</div>
         </div>
       </div>
-      <div class="timer-badge" id="user-timer">10:00</div>
+      <div style="font-family: 'Space Grotesk'; font-weight: 700;">10:00</div>
     </div>
 
-    <div class="status-bar" id="game-status">White to move. Select a piece to start.</div>
+    <div class="status-msg" id="game-status">White to move. Select a piece.</div>
   </section>
 
-  <!-- RIGHT PANEL: CHAT & CONNECT -->
+  <!-- RIGHT: CHAT & CONNECT -->
   <aside class="panel-card">
-    <div class="panel-title">💬 Game Chat & Ice-Breakers</div>
-    
+    <div class="panel-title">💬 Game Chat</div>
     <div class="chat-box" id="chat-messages">
-      <div class="chat-msg"><span class="author">System:</span> Welcome to GAMBIT! Strict chess rules enforced. Move pieces to break the ice.</div>
+      <div><strong style="color:var(--primary-accent)">System:</strong> Game started. Strict rules active.</div>
     </div>
-
-    <div class="quick-icebreakers">
-      <button class="ice-chip" onclick="sendChat('Good luck with the game!')">👋 Good luck!</button>
-      <button class="ice-chip" onclick="sendChat('Nice tactical move!')">🎯 Nice move!</button>
-      <button class="ice-chip" onclick="sendChat('What projects are you building?')">🚀 What are you building?</button>
-    </div>
-
-    <!-- LinkedIn Connection Card -->
-    <div class="linkedin-reveal-card">
-      <div style="font-size: 13px; font-weight: 700; color: #fff;">LinkedIn Networking</div>
-      <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Connect directly without needing InMail/Premium credits.</p>
-      <a href="https://www.linkedin.com" target="_blank" class="btn-linkedin" id="linkedin-link">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
-        Connect on LinkedIn
-      </a>
+    <div style="display:flex; gap:6px;">
+      <button class="btn-secondary" style="flex:1; font-size:11px;" onclick="sendChat('Good luck!')">👋 Good luck</button>
+      <button class="btn-secondary" style="flex:1; font-size:11px;" onclick="sendChat('Great move!')">🎯 Great move</button>
     </div>
   </aside>
 
 </main>
 
 <script>
-/* ── AUDIO SFX ENGINE (WEB AUDIO API - NO EXTERNAL ASSETS) ── */
+/* ── AUDIO SFX ────────────────────────────────────────── */
 class SoundEngine {
-  constructor() {
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  constructor() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
   playMove() {
-    let osc = this.ctx.createOscillator();
-    let gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
-    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(); osc.stop(this.ctx.currentTime + 0.08);
-  }
-  playCapture() {
-    let osc = this.ctx.createOscillator();
-    let gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+    let o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.frequency.setValueAtTime(300, this.ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(); o.stop(this.ctx.currentTime + 0.08);
   }
 }
 const sfx = new SoundEngine();
 
-/* ── STRICT CHESS LOGIC WITH CHESS.JS ───────────────── */
+/* ── CHESS LOGIC ─────────────────────────────────────── */
 const game = new Chess();
 let selectedSquare = null;
-
-// High-Contrast Vector SVG Icons for Pieces
-const PIECE_SVGS = {
-  w: {
-    p: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"/></svg>',
-    r: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M9 39h27v-3H9v3zm3-3h21v-4H12v4zm0-5h21l-2-12H14l-2 12zm-1-14h23v-4h-4v2h-3v-2h-5v2h-3v-2H9v4z"/></svg>',
-    n: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22 9c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 36h21l-3-12.39C31.26 22.07 32 20.12 32 18c0-4.97-4.03-9-9-9z"/></svg>',
-    b: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22.5 8c-3.04 0-5.5 2.46-5.5 5.5 0 1.22.4 2.34 1.08 3.25C15.68 18.25 14 21.17 14 24.5c0 4.14 2.86 7.6 6.75 8.35L20 36h5l-.75-3.15c3.89-.75 6.75-4.21 6.75-8.35 0-3.33-1.68-6.25-4.08-7.75.68-.91 1.08-2.03 1.08-3.25 0-3.04-2.46-5.5-5.5-5.5z"/></svg>',
-    q: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M9 26c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3S9 24 9 26zm13.5-14c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5 3.5-1.5 3.5-3.5-1.5-3.5-3.5-3.5zm13.5 14c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3-1.5 1-3.5 3zM11 38h23v-4H11v4z"/></svg>',
-    k: '<svg class="piece" viewBox="0 0 45 45"><path fill="#ffffff" stroke="#000" stroke-width="1.5" d="M22.5 6v4m-2-2h4m-2 4c-4 0-7 3-7 7 0 3 2 6 5 7v10h8V26c3-1 5-4 5-7 0-4-3-7-7-7z"/></svg>'
-  },
-  b: {
-    p: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"/></svg>',
-    r: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M9 39h27v-3H9v3zm3-3h21v-4H12v4zm0-5h21l-2-12H14l-2 12zm-1-14h23v-4h-4v2h-3v-2h-5v2h-3v-2H9v4z"/></svg>',
-    n: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22 9c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 36h21l-3-12.39C31.26 22.07 32 20.12 32 18c0-4.97-4.03-9-9-9z"/></svg>',
-    b: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22.5 8c-3.04 0-5.5 2.46-5.5 5.5 0 1.22.4 2.34 1.08 3.25C15.68 18.25 14 21.17 14 24.5c0 4.14 2.86 7.6 6.75 8.35L20 36h5l-.75-3.15c3.89-.75 6.75-4.21 6.75-8.35 0-3.33-1.68-6.25-4.08-7.75.68-.91 1.08-2.03 1.08-3.25 0-3.04-2.46-5.5-5.5-5.5z"/></svg>',
-    q: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M9 26c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3S9 24 9 26zm13.5-14c-2 0-3.5 1.5-3.5 3.5s1.5 3.5 3.5 3.5 3.5-1.5 3.5-3.5-1.5-3.5-3.5-3.5zm13.5 14c0 2 1.5 3 3.5 3s3.5-1 3.5-3-1.5-3-3.5-3-1.5 1-3.5 3zM11 38h23v-4H11v4z"/></svg>',
-    k: '<svg class="piece" viewBox="0 0 45 45"><path fill="#1a2e22" stroke="#8ae87f" stroke-width="1.5" d="M22.5 6v4m-2-2h4m-2 4c-4 0-7 3-7 7 0 3 2 6 5 7v10h8V26c3-1 5-4 5-7 0-4-3-7-7-7z"/></svg>'
-  }
-};
 
 function renderBoard() {
   const boardEl = document.getElementById('chessboard');
@@ -473,7 +358,9 @@ function renderBoard() {
 
       const piece = board[r][c];
       if (piece) {
-        squareEl.innerHTML = PIECE_SVGS[piece.color][piece.type];
+        const pieceEl = document.createElement('div');
+        pieceEl.className = `piece ${piece.color}${piece.type.toUpperCase()}`;
+        squareEl.appendChild(pieceEl);
       }
 
       squareEl.addEventListener('click', () => handleSquareClick(squareName));
@@ -491,23 +378,17 @@ function handleSquareClick(sq) {
   }
 
   if (selectedSquare) {
-    // Attempt move
     const move = game.move({ from: selectedSquare, to: sq, promotion: 'q' });
     if (move) {
-      if (move.captured) sfx.playCapture(); else sfx.playMove();
+      sfx.playMove();
       selectedSquare = null;
       clearHighlights();
       renderBoard();
-      
-      // Auto-responder AI Move (Simulated LinkedIn Opponent)
-      if (!game.game_over()) {
-        setTimeout(makeAIMove, 800);
-      }
+      if (!game.game_over()) setTimeout(makeAIMove, 700);
       return;
     }
   }
 
-  // Select piece
   const piece = game.get(sq);
   if (piece && piece.color === game.turn()) {
     selectedSquare = sq;
@@ -517,63 +398,44 @@ function handleSquareClick(sq) {
 
 function highlightSquare(sq) {
   clearHighlights();
-  const el = document.querySelector(`[data-square="${sq}"]`);
-  if (el) el.classList.add('selected');
-
-  const moves = game.moves({ square: sq, verbose: true });
-  moves.forEach(m => {
-    const validEl = document.querySelector(`[data-square="${m.to}"]`);
-    if (validEl) validEl.classList.add('valid-move');
+  document.querySelector(`[data-square="${sq}"]`)?.classList.add('selected');
+  game.moves({ square: sq, verbose: true }).forEach(m => {
+    document.querySelector(`[data-square="${m.to}"]`)?.classList.add('valid-move');
   });
 }
 
 function clearHighlights() {
-  document.querySelectorAll('.square').forEach(el => {
-    el.classList.remove('selected', 'valid-move');
-  });
+  document.querySelectorAll('.square').forEach(el => el.classList.remove('selected', 'valid-move'));
 }
 
 function makeAIMove() {
   const moves = game.moves({ verbose: true });
   if (moves.length === 0) return;
-  const randomMove = moves[Math.floor(Math.random() * moves.length)];
-  const move = game.move(randomMove);
-  if (move.captured) sfx.playCapture(); else sfx.playMove();
+  game.move(moves[Math.floor(Math.random() * moves.length)]);
+  sfx.playMove();
   renderBoard();
 }
 
 function updateStatus() {
   const statusEl = document.getElementById('game-status');
-  if (game.in_checkmate()) {
-    statusEl.innerText = "Checkmate! Game Over.";
-  } else if (game.in_draw()) {
-    statusEl.innerText = "Draw Game!";
-  } else if (game.in_check()) {
-    statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} is in Check!`;
-  } else {
-    statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} to move.`;
+  if (game.in_checkmate()) statusEl.innerText = "Checkmate!";
+  else if (game.in_check()) statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} is in Check!`;
+  else statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} to move.`;
+}
+
+function changeTheme(themeKey) {
+  document.body.className = '';
+  if (themeKey !== 'emerald') {
+    document.body.classList.add(`theme-${themeKey}`);
   }
 }
 
-function sendChat(txt) {
+function sendChat(msg) {
   const box = document.getElementById('chat-messages');
-  box.innerHTML += `<div class="chat-msg"><span class="author">You:</span> ${txt}</div>`;
+  box.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
   box.scrollTop = box.scrollHeight;
-  
-  // Simulated responses
-  setTimeout(() => {
-    const replies = [
-      "Thanks! Likewise.",
-      "Interesting tactic. Are you open to a quick call next week?",
-      "Great match! Let's definitely connect on LinkedIn."
-    ];
-    const reply = replies[Math.floor(Math.random() * replies.length)];
-    box.innerHTML += `<div class="chat-msg"><span class="author" style="color:var(--cyan-neon)">Opponent:</span> ${reply}</div>`;
-    box.scrollTop = box.scrollHeight;
-  }, 1200);
 }
 
-// Initialize
 renderBoard();
 </script>
 </body>
