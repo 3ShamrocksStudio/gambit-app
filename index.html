@@ -3,123 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>E4 CONNECT | LinkedIn Professional Tactical Chess</title>
+<title>E4 CONNECT | Executive Tactical Networking</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- Strict Chess Rules Engine -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
 <style>
-/* ── THEME DEFINITIONS ────────────────────────────────── */
+/* ── NATURAL & MINIMALIST THEMES ────────────────────────── */
 :root {
-  /* Default Theme: 3SDS Emerald Glass */
-  --bg-deep: #030806;
-  --bg-surface: #0a140f;
-  --bg-glass: rgba(14, 26, 20, 0.85);
-  --primary-accent: #8ae87f;
-  --primary-glow: rgba(138, 232, 127, 0.25);
-  --text-main: #f0f7f2;
-  --text-muted: rgba(240, 247, 242, 0.65);
-  --border-glass: rgba(138, 232, 127, 0.2);
-  --board-light: #2b3a31;
-  --board-dark: #121e17;
-  --square-select: rgba(0, 229, 255, 0.45);
-  --square-move: rgba(138, 232, 127, 0.5);
+  /* Default: Warm Cream & Natural Oak */
+  --bg-app: #f7f6f2;
+  --bg-card: #ffffff;
+  --border-subtle: #e2e0d8;
+  --text-primary: #1c1917;
+  --text-muted: #78716c;
+  --accent-main: #44403c;
+  --board-light: #f0ebdf;
+  --board-dark: #b8a99a;
+  --square-select: rgba(180, 140, 100, 0.35);
+  --square-move: rgba(120, 110, 100, 0.4);
+  --shadow-soft: 0 4px 20px -2px rgba(28, 25, 23, 0.05);
 }
 
-body.theme-executive {
-  --bg-deep: #080c14;
-  --bg-surface: #0f172a;
-  --bg-glass: rgba(15, 23, 42, 0.85);
-  --primary-accent: #f59e0b;
-  --primary-glow: rgba(245, 158, 11, 0.25);
-  --text-main: #f8fafc;
-  --text-muted: rgba(248, 250, 252, 0.65);
-  --border-glass: rgba(245, 158, 11, 0.2);
-  --board-light: #334155;
-  --board-dark: #0f172a;
-  --square-select: rgba(56, 189, 248, 0.45);
-  --square-move: rgba(245, 158, 11, 0.5);
+body.theme-slate {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --accent-main: #334155;
+  --board-light: #e2e8f0;
+  --board-dark: #94a3b8;
+  --square-select: rgba(148, 163, 184, 0.4);
+  --square-move: rgba(71, 85, 105, 0.35);
 }
 
-body.theme-monochrome {
-  --bg-deep: #0f0f11;
-  --bg-surface: #18181b;
-  --bg-glass: rgba(24, 24, 27, 0.85);
-  --primary-accent: #ffffff;
-  --primary-glow: rgba(255, 255, 255, 0.15);
-  --text-main: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.6);
-  --border-glass: rgba(255, 255, 255, 0.15);
-  --board-light: #3f3f46;
-  --board-dark: #18181b;
-  --square-select: rgba(161, 161, 170, 0.5);
-  --square-move: rgba(255, 255, 255, 0.6);
+body.theme-dark-minimal {
+  --bg-app: #121212;
+  --bg-card: #1e1e1e;
+  --border-subtle: #2e2e2e;
+  --text-primary: #f5f5f5;
+  --text-muted: #a1a1aa;
+  --accent-main: #e4e4e7;
+  --board-light: #2a2a2a;
+  --board-dark: #1a1a1a;
+  --square-select: rgba(255, 255, 255, 0.2);
+  --square-move: rgba(255, 255, 255, 0.3);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: var(--bg-deep);
-  color: var(--text-main);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.25s ease;
 }
 
-/* ── HEADER & CONTROL BAR ────────────────────────────── */
-.app-header {
-  height: 72px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-glass);
+/* ── APP HEADER ───────────────────────────────────────── */
+.header {
+  height: 64px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
+  padding: 0 32px;
 }
-.brand-logo {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: -0.02em;
+.brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
 }
-.brand-badge {
-  background: var(--primary-accent);
-  color: #000;
+.brand-pill {
   font-size: 10px;
-  font-weight: 800;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
   padding: 2px 8px;
-  border-radius: 99px;
-  text-transform: uppercase;
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
 }
-.controls-group { display: flex; align-items: center; gap: 12px; }
-.theme-select, .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-glass);
-  color: var(--text-main);
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-family: 'Space Grotesk', sans-serif;
+.header-actions { display: flex; gap: 12px; align-items: center; }
+
+.select-clean {
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
   font-size: 13px;
-  cursor: pointer;
   outline: none;
+  cursor: pointer;
 }
 
-/* ── MAIN LAYOUT ─────────────────────────────────────── */
+/* ── LAYOUT WORKSPACE ─────────────────────────────────── */
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: 300px 1fr 320px;
+  grid-template-columns: 320px 1fr 320px;
   gap: 24px;
-  max-width: 1400px;
+  max-width: 1360px;
   width: 100%;
   margin: 0 auto;
   padding: 24px;
@@ -128,242 +122,237 @@ body {
   .workspace { grid-template-columns: 1fr; }
 }
 
-.panel-card {
-  background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-glass);
-  border-radius: 18px;
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
   padding: 20px;
+  box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.panel-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--primary-accent);
+.panel-header {
+  font-size: 12px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
 }
 
 /* ── CHESSBOARD ──────────────────────────────────────── */
-.board-stage {
+.board-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
 }
-.player-strip {
+
+.player-card {
   width: 100%;
-  max-width: 540px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-glass);
-  padding: 10px 16px;
-  border-radius: 12px;
+  max-width: 520px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.player-info { display: flex; align-items: center; gap: 10px; }
-.player-avatar {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: var(--primary-accent); color: #000;
+.player-details { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #d6d3d1;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 14px;
+  font-weight: 700; font-size: 13px; color: #44403c;
 }
 
-#chessboard {
-  width: min(100%, 540px);
+#board {
+  width: min(100%, 520px);
   aspect-ratio: 1;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border-radius: 14px;
+  border-radius: 8px;
   overflow: hidden;
-  border: 2px solid var(--border-glass);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px var(--primary-glow);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
 }
+
 .square {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  font-size: clamp(28px, 6vw, 42px);
   user-select: none;
+  cursor: pointer;
 }
 .square.light { background-color: var(--board-light); }
 .square.dark { background-color: var(--board-dark); }
 .square.selected { background-color: var(--square-select) !important; }
 .square.valid-move::after {
-  content: ''; position: absolute; width: 14px; height: 14px;
-  background: var(--primary-accent); border-radius: 50%; opacity: 0.75;
+  content: ''; position: absolute; width: 12px; height: 12px;
+  background: var(--accent-main); border-radius: 50%; opacity: 0.5;
 }
 
-/* Standard HD Pieces (Cburnett Set) */
+/* Crisp render for chess pieces */
 .piece {
-  width: 85%; height: 85%;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  transition: transform 0.12s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
-.piece:hover { transform: scale(1.08); }
+.piece.w { color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.piece.b { color: #1c1917; text-shadow: 0 1px 1px rgba(255,255,255,0.2); }
 
-/* White Pieces */
-.piece.wP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'); }
-.piece.wR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg'); }
-.piece.wN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg'); }
-.piece.wB { background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg'); }
-.piece.wQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg'); }
-.piece.wK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg'); }
-
-/* Black Pieces */
-.piece.bP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'); }
-.piece.bR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/ff/ff/Chess_rdt45.svg'); }
-.piece.bN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/ef/ef/Chess_ndt45.svg'); }
-.piece.bB { background-image: url('https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg'); }
-.piece.bQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg'); }
-.piece.bK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'); }
-
-/* ── SIDEBARS & CHAT ─────────────────────────────────── */
-.btn-primary {
-  background: var(--primary-accent);
-  color: #000; border: none; padding: 12px; border-radius: 10px;
-  font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-  cursor: pointer; transition: transform 0.2s;
+/* ── UI ELEMENTS ──────────────────────────────────────── */
+.btn {
+  background: var(--text-primary);
+  color: var(--bg-card);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
 }
-.btn-primary:hover { transform: translateY(-2px); }
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
 
 .chat-box {
-  flex: 1; background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.05); border-radius: 10px;
-  padding: 10px; display: flex; flex-direction: column; gap: 8px;
-  max-height: 240px; overflow-y: auto; font-size: 13px;
+  flex: 1;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  max-height: 220px;
+  overflow-y: auto;
 }
-.status-msg { text-align: center; color: var(--primary-accent); font-weight: 600; font-size: 14px; }
 </style>
 </head>
 <body>
 
-<header class="app-header">
-  <div class="brand-logo">
+<header class="header">
+  <div class="brand">
     <span>E4 CONNECT</span>
-    <span class="brand-badge">3SDS Studio</span>
+    <span class="brand-badge brand-pill">Networking via Tactics</span>
   </div>
-  <div class="controls-group">
-    <!-- Theme Switcher -->
-    <select class="theme-select" id="theme-switcher" onchange="changeTheme(this.value)">
-      <option value="emerald">🌿 Emerald Glass</option>
-      <option value="executive">🫐 Midnight Executive</option>
-      <option value="monochrome">⚡ Monochrome Pro</option>
+  <div class="header-actions">
+    <select class="select-clean" onchange="switchTheme(this.value)">
+      <option value="cream">🌾 Warm Natural</option>
+      <option value="slate">🐘 Slate Minimal</option>
+      <option value="dark-minimal">🌙 Dark Minimal</option>
     </select>
-    <button class="btn-secondary">🔗 Direct Invite</button>
   </div>
 </header>
 
 <main class="workspace">
   
-  <!-- LEFT: MATCHMAKING -->
-  <aside class="panel-card">
-    <div class="panel-title">🎯 Professional Match</div>
-    
+  <!-- LEFT PANEL: DIFFERENTIATION / MATCHMAKING -->
+  <aside class="panel">
+    <div class="panel-header">Networking Mandate</div>
+    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+      Skip cold emails. Play a quick game with aligned founders and decision-makers.
+    </div>
+
     <div>
-      <label style="font-size: 12px; color: var(--text-muted);">Target Industry</label>
-      <select class="theme-select" style="width: 100%; margin-top: 4px;">
+      <label style="font-size: 11px; font-weight:700; color: var(--text-muted); text-transform:uppercase;">Target Match</label>
+      <select class="select-clean" style="width:100%; margin-top:6px;">
+        <option>Series A / B Investors</option>
         <option>AI & Tech Founders</option>
-        <option>Venture Capital</option>
-        <option>Product & Design</option>
+        <option>Design & Product Leaders</option>
       </select>
     </div>
 
-    <button class="btn-primary" style="margin-top: 8px;">⚡ Find Match (Skip InMail)</button>
+    <button class="btn">Match Player</button>
   </aside>
 
-  <!-- CENTER: BOARD -->
-  <section class="board-stage">
-    <div class="player-strip">
-      <div class="player-info">
-        <div class="player-avatar" style="background:#38bdf8;">VC</div>
+  <!-- CENTER PANEL: CHESSBOARD -->
+  <section class="board-container">
+    <div class="player-card">
+      <div class="player-details">
+        <div class="avatar" style="background:#e2e8f0;">VC</div>
         <div>
-          <div style="font-weight: 700; font-size: 14px;">Tech Investor [Incognito]</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Seed & Series A · AI Focus</div>
+          <div style="font-weight:600; font-size:13px;">Partner @ Ventures</div>
+          <div style="font-size:11px; color:var(--text-muted);">Consumer Tech · Active Investor</div>
         </div>
       </div>
-      <div style="font-family: 'Space Grotesk'; font-weight: 700;">10:00</div>
+      <span style="font-size:13px; font-weight:600;">10:00</span>
     </div>
 
-    <div id="chessboard"></div>
+    <div id="board"></div>
 
-    <div class="player-strip">
-      <div class="player-info">
-        <div class="player-avatar">YOU</div>
+    <div class="player-card">
+      <div class="player-details">
+        <div class="avatar">YOU</div>
         <div>
-          <div style="font-weight: 700; font-size: 14px;">Your Profile</div>
-          <div style="font-size: 11px; color: var(--text-muted);">Product Strategist</div>
+          <div style="font-weight:600; font-size:13px;">Your Profile</div>
+          <div style="font-size:11px; color:var(--text-muted);">Product Lead</div>
         </div>
       </div>
-      <div style="font-family: 'Space Grotesk'; font-weight: 700;">10:00</div>
+      <span style="font-size:13px; font-weight:600;">10:00</span>
     </div>
 
-    <div class="status-msg" id="game-status">White to move. Select a piece.</div>
+    <div id="status" style="font-size:13px; font-weight:600; color:var(--text-muted);">White to move</div>
   </section>
 
-  <!-- RIGHT: CHAT & CONNECT -->
-  <aside class="panel-card">
-    <div class="panel-title">💬 Game Chat</div>
-    <div class="chat-box" id="chat-messages">
-      <div><strong style="color:var(--primary-accent)">System:</strong> Game started. Strict rules active.</div>
+  <!-- RIGHT PANEL: GAME CONTEXT & CHAT -->
+  <aside class="panel">
+    <div class="panel-header">Game & Pitch Chat</div>
+    <div class="chat-box" id="chat">
+      <div style="color:var(--text-muted); font-size:12px;">Game initialized. High quality unicode pieces active.</div>
     </div>
-    <div style="display:flex; gap:6px;">
-      <button class="btn-secondary" style="flex:1; font-size:11px;" onclick="sendChat('Good luck!')">👋 Good luck</button>
-      <button class="btn-secondary" style="flex:1; font-size:11px;" onclick="sendChat('Great move!')">🎯 Great move</button>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+      <button class="btn btn-outline" style="font-size:11px;" onclick="sendQuickChat('Good luck!')">Good luck</button>
+      <button class="btn btn-outline" style="font-size:11px;" onclick="sendQuickChat('Interesting move!')">Interesting</button>
     </div>
   </aside>
 
 </main>
 
 <script>
-/* ── AUDIO SFX ────────────────────────────────────────── */
-class SoundEngine {
-  constructor() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-  playMove() {
-    let o = this.ctx.createOscillator(), g = this.ctx.createGain();
-    o.frequency.setValueAtTime(300, this.ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.08);
-    g.gain.setValueAtTime(0.2, this.ctx.currentTime);
-    g.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-    o.connect(g); g.connect(this.ctx.destination);
-    o.start(); o.stop(this.ctx.currentTime + 0.08);
-  }
-}
-const sfx = new SoundEngine();
+/* ── UNICODE PIECE DICTIONARY (Bulletproof Rendering) ── */
+const UNICODE_PIECES = {
+  'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+  'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+};
 
-/* ── CHESS LOGIC ─────────────────────────────────────── */
 const game = new Chess();
 let selectedSquare = null;
 
 function renderBoard() {
-  const boardEl = document.getElementById('chessboard');
+  const boardEl = document.getElementById('board');
   boardEl.innerHTML = '';
   const board = game.board();
 
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
-      const squareName = String.fromCharCode(97 + c) + (8 - r);
+      const sqName = String.fromCharCode(97 + c) + (8 - r);
       const squareEl = document.createElement('div');
       squareEl.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-      squareEl.dataset.square = squareName;
+      squareEl.dataset.square = sqName;
 
       const piece = board[r][c];
       if (piece) {
         const pieceEl = document.createElement('div');
-        pieceEl.className = `piece ${piece.color}${piece.type.toUpperCase()}`;
+        pieceEl.className = `piece ${piece.color}`;
+        // Precise Unicode Mapping
+        const key = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
+        pieceEl.innerText = UNICODE_PIECES[key];
         squareEl.appendChild(pieceEl);
       }
 
-      squareEl.addEventListener('click', () => handleSquareClick(squareName));
+      squareEl.addEventListener('click', () => handleSquareClick(sqName));
       boardEl.appendChild(squareEl);
     }
   }
@@ -380,11 +369,10 @@ function handleSquareClick(sq) {
   if (selectedSquare) {
     const move = game.move({ from: selectedSquare, to: sq, promotion: 'q' });
     if (move) {
-      sfx.playMove();
       selectedSquare = null;
       clearHighlights();
       renderBoard();
-      if (!game.game_over()) setTimeout(makeAIMove, 700);
+      if (!game.game_over()) setTimeout(makeBotMove, 600);
       return;
     }
   }
@@ -408,32 +396,31 @@ function clearHighlights() {
   document.querySelectorAll('.square').forEach(el => el.classList.remove('selected', 'valid-move'));
 }
 
-function makeAIMove() {
+function makeBotMove() {
   const moves = game.moves({ verbose: true });
   if (moves.length === 0) return;
   game.move(moves[Math.floor(Math.random() * moves.length)]);
-  sfx.playMove();
   renderBoard();
 }
 
 function updateStatus() {
-  const statusEl = document.getElementById('game-status');
+  const statusEl = document.getElementById('status');
   if (game.in_checkmate()) statusEl.innerText = "Checkmate!";
   else if (game.in_check()) statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} is in Check!`;
-  else statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} to move.`;
+  else statusEl.innerText = `${game.turn() === 'w' ? 'White' : 'Black'} turn`;
 }
 
-function changeTheme(themeKey) {
+function switchTheme(theme) {
   document.body.className = '';
-  if (themeKey !== 'emerald') {
-    document.body.classList.add(`theme-${themeKey}`);
+  if (theme !== 'cream') {
+    document.body.classList.add(`theme-${theme}`);
   }
 }
 
-function sendChat(msg) {
-  const box = document.getElementById('chat-messages');
-  box.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
-  box.scrollTop = box.scrollHeight;
+function sendQuickChat(msg) {
+  const chat = document.getElementById('chat');
+  chat.innerHTML += `<div style="margin-top:4px;"><strong>You:</strong> ${msg}</div>`;
+  chat.scrollTop = chat.scrollHeight;
 }
 
 renderBoard();
