@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ROOKIE & KING | Executive Tactical Networking</title>
+<title>ROOKIE & KING | Live Gamified Networking</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,45 +13,47 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
 <style>
+/* ── COLOR PALETTES ────────────────────────────────────── */
 :root {
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+  /* Dynamic Neon Sunset Theme */
+  --bg-gradient: linear-gradient(135deg, #0d0118 0%, #2a0845 50%, #641442 100%);
   --panel-bg: rgba(255, 255, 255, 0.08);
-  --panel-border: rgba(255, 255, 255, 0.18);
-  --accent-primary: #f43f5e;
-  --accent-secondary: #fb923c;
-  --accent-glow: rgba(244, 63, 94, 0.4);
+  --panel-border: rgba(255, 255, 255, 0.2);
+  --accent-primary: #ff2a85;
+  --accent-secondary: #ff9f43;
+  --accent-glow: rgba(255, 42, 133, 0.5);
   --text-main: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.7);
   
   --board-light: #f3e8ff;
   --board-dark: #8b5cf6;
-  --square-highlight: rgba(251, 146, 60, 0.65);
-  --move-dot: #f43f5e;
+  --square-highlight: rgba(255, 159, 67, 0.8);
+  --move-dot: #ff2a85;
 }
 
 body.theme-cyber {
-  --bg-gradient: linear-gradient(135deg, #022c22 0%, #0f172a 50%, #0284c7 100%);
+  --bg-gradient: linear-gradient(135deg, #011627 0%, #002244 50%, #0077b6 100%);
   --panel-bg: rgba(255, 255, 255, 0.08);
-  --panel-border: rgba(56, 189, 248, 0.25);
-  --accent-primary: #38bdf8;
-  --accent-secondary: #34d399;
-  --accent-glow: rgba(56, 189, 248, 0.4);
+  --panel-border: rgba(0, 180, 216, 0.3);
+  --accent-primary: #00f5d4;
+  --accent-secondary: #7b2cbf;
+  --accent-glow: rgba(0, 245, 212, 0.5);
   --board-light: #e0f2fe;
   --board-dark: #0284c7;
-  --square-highlight: rgba(52, 211, 153, 0.6);
-  --move-dot: #38bdf8;
+  --square-highlight: rgba(0, 245, 212, 0.7);
+  --move-dot: #00f5d4;
 }
 
 body.theme-electric {
-  --bg-gradient: linear-gradient(135deg, #18002e 0%, #4c0519 50%, #831843 100%);
+  --bg-gradient: linear-gradient(135deg, #12002b 0%, #310055 50%, #870058 100%);
   --panel-bg: rgba(255, 255, 255, 0.08);
-  --panel-border: rgba(244, 114, 182, 0.25);
+  --panel-border: rgba(244, 114, 182, 0.3);
   --accent-primary: #f472b6;
   --accent-secondary: #facc15;
-  --accent-glow: rgba(244, 114, 182, 0.4);
+  --accent-glow: rgba(244, 114, 182, 0.5);
   --board-light: #fce7f3;
   --board-dark: #db2777;
-  --square-highlight: rgba(250, 204, 21, 0.65);
+  --square-highlight: rgba(250, 204, 21, 0.8);
   --move-dot: #f472b6;
 }
 
@@ -67,6 +69,7 @@ body {
   overflow-x: hidden;
 }
 
+/* ── HEADER ───────────────────────────────────────────── */
 .app-header {
   height: 72px;
   padding: 0 32px;
@@ -74,13 +77,13 @@ body {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--panel-border);
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(16px);
 }
 .brand-title {
   font-family: 'Outfit', sans-serif;
   font-weight: 900;
-  font-size: 24px;
+  font-size: 26px;
   letter-spacing: -0.02em;
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
   -webkit-background-clip: text;
@@ -92,18 +95,18 @@ body {
 .brand-tag {
   font-size: 10px;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .controls-bar { display: flex; gap: 12px; align-items: center; }
 .theme-select {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid var(--panel-border);
   color: #fff;
   padding: 8px 16px;
@@ -114,6 +117,7 @@ body {
   cursor: pointer;
 }
 
+/* ── LAYOUT ───────────────────────────────────────────── */
 .workspace {
   flex: 1;
   display: grid;
@@ -131,13 +135,13 @@ body {
 .card-panel {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  backdrop-filter: blur(16px);
-  border-radius: 20px;
-  padding: 20px;
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  gap: 18px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.4);
 }
 
 .section-label {
@@ -149,6 +153,7 @@ body {
   color: var(--accent-secondary);
 }
 
+/* ── GAME BOARD ───────────────────────────────────────── */
 .board-stage {
   display: flex;
   flex-direction: column;
@@ -161,17 +166,17 @@ body {
 .player-strip {
   width: 100%;
   max-width: 520px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
-  padding: 10px 18px;
+  border-radius: 16px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .player-profile { display: flex; align-items: center; gap: 12px; }
 .avatar-ring {
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   border-radius: 50%;
   background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
   padding: 2px;
@@ -179,7 +184,7 @@ body {
 }
 .avatar-inner {
   width: 100%; height: 100%;
-  background: #000;
+  background: #111;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 12px;
@@ -191,10 +196,10 @@ body {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px var(--accent-glow);
+  border: 4px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 50px var(--accent-glow);
 }
 
 .square {
@@ -210,13 +215,14 @@ body {
 .square.selected { background-color: var(--square-highlight) !important; }
 
 .square.valid-move::after {
-  content: ''; position: absolute; width: 16px; height: 16px;
+  content: ''; position: absolute; width: 18px; height: 18px;
   background: var(--move-dot); border-radius: 50%; opacity: 0.9;
-  box-shadow: 0 0 10px var(--move-dot);
+  box-shadow: 0 0 12px var(--move-dot);
 }
 
+/* SOLID HIGH-CONTRAST VECTOR PIECES */
 .piece {
-  width: 82%; height: 82%;
+  width: 85%; height: 85%;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -224,6 +230,7 @@ body {
 }
 .piece:hover { transform: scale(1.15); }
 
+/* ALL PIECES GUARANTEED SOLID VECTOR RENDERS */
 .piece.wP { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'); }
 .piece.wR { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg'); }
 .piece.wN { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg'); }
@@ -238,32 +245,40 @@ body {
 .piece.bQ { background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg'); }
 .piece.bK { background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'); }
 
+/* ── GAMIFICATION & INTERACTION ──────────────────────── */
 .btn-action {
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-  color: #fff; border: none; padding: 12px; border-radius: 12px;
-  font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px;
-  cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 .btn-action:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px var(--accent-glow);
+  box-shadow: 0 10px 25px var(--accent-glow);
 }
 
 .milestone-box {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 12px;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 13px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .milestone-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  opacity: 0.5;
+  gap: 10px;
+  opacity: 0.4;
+  transition: opacity 0.3s;
 }
 .milestone-item.unlocked {
   opacity: 1;
@@ -271,27 +286,32 @@ body {
   font-weight: 700;
 }
 
-.reaction-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.reaction-pills { display: flex; gap: 8px; flex-wrap: wrap; }
 .pill-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid var(--panel-border);
-  color: #fff; padding: 6px 12px; border-radius: 20px;
-  font-size: 12px; font-weight: 700; cursor: pointer;
-  transition: background 0.2s;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
 }
-.pill-btn:hover { background: rgba(255, 255, 255, 0.25); }
+.pill-btn:hover { background: rgba(255, 255, 255, 0.25); transform: scale(1.05); }
 
 .floating-reaction {
   position: absolute;
   animation: floatUp 2s ease-out forwards;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: #fff;
   pointer-events: none;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8);
 }
 @keyframes floatUp {
   0% { opacity: 1; transform: translateY(0) scale(0.8); }
-  100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-100px) scale(1.3); }
 }
 </style>
 </head>
@@ -300,11 +320,11 @@ body {
 <header class="app-header">
   <div class="brand-title">
     <span>ROOKIE & KING</span>
-    <span class="brand-tag">Professional Tactics</span>
+    <span class="brand-tag">Tactical Networking</span>
   </div>
   <div class="controls-bar">
     <select class="theme-select" onchange="switchTheme(this.value)">
-      <option value="sunset">🌅 Sunset Glow</option>
+      <option value="sunset">🌅 Neon Sunset</option>
       <option value="cyber">⚡ Cyber Turquoise</option>
       <option value="electric">🔮 Electric Magenta</option>
     </select>
@@ -314,10 +334,10 @@ body {
 <main class="workspace">
   
   <aside class="card-panel">
-    <div class="section-label">🎯 Executive Matchmaking</div>
+    <div class="section-label">🎯 Targeted Matchmaking</div>
     
     <div>
-      <label style="font-size:11px; color:var(--text-muted); font-weight:700;">PLAY FOR</label>
+      <label style="font-size:11px; color:var(--text-muted); font-weight:700;">NETWORKING INTENT</label>
       <select class="theme-select" style="width:100%; margin-top:4px;">
         <option>🚀 Pitching a Startup</option>
         <option>💼 Hiring Top Talent</option>
@@ -326,7 +346,7 @@ body {
     </div>
 
     <div>
-      <label style="font-size:11px; color:var(--text-muted); font-weight:700;">TARGET INDUSTRY</label>
+      <label style="font-size:11px; color:var(--text-muted); font-weight:700;">LINKEDIN INDUSTRY</label>
       <select class="theme-select" style="width:100%; margin-top:4px;">
         <option>Venture Capital & Angels</option>
         <option>AI / LLM Engineers</option>
@@ -334,10 +354,11 @@ body {
       </select>
     </div>
 
-    <button class="btn-action">⚡ Find Strategic Game</button>
+    <button class="btn-action">⚡ Find Strategic Match</button>
   </aside>
 
   <section class="board-stage" id="board-stage">
+    
     <div class="player-strip">
       <div class="player-profile">
         <div class="avatar-ring"><div class="avatar-inner">VC</div></div>
@@ -355,52 +376,54 @@ body {
       <div class="player-profile">
         <div class="avatar-ring"><div class="avatar-inner">YOU</div></div>
         <div>
-          <div style="font-weight:700; font-size:14px;">Your Profile</div>
+          <div style="font-weight:700; font-size:14px;">Your LinkedIn Profile</div>
           <div style="font-size:11px; color:var(--text-muted);">Founder & CEO</div>
         </div>
       </div>
       <div style="font-family:'Outfit'; font-weight:800;">10:00</div>
     </div>
+
   </section>
 
   <aside class="card-panel">
-    <div class="section-label">🏆 Connection Milestones</div>
+    <div class="section-label">🏆 Unlocked Connections</div>
     
     <div class="milestone-box">
       <div class="milestone-item unlocked" id="m1">
         <span>✅ Move 1:</span> LinkedIn Handles Disclosed
       </div>
       <div class="milestone-item" id="m2">
-        <span>🔒 Move 5:</span> Elevator Pitch Unlocked
+        <span>🔒 Move 5:</span> Elevator Pitch Card Unlocked
       </div>
       <div class="milestone-item" id="m3">
-        <span>🔒 Capture Knight:</span> Direct Calendar Link Unlocked
+        <span>🔒 Capture Piece:</span> Direct Calendar Link Unlocked
       </div>
     </div>
 
-    <div class="section-label" style="margin-top:8px;">🔥 Quick Reactions</div>
+    <div class="section-label" style="margin-top:8px;">🔥 Live Board Reactions</div>
     <div class="reaction-pills">
       <button class="pill-btn" onclick="triggerReaction('🔥 Bold Move!')">🔥 Bold Move</button>
       <button class="pill-btn" onclick="triggerReaction('💡 Genius!')">💡 Genius</button>
       <button class="pill-btn" onclick="triggerReaction('☕ Let\'s Connect')">☕ Coffee?</button>
-      <button class="pill-btn" onclick="triggerReaction('🚀 Pitch Me')">🚀 Pitch Me</button>
+      <button class="pill-btn" onclick="triggerReaction('🚀 Pitch Me!')">🚀 Pitch Me</button>
     </div>
 
     <div id="game-status" style="font-size:13px; font-weight:700; color:var(--accent-secondary); text-align:center; margin-top:8px;">
-      White to move. Select your pawn!
+      White to move. Select your piece!
     </div>
   </aside>
 
 </main>
 
 <script>
+/* ── AUDIO SYNTHESIZER ── */
 class SoundFx {
   constructor() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
   playMove() {
     let o = this.ctx.createOscillator(), g = this.ctx.createGain();
     o.type = 'sine';
-    o.frequency.setValueAtTime(400, this.ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.08);
+    o.frequency.setValueAtTime(420, this.ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.08);
     g.gain.setValueAtTime(0.3, this.ctx.currentTime);
     g.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
     o.connect(g); g.connect(this.ctx.destination);
@@ -409,6 +432,7 @@ class SoundFx {
 }
 const sfx = new SoundFx();
 
+/* ── CHESS LOGIC ── */
 const game = new Chess();
 let selectedSquare = null;
 let moveCount = 0;
@@ -455,12 +479,12 @@ function handleSquareClick(sq) {
       clearHighlights();
       renderBoard();
       
-      if (move.captured === 'n') {
+      if (move.captured) {
         document.getElementById('m3').classList.add('unlocked');
-        document.getElementById('m3').innerHTML = '<span>✅ Knight Captured:</span> Direct Calendar Link Unlocked!';
+        document.getElementById('m3').innerHTML = '<span>✅ Piece Captured:</span> Direct Calendar Link Unlocked!';
       }
 
-      if (!game.game_over()) setTimeout(makeAIMove, 650);
+      if (!game.game_over()) setTimeout(makeAIMove, 600);
       return;
     }
   }
