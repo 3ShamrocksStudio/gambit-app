@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ROOKIE & KING™ | The High-Stakes Attention Marketplace</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -215,8 +216,8 @@
                     </div>
                 </div>
                 <div class="text-right">
-                    <div class="text-[10px] font-mono text-gray-400">MOVE REQUIREMENT</div>
-                    <div class="text-xs font-mono font-bold text-electricOrange" id="puzzleObjective">CHECKMATE IN 2</div>
+                    <div class="text-[10px] font-mono text-gray-400">GAME GOAL</div>
+                    <div class="text-xs font-mono font-bold text-electricOrange" id="puzzleObjective">CHECKMATE THE BOARD</div>
                 </div>
             </div>
 
@@ -497,95 +498,95 @@
             }
         }
 
-        // CHESSBOARD PUZZLE MATRIX (Simplified 3-Move Tactical State)
-        const boardLayout = [
-            ['', '', '', '', '♚', '', '', ''],
-            ['', '', '', '', '', '', '♟', '♟'],
-            ['', '', '', '', '', '', '', ''],
-            ['', '', '', '♛', '', '', '', ''],
-            ['', '', '', '', '♞', '', '', ''],
-            ['', '', '', '', '', '♘', '', ''],
-            ['♙', '♙', '', '', '', '♙', '♙', '♙'],
-            ['', '', '', '', '♔', '', '', '♖']
-        ];
+        // ─── REAL CHESS ENGINE (chess.js 0.13.x) + computer opponent ───
+        let game = null, selectedSq = null;
+        const FILES = ['a','b','c','d','e','f','g','h'];
+        const GLYPH = { w:{k:'♔',q:'♕',r:'♖',b:'♗',n:'♘',p:'♙'}, b:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'} };
+        function mkChess(fen){ let C=window.Chess; C=(typeof C==='function')?C:(C&&C.Chess); return fen? new C(fen): new C(); }
+        function sqName(r,c){ return FILES[c] + (8 - r); }   // r0 = rank 8
+        function persist(){ try{ localStorage.setItem('rk_fen', game.fen()); }catch(e){} }
+        function pickRandom(a){ return a&&a.length ? a[Math.floor(Math.random()*a.length)] : null; }
 
-        function renderBoard() {
-            const boardEl = document.getElementById('board');
-            boardEl.innerHTML = '';
-
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const square = document.createElement('div');
-                    const isDark = (r + c) % 2 === 1;
-                    square.className = `board-square ${isDark ? 'dark' : 'light'} flex items-center justify-center cursor-pointer rounded-sm`;
-                    square.dataset.row = r;
-                    square.dataset.col = c;
-
-                    // Add Hinting for Winning Move Sequence
-                    if (puzzleStep === 0 && r === 5 && c === 5) square.classList.add('hint'); // White Knight Move
-                    if (puzzleStep === 1 && r === 7 && c === 7) square.classList.add('hint'); // White Rook Checkmate
-
-                    const pieceSymbol = boardLayout[r][c];
-                    if (pieceSymbol) {
-                        const pieceEl = document.createElement('span');
-                        pieceEl.className = 'chess-piece text-xl sm:text-2xl font-bold font-mono';
-                        pieceEl.textContent = pieceSymbol;
-
-                        // Piece Color differentiation
-                        if (['♚','♛','♟','♞'].includes(pieceSymbol)) {
-                            pieceEl.classList.add('text-royalPurple');
-                        } else {
-                            pieceEl.classList.add('text-electricOrange');
-                        }
-
-                        square.appendChild(pieceEl);
-                    }
-
-                    square.onclick = () => handleSquareClick(r, c);
-                    boardEl.appendChild(square);
-                }
-            }
-        }
-
-        function handleSquareClick(r, c) {
-            playSound('move');
-
-            if (puzzleStep === 0 && r === 5 && c === 5) {
-                // Step 1 Solved: Knight Move
-                boardLayout[5][5] = '';
-                boardLayout[3][4] = '♘'; // Move Knight to e5
-                puzzleStep = 1;
-                updateUnlockProgress(66, 'MOVE 2/3 - CHECK ADVANTAGE');
-                document.getElementById('moveFeedback').textContent = 'EXCELLENT! NOW DELIVER CHECKMATE';
-                renderBoard();
-                playSound('unlock');
-            } else if (puzzleStep === 1 && r === 7 && c === 7) {
-                // Step 2 Solved: Rook Checkmate
-                boardLayout[7][7] = '';
-                boardLayout[0][7] = '♖'; // Rook to h8 Mate
-                puzzleStep = 2;
-                updateUnlockProgress(100, 'SOLVED! DEAL ROOM UNLOCKED');
-                document.getElementById('moveFeedback').textContent = 'PUZZLE SOLVED! MATCH UNLOCKED';
-                renderBoard();
-                playSound('unlock');
-
-                setTimeout(() => {
-                    openModal('dealRoomModal');
-                }, 600);
-            }
-        }
-
-        function resetPuzzle() {
-            puzzleStep = 0;
-            // Reset Pieces
-            boardLayout[5][5] = '♘';
-            boardLayout[3][4] = '';
-            boardLayout[7][7] = '♖';
-            boardLayout[0][7] = '';
-            updateUnlockProgress(33, 'MOVE 1/3');
-            document.getElementById('moveFeedback').textContent = 'YOUR MOVE (WHITE)';
+        function newGame(){
+            game = mkChess();
+            selectedSq = null; persist();
+            updateUnlockProgress(0,'YOUR MOVE (WHITE)');
+            document.getElementById('moveFeedback').textContent = 'YOUR MOVE (WHITE) — checkmate the board to unlock the Deal Room';
             renderBoard();
         }
+        function loadGame(){
+            try{ const f=localStorage.getItem('rk_fen'); game = f? mkChess(f): mkChess(); }
+            catch(e){ game = mkChess(); }
+            if(!game) game = mkChess();
+        }
+        function renderBoard(){
+            const boardEl = document.getElementById('board'); boardEl.innerHTML='';
+            const targets = selectedSq ? game.moves({square:selectedSq, verbose:true}).map(m=>m.to) : [];
+            const b = game.board();
+            for(let r=0;r<8;r++){ for(let c=0;c<8;c++){
+                const square=document.createElement('div');
+                const isDark=(r+c)%2===1;
+                square.className=`board-square ${isDark?'dark':'light'} flex items-center justify-center cursor-pointer rounded-sm`;
+                const name=sqName(r,c); square.dataset.sq=name;
+                if(selectedSq===name || targets.includes(name)) square.classList.add('hint');
+                const cell=b[r][c];
+                if(cell){
+                    const p=document.createElement('span');
+                    p.className='chess-piece text-xl sm:text-2xl font-bold font-mono';
+                    p.textContent=GLYPH[cell.color][cell.type];
+                    p.classList.add(cell.color==='w'?'text-electricOrange':'text-royalPurple');
+                    square.appendChild(p);
+                }
+                square.onclick=()=>handleSquareClick(name);
+                boardEl.appendChild(square);
+            }}
+        }
+        function handleSquareClick(name){
+            if(!game || game.game_over() || game.turn()!=='w') return;
+            const piece=game.get(name);
+            if(selectedSq){
+                const mv=game.moves({square:selectedSq,verbose:true}).find(m=>m.to===name);
+                if(mv){
+                    game.move({from:selectedSq,to:name,promotion:'q'});
+                    selectedSq=null; playSound('move'); persist(); renderBoard();
+                    if(checkEnd()) return;
+                    setTimeout(aiMove,450); return;
+                }
+                if(piece && piece.color==='w'){ selectedSq=name; renderBoard(); return; }
+                selectedSq=null; renderBoard(); return;
+            }
+            if(piece && piece.color==='w'){ selectedSq=name; playSound('move'); renderBoard(); }
+        }
+        function aiMove(){
+            if(game.game_over()) return;
+            const moves=game.moves({verbose:true}); if(!moves.length) return;
+            const pick = moves.find(m=>m.san.includes('#'))
+                      || pickRandom(moves.filter(m=>m.flags.includes('c')))
+                      || pickRandom(moves);
+            game.move(pick); playSound('move'); persist(); renderBoard(); checkEnd();
+        }
+        function checkEnd(){
+            if(game.in_checkmate()){
+                if(game.turn()==='b'){ // black to move and mated → player (white) won
+                    updateUnlockProgress(100,'CHECKMATE — DEAL ROOM UNLOCKED');
+                    document.getElementById('moveFeedback').textContent='CHECKMATE! You beat the board — match unlocked.';
+                    playSound('unlock'); setTimeout(()=>openModal('dealRoomModal'),700);
+                } else {
+                    updateUnlockProgress(0,'CHECKMATED — TAP RESET');
+                    document.getElementById('moveFeedback').textContent='Checkmated. Tap RESET BOARD to replay.';
+                    playSound('resign');
+                }
+                return true;
+            }
+            if(game.in_draw() || game.in_stalemate()){
+                document.getElementById('moveFeedback').textContent='Draw. Tap RESET BOARD to replay.'; return true;
+            }
+            document.getElementById('moveFeedback').textContent = game.in_check()
+                ? (game.turn()==='w'?'You are in check.':'Check!')
+                : (game.turn()==='w'?'YOUR MOVE (WHITE)':'AI thinking…');
+            return false;
+        }
+        function resetPuzzle(){ newGame(); }
 
         function updateUnlockProgress(pct, label) {
             document.getElementById('unlockBar').style.width = `${pct}%`;
@@ -631,6 +632,7 @@
             playSound('coin');
             coinBalance += 50;
             document.getElementById('coinBalance').textContent = `${coinBalance} COINS`;
+            try{ localStorage.setItem('rk_coins', String(coinBalance)); }catch(e){}
             alert('🪙 50 Pass Coins Staked! Priority Queue Boosted.');
         }
 
@@ -688,7 +690,9 @@
 
         // INITIALIZE ON LOAD
         window.onload = function() {
-            renderBoard();
+            loadGame(); renderBoard();
+            updateUnlockProgress(0, 'YOUR MOVE (WHITE)');
+            try{ const cb=localStorage.getItem('rk_coins'); if(cb){ coinBalance=parseInt(cb,10)||coinBalance; document.getElementById('coinBalance').textContent=coinBalance+' COINS'; } }catch(e){}
         };
     </script>
 </body>
