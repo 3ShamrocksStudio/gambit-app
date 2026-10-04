@@ -228,6 +228,17 @@
                 </div>
             </div>
 
+            <!-- DIFFICULTY + RANK BAR -->
+            <div class="w-full max-w-md flex items-center justify-between mt-1 gap-2 font-mono">
+                <div class="flex gap-1" id="diffBar">
+                    <button onclick="setDiff('easy')" data-diff="easy" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">ROOKIE</button>
+                    <button onclick="setDiff('med')" data-diff="med" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">PRO</button>
+                    <button onclick="setDiff('hard')" data-diff="hard" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">MASTER</button>
+                </div>
+                <div class="text-[10px] text-gray-400 whitespace-nowrap">RANK <span id="rkRating" class="text-titanium font-bold">1000</span> · <span id="rkRecord" class="text-electricOrange">0W-0L</span></div>
+                <button onclick="openModal('coinStoreModal')" class="px-2 py-1 rounded-lg text-[10px] border border-orange-500/40 text-electricOrange hover:bg-orange-500/10 transition-all">🪙 BUY</button>
+            </div>
+
             <!-- PUZZLE CONTROLS & HINT BAR -->
             <div class="w-full max-w-md flex items-center justify-between mt-2 gap-2">
                 <button onclick="resetPuzzle()" class="bg-slateArmor hover:bg-slate-800 text-gray-300 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-mono transition-all">
@@ -433,6 +444,19 @@
         </div>
     </div>
 
+    <!-- COIN STORE MODAL -->
+    <div id="coinStoreModal" class="fixed inset-0 z-50 bg-obsidian/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full bg-slateArmor border border-orange-500/40 rounded-2xl p-5 shadow-2xl relative">
+            <button onclick="closeModal('coinStoreModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white font-mono text-sm">✕</button>
+            <div class="text-center mb-4">
+                <div class="split-shield mx-auto mb-2"></div>
+                <h2 class="text-base font-mono font-bold text-titanium">COIN VAULT</h2>
+                <p class="text-xs text-gray-400 font-mono">Stake coins for ranked duels &amp; to unlock real intros</p>
+            </div>
+            <div class="space-y-2 font-mono text-xs" id="coinPacks"></div>
+        </div>
+    </div>
+
     <script>
         // APP STATE MANAGEMENT
         let currentMode = 'chess';
@@ -570,11 +594,11 @@
                 if(game.turn()==='b'){ // black to move and mated → player (white) won
                     updateUnlockProgress(100,'CHECKMATE — DEAL ROOM UNLOCKED');
                     document.getElementById('moveFeedback').textContent='CHECKMATE! You beat the board — match unlocked.';
-                    playSound('unlock'); setTimeout(()=>openModal('dealRoomModal'),700);
+                    playSound('unlock'); recordResult('win'); setTimeout(()=>openModal('dealRoomModal'),700);
                 } else {
                     updateUnlockProgress(0,'CHECKMATED — TAP RESET');
                     document.getElementById('moveFeedback').textContent='Checkmated. Tap RESET BOARD to replay.';
-                    playSound('resign');
+                    recordResult('loss'); playSound('resign');
                 }
                 return true;
             }
@@ -688,10 +712,55 @@
             }, 2500);
         }
 
+        // ─── DIFFICULTY + MINIMAX AI ───
+        let rkDifficulty = 'easy';
+        const PV = {p:1,n:3,b:3,r:5,q:9,k:0};
+        function setDiff(d){ rkDifficulty=d; try{localStorage.setItem('rk_diff',d);}catch(e){} highlightDiff(); document.getElementById('moveFeedback').textContent='Difficulty: '+({easy:'ROOKIE',med:'PRO',hard:'MASTER'}[d])+' — your move'; }
+        function highlightDiff(){ document.querySelectorAll('.diff-btn').forEach(b=>{ const on=b.dataset.diff===rkDifficulty; b.classList.toggle('bg-electricOrange',on); b.classList.toggle('text-obsidian',on); b.classList.toggle('border-electricOrange',on); b.classList.toggle('text-gray-300',!on); }); }
+        function evalBoard(){ let s=0; const b=game.board(); for(const row of b) for(const cell of row){ if(cell) s+=(cell.color==='w'?1:-1)*PV[cell.type]; } return s; }
+        function minimax(depth,a,b,maximizing){
+            if(depth===0 || game.game_over()){ let e=evalBoard(); if(game.in_checkmate()) e += (game.turn()==='w'? -1000:1000); return e; }
+            const moves=game.moves({verbose:true});
+            if(maximizing){ let v=-Infinity; for(const m of moves){ game.move(m); v=Math.max(v,minimax(depth-1,a,b,false)); game.undo(); a=Math.max(a,v); if(b<=a)break; } return v; }
+            let v=Infinity; for(const m of moves){ game.move(m); v=Math.min(v,minimax(depth-1,a,b,true)); game.undo(); b=Math.min(b,v); if(b<=a)break; } return v;
+        }
+        function bestMove(depth){
+            const moves=game.moves({verbose:true}); let best=null,bestVal=Infinity;
+            for(const m of moves){ game.move(m); const val=minimax(depth-1,-Infinity,Infinity,true); game.undo();
+                if(val<bestVal || (val===bestVal && Math.random()<0.3)){ bestVal=val; best=m; } }
+            return best || pickRandom(moves);
+        }
+        // override: difficulty-aware AI
+        function aiMove(){
+            if(game.game_over()) return;
+            const moves=game.moves({verbose:true}); if(!moves.length) return;
+            let pick;
+            if(rkDifficulty==='easy'){ pick = moves.find(m=>m.san.includes('#')) || pickRandom(moves.filter(m=>m.flags.includes('c'))) || pickRandom(moves); }
+            else { pick = bestMove(rkDifficulty==='hard'?3:2); }
+            game.move(pick); playSound('move'); persist(); renderBoard(); checkEnd();
+        }
+        // ─── RANKED LADDER (ELO-lite) ───
+        let rkRating=1000, rkWins=0, rkLosses=0;
+        function loadStats(){ try{ rkRating=+(localStorage.getItem('rk_rating')||1000); rkWins=+(localStorage.getItem('rk_wins')||0); rkLosses=+(localStorage.getItem('rk_losses')||0);}catch(e){} }
+        function saveStats(){ try{ localStorage.setItem('rk_rating',rkRating); localStorage.setItem('rk_wins',rkWins); localStorage.setItem('rk_losses',rkLosses);}catch(e){} }
+        function renderStats(){ const r=document.getElementById('rkRating'), rec=document.getElementById('rkRecord'); if(r)r.textContent=rkRating; if(rec)rec.textContent=rkWins+'W-'+rkLosses+'L'; }
+        function recordResult(kind){ const g={easy:12,med:20,hard:32}[rkDifficulty]||20; if(kind==='win'){rkRating+=g; rkWins++;} else if(kind==='loss'){rkRating=Math.max(100,rkRating-Math.round(g*0.6)); rkLosses++;} saveStats(); renderStats(); }
+        // ─── COIN STORE ───
+        const COIN_PACKS=[{coins:100,price:4.99},{coins:500,price:19.99,tag:'POPULAR'},{coins:1200,price:39.99,tag:'BEST VALUE'}];
+        function renderCoinPacks(){ const el=document.getElementById('coinPacks'); if(!el) return;
+            el.innerHTML=COIN_PACKS.map((p,i)=>`<button onclick="startCheckout(${i})" class="w-full flex items-center justify-between bg-obsidian border border-gray-700 hover:border-electricOrange text-titanium p-3 rounded-xl transition-all"><span>🪙 <b>${p.coins}</b> coins ${p.tag?'<span class=\'text-[9px] text-electricOrange ml-1\'>'+p.tag+'</span>':''}</span><span class="text-electricOrange font-bold">$${p.price}</span></button>`).join('');
+        }
+        function startCheckout(i){ const p=COIN_PACKS[i]; playSound('coin');
+            // Stripe Checkout wires in here (one line) once the account is connected.
+            alert('🔒 Secure checkout for '+p.coins+' coins ($'+p.price+') opens here once Stripe is connected.');
+        }
+
         // INITIALIZE ON LOAD
         window.onload = function() {
+            try{ rkDifficulty=localStorage.getItem('rk_diff')||'easy'; }catch(e){}
             loadGame(); renderBoard();
             updateUnlockProgress(0, 'YOUR MOVE (WHITE)');
+            highlightDiff(); loadStats(); renderStats(); renderCoinPacks();
             try{ const cb=localStorage.getItem('rk_coins'); if(cb){ coinBalance=parseInt(cb,10)||coinBalance; document.getElementById('coinBalance').textContent=coinBalance+' COINS'; } }catch(e){}
         };
     </script>
