@@ -11,48 +11,43 @@
             theme: {
                 extend: {
                     colors: {
-                        obsidian: '#06080D',
-                        slateArmor: '#121824',
-                        electricOrange: '#FF4500',
-                        royalPurple: '#A855F7',
-                        titanium: '#F8FAFC',
-                        cyberAmber: '#F59E0B',
-                        neonGreen: '#10B981'
+                        obsidian: '#101216',
+                        slateArmor: '#1A1D23',
+                        electricOrange: '#C2A661',
+                        royalPurple: '#8A94A6',
+                        titanium: '#ECEAE3',
+                        cyberAmber: '#C2A661',
+                        neonGreen: '#5E9C7C'
                     },
                     fontFamily: {
-                        mono: ['JetBrains Mono', 'Fira Code', 'Monaco', 'monospace'],
-                        sans: ['Inter', 'system-ui', 'sans-serif']
+                        mono: ['Inter', 'system-ui', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Fraunces', 'Georgia', 'serif']
                     }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
 
         body {
-            background-color: #06080D;
-            color: #F8FAFC;
+            background-color: #101216;
+            color: #ECEAE3;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            letter-spacing: 0.1px;
         }
+        /* Editorial display type for the wordmark + section titles */
+        h1, h2, .serif { font-family: 'Fraunces', Georgia, serif !important; letter-spacing: 0 !important; font-weight: 600 !important; }
 
-        /* 3SDSTM Glow Effects & Borders */
-        .neon-border-orange {
-            border: 1px solid rgba(255, 69, 0, 0.5);
-            box-shadow: 0 0 15px rgba(255, 69, 0, 0.25);
-        }
-        .neon-border-purple {
-            border: 1px solid rgba(168, 85, 247, 0.5);
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.25);
-        }
-        .neon-text-orange {
-            text-shadow: 0 0 8px rgba(255, 69, 0, 0.6);
-        }
-        .neon-text-purple {
-            text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
-        }
+        /* Minimal — flat surfaces, hairline borders, NO neon glows */
+        .neon-border-orange { border: 1px solid rgba(194,166,97,0.35); box-shadow: none; }
+        .neon-border-purple { border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+        .neon-text-orange, .neon-text-purple { text-shadow: none; }
+        /* kill all coloured glow shadows app-wide → clean, flat, confident */
+        [class*="shadow-orange"], [class*="shadow-purple"], [class*="shadow-green"], [class*="shadow-2xl"], [class*="shadow-lg"] { box-shadow: 0 1px 2px rgba(0,0,0,0.25) !important; }
 
         /* Classic flat 2D board — natural wood tones, focus on the concept not the game */
         .stage-container {}
@@ -77,7 +72,7 @@
             position: relative;
             width: 32px;
             height: 38px;
-            background: linear-gradient(135deg, #FF4500 50%, #A855F7 50%);
+            background: linear-gradient(135deg, #C2A661 50%, #2A2E36 50%);
             clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
         }
 
@@ -94,11 +89,11 @@
             border-radius: 2px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #FF4500;
+            background: #C2A661;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-electricOrange selection:text-white">
+<body class="min-h-screen flex flex-col justify-between selection:bg-electricOrange selection:text-obsidian">
 
     <!-- TOP HEADER / NAV BAR -->
     <header class="sticky top-0 z-40 bg-obsidian/90 backdrop-blur-md border-b border-slateArmor px-4 py-3 flex items-center justify-between">
@@ -117,10 +112,10 @@
         <!-- STATS & VAULT COUNTER -->
         <div class="flex items-center space-x-2 md:space-x-4">
             <!-- PASS COIN VAULT -->
-            <div class="bg-slateArmor/80 border border-purple-500/30 rounded-lg px-2.5 py-1 flex items-center space-x-1.5">
+            <div class="bg-slateArmor/80 border border-white/10 rounded-lg px-2.5 py-1 flex items-center space-x-1.5">
                 <span class="text-base">🪙</span>
                 <div>
-                    <div class="text-[9px] font-mono text-purple-400 font-semibold leading-none">VAULT</div>
+                    <div class="text-[9px] font-mono text-electricOrange font-semibold leading-none">VAULT</div>
                     <div id="coinBalance" class="text-xs font-mono font-bold text-titanium leading-tight">250 COINS</div>
                 </div>
             </div>
@@ -326,7 +321,7 @@
 
                     <button onclick="actionOfferCoins()" class="bg-obsidian hover:bg-slate-800 border border-gray-700 hover:border-purple-500 p-2 rounded-xl text-center transition-all group">
                         <span class="text-sm block">🪙</span>
-                        <span class="text-[10px] font-mono font-bold text-gray-300 group-hover:text-purple-400 block">+50 COINS</span>
+                        <span class="text-[10px] font-mono font-bold text-gray-300 group-hover:text-electricOrange block">+50 COINS</span>
                     </button>
 
                     <button onclick="actionProposeMeeting()" class="bg-electricOrange hover:bg-orange-600 text-white p-2 rounded-xl text-center transition-all font-bold shadow-lg shadow-orange-950/50">
