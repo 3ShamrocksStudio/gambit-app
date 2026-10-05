@@ -165,6 +165,10 @@
             </div>
 
             <!-- INTENT SETTINGS BTN -->
+            <button onclick="showIntro()" class="bg-slateArmor hover:bg-slate-800 text-titanium p-2 rounded-lg border border-gray-700 transition-all text-xs font-mono flex items-center space-x-1" aria-label="How it works">
+                <span>❔</span>
+                <span class="hidden md:inline">HOW</span>
+            </button>
             <button onclick="openIntentModal()" class="bg-slateArmor hover:bg-slate-800 text-titanium p-2 rounded-lg border border-gray-700 transition-all text-xs font-mono flex items-center space-x-1">
                 <span>⚙️</span>
                 <span class="hidden md:inline">INTENT</span>
@@ -449,6 +453,22 @@
         </div>
     </div>
 
+    <!-- INTRO / HOW IT WORKS -->
+    <div id="introModal" class="fixed inset-0 z-[60] bg-obsidian/98 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+      <div class="max-w-md w-full bg-slateArmor border border-royalPurple/40 rounded-2xl p-6 shadow-2xl relative text-center">
+        <div class="split-shield mx-auto mb-3"></div>
+        <h2 class="text-lg font-mono font-black text-titanium tracking-wider">ROOKIE &amp; KING<span class="text-electricOrange">™</span></h2>
+        <p class="text-xs text-gray-400 font-mono mb-5">The High-Stakes Attention Marketplace</p>
+        <div class="space-y-3 text-start mb-5">
+          <div class="flex items-start gap-3"><span class="text-xl">♟️</span><div><div class="text-sm font-mono font-bold text-titanium">1 &middot; Win the duel</div><div class="text-xs text-gray-400">Beat the board — or a matched player — in a real chess or scenario duel.</div></div></div>
+          <div class="flex items-start gap-3"><span class="text-xl">🔓</span><div><div class="text-sm font-mono font-bold text-titanium">2 &middot; Unlock the Deal Room</div><div class="text-xs text-gray-400">A verified match opens — founder meets investor, talent meets recruiter.</div></div></div>
+          <div class="flex items-start gap-3"><span class="text-xl">🤝</span><div><div class="text-sm font-mono font-bold text-titanium">3 &middot; Get the intro</div><div class="text-xs text-gray-400">Stake coins into escrow; we broker a real meeting. Escrow releases when it happens.</div></div></div>
+        </div>
+        <button onclick="startFromIntro()" class="w-full bg-electricOrange hover:bg-orange-600 text-obsidian font-mono font-black py-3 rounded-xl transition-all shadow-lg mb-2">ENTER THE ARENA ♟</button>
+        <button onclick="closeIntro()" class="w-full text-gray-400 hover:text-titanium font-mono text-xs py-1">Skip — just play</button>
+      </div>
+    </div>
+
     <!-- COIN STORE MODAL -->
     <div id="coinStoreModal" class="fixed inset-0 z-50 bg-obsidian/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
         <div class="max-w-md w-full bg-slateArmor border border-orange-500/40 rounded-2xl p-5 shadow-2xl relative">
@@ -687,9 +707,15 @@
         }
 
         function saveIntentVector() {
+            try{
+                var role=(document.getElementById('roleSelect')||{}).value||'';
+                var target=(document.getElementById('targetSelect')||{}).value||'';
+                localStorage.setItem('rk_intent', JSON.stringify({role:role,target:target,ts:Date.now()}));
+                localStorage.setItem('rk_intent_set','1');
+            }catch(e){}
             closeModal('intentModal');
             playSound('unlock');
-            alert('⚙️ Intent Vector Updated. Matchmaking queue refreshed!');
+            alert('⚙️ Intent saved. Your match board is tuned to it.');
         }
 
         function triggerCalendlyMock() {
@@ -788,6 +814,11 @@
             closeModal('dealRoomModal');
         }
 
+        // ─── INTRO / ONBOARDING ───
+        function showIntro(){ openModal('introModal'); }
+        function closeIntro(){ closeModal('introModal'); try{localStorage.setItem('rk_seen_intro','1');}catch(e){} }
+        function startFromIntro(){ closeIntro(); playSound('unlock'); try{ if(!localStorage.getItem('rk_intent_set')) openIntentModal(); }catch(e){ try{openIntentModal();}catch(_){} } }
+
         // INITIALIZE ON LOAD
         window.onload = function() {
             try{ rkDifficulty=localStorage.getItem('rk_diff')||'easy'; }catch(e){}
@@ -795,6 +826,7 @@
             updateUnlockProgress(0, 'YOUR MOVE (WHITE)');
             highlightDiff(); loadStats(); renderStats(); renderCoinPacks();
             try{ const cb=localStorage.getItem('rk_coins'); if(cb){ coinBalance=parseInt(cb,10)||coinBalance; document.getElementById('coinBalance').textContent=coinBalance+' COINS'; } }catch(e){}
+            try{ if(!localStorage.getItem('rk_seen_intro')) showIntro(); }catch(e){}
         };
     </script>
 </body>
