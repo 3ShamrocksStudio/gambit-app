@@ -54,53 +54,23 @@
             text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
         }
 
-        /* Isometric 3D Board CSS Transformation */
-        .stage-container {
-            perspective: 1000px;
-            perspective-origin: 50% 35%;
-        }
-
+        /* Classic flat 2D board — natural wood tones, focus on the concept not the game */
+        .stage-container {}
         .isometric-board {
-            transform: rotateX(38deg) rotateZ(-22deg) translateZ(0);
-            transform-style: preserve-3d;
-            transition: transform 0.5s ease;
-            box-shadow: -20px 20px 30px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 69, 0, 0.2);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+            border-color: #5a4632 !important;
+            background: #5a4632 !important;
         }
-
-        .board-square {
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .board-square.dark {
-            background-color: #121824;
-        }
-        .board-square.light {
-            background-color: #1a2332;
-        }
-
-        .board-square.highlight {
-            background-color: rgba(255, 69, 0, 0.4) !important;
-            box-shadow: inset 0 0 10px #FF4500;
-        }
-
+        .board-square { transition: background-color 0.15s ease; position: relative; }
+        .board-square.dark  { background-color: #b58863; }
+        .board-square.light { background-color: #f0d9b5; }
+        .board-square.highlight { background-color: rgba(255,214,0,0.45) !important; }
         .board-square.hint {
-            background-color: rgba(16, 185, 129, 0.3) !important;
-            box-shadow: inset 0 0 8px #10B981;
+            background-color: rgba(106,168,79,0.55) !important;
+            box-shadow: inset 0 0 0 3px rgba(106,168,79,0.85);
         }
-
-        /* 3D Floating Piece Elevation */
-        .chess-piece {
-            transform: translateZ(18px) rotateX(-38deg) rotateY(22deg) scale(1.2);
-            transition: transform 0.2s ease, filter 0.2s ease;
-            filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.7));
-            user-select: none;
-        }
-
-        .chess-piece:hover, .chess-piece:active {
-            transform: translateZ(30px) rotateX(-38deg) rotateY(22deg) scale(1.35);
-            filter: drop-shadow(0 15px 12px rgba(255, 69, 0, 0.8));
-        }
+        .chess-piece { transition: transform 0.12s ease; user-select: none; }
+        .chess-piece:hover, .chess-piece:active { transform: scale(1.12); }
 
         /* Monolithic Split Shield Logo Styling */
         .split-shield {
@@ -426,22 +396,36 @@
             <div class="space-y-3 font-mono text-xs">
                 <div>
                     <label class="block text-gray-400 mb-1 text-[10px]">YOUR PRIMARY ROLE (I AM A...)</label>
-                    <select id="roleSelect" class="w-full bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
-                        <option value="founder">🚀 Founder / CEO (Seeking Capital)</option>
-                        <option value="vc">💼 VC / Angel Investor (Deploying Capital)</option>
-                        <option value="recruiter">🎯 Executive Recruiter (Hiring Talent)</option>
-                        <option value="seeker">💻 Senior Software Engineer (Job Seeker)</option>
-                        <option value="sales">📈 B2B Sales Executive (Vendor)</option>
+                    <select id="roleSelect" onchange="toggleOther('role')" class="w-full bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
+                        <option value="founder">🚀 Founder / CEO</option>
+                        <option value="operator">🧭 Operator / Exec (COO, CMO, CPO…)</option>
+                        <option value="investor">💼 Investor (VC / Angel)</option>
+                        <option value="recruiter">🎯 Recruiter / Hiring manager</option>
+                        <option value="jobseeker">💻 Job seeker (any field)</option>
+                        <option value="freelancer">🛠️ Freelancer / Consultant</option>
+                        <option value="sales">📈 Sales / Business development</option>
+                        <option value="partner">🤝 Partnerships / BizDev</option>
+                        <option value="creator">🎨 Creator / Marketer</option>
+                        <option value="student">🎓 Student / Early-career</option>
+                        <option value="other">✳️ Other…</option>
                     </select>
+                    <input id="roleOther" type="text" maxlength="60" placeholder="Describe your role" class="hidden w-full mt-2 bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
                 </div>
 
                 <div>
                     <label class="block text-gray-400 mb-1 text-[10px]">TARGET MATCH (LOOKING FOR...)</label>
-                    <select id="targetSelect" class="w-full bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
-                        <option value="vc">💼 Angel / VC Investors ($50k - $2M)</option>
-                        <option value="clients">🏢 Enterprise B2C/B2B Clients</option>
-                        <option value="talent">👨‍💻 Technical Co-Founders / Lead Engineers</option>
+                    <select id="targetSelect" onchange="toggleOther('target')" class="w-full bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
+                        <option value="investors">💼 Investors / capital</option>
+                        <option value="founders">🚀 Founders / startups</option>
+                        <option value="clients">🏢 Clients / customers</option>
+                        <option value="talent">👩‍💻 Talent / co-founders</option>
+                        <option value="job">💼 A job / new role</option>
+                        <option value="partners">🤝 Partners / collaborators</option>
+                        <option value="mentors">🧠 Mentors / advisors</option>
+                        <option value="press">📰 Press / exposure</option>
+                        <option value="other">✳️ Other…</option>
                     </select>
+                    <input id="targetOther" type="text" maxlength="60" placeholder="What are you looking for?" class="hidden w-full mt-2 bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
                 </div>
 
                 <div class="pt-2">
@@ -583,7 +567,8 @@
                     const p=document.createElement('span');
                     p.className='chess-piece text-xl sm:text-2xl font-bold font-mono';
                     p.textContent=GLYPH[cell.color][cell.type];
-                    p.classList.add(cell.color==='w'?'text-electricOrange':'text-royalPurple');
+                    if(cell.color==='w'){ p.style.color='#f8f8f8'; p.style.textShadow='0 1px 1px rgba(0,0,0,.5), 0 0 2px rgba(0,0,0,.4)'; }
+                    else { p.style.color='#2b2b2b'; p.style.textShadow='0 1px 1px rgba(255,255,255,.3)'; }
                     square.appendChild(p);
                 }
                 square.onclick=()=>handleSquareClick(name);
@@ -706,10 +691,16 @@
             openModal('intentModal');
         }
 
+        function toggleOther(which){
+            var sel=document.getElementById(which+'Select'), inp=document.getElementById(which+'Other');
+            if(sel&&inp){ if(sel.value==='other'){ inp.classList.remove('hidden'); inp.focus(); } else { inp.classList.add('hidden'); } }
+        }
         function saveIntentVector() {
             try{
                 var role=(document.getElementById('roleSelect')||{}).value||'';
                 var target=(document.getElementById('targetSelect')||{}).value||'';
+                if(role==='other'){ role=((document.getElementById('roleOther')||{}).value||'').trim()||'other'; }
+                if(target==='other'){ target=((document.getElementById('targetOther')||{}).value||'').trim()||'other'; }
                 localStorage.setItem('rk_intent', JSON.stringify({role:role,target:target,ts:Date.now()}));
                 localStorage.setItem('rk_intent_set','1');
             }catch(e){}
