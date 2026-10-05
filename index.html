@@ -236,6 +236,7 @@
                     <button onclick="setDiff('hard')" data-diff="hard" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">MASTER</button>
                 </div>
                 <div class="text-[10px] text-gray-400 whitespace-nowrap">RANK <span id="rkRating" class="text-titanium font-bold">1000</span> · <span id="rkRecord" class="text-electricOrange">0W-0L</span></div>
+                <button onclick="startRanked()" class="px-2 py-1 rounded-lg text-[10px] border border-royalPurple/60 text-royalPurple hover:bg-royalPurple/10 transition-all font-bold">⚔ RANKED 50🪙</button>
                 <button onclick="openModal('coinStoreModal')" class="px-2 py-1 rounded-lg text-[10px] border border-orange-500/40 text-electricOrange hover:bg-orange-500/10 transition-all">🪙 BUY</button>
             </div>
 
@@ -390,6 +391,10 @@
 
             <!-- ACTION CONTROLS -->
             <div class="space-y-2.5">
+                <button onclick="requestIntro()" class="w-full bg-royalPurple hover:bg-purple-600 text-white font-mono font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg">
+                    <span>🤝</span>
+                    <span>REQUEST INTRO · STAKE 100🪙 ESCROW</span>
+                </button>
                 <button onclick="triggerCalendlyMock()" class="w-full bg-neonGreen hover:bg-emerald-600 text-obsidian font-mono font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg">
                     <span>📅</span>
                     <span>BOOK 15m VIA CALENDLY</span>
@@ -594,16 +599,16 @@
                 if(game.turn()==='b'){ // black to move and mated → player (white) won
                     updateUnlockProgress(100,'CHECKMATE — DEAL ROOM UNLOCKED');
                     document.getElementById('moveFeedback').textContent='CHECKMATE! You beat the board — match unlocked.';
-                    playSound('unlock'); recordResult('win'); setTimeout(()=>openModal('dealRoomModal'),700);
+                    playSound('unlock'); recordResult('win'); settleStake('win'); setTimeout(()=>openModal('dealRoomModal'),700);
                 } else {
                     updateUnlockProgress(0,'CHECKMATED — TAP RESET');
                     document.getElementById('moveFeedback').textContent='Checkmated. Tap RESET BOARD to replay.';
-                    recordResult('loss'); playSound('resign');
+                    recordResult('loss'); settleStake('loss'); playSound('resign');
                 }
                 return true;
             }
             if(game.in_draw() || game.in_stalemate()){
-                document.getElementById('moveFeedback').textContent='Draw. Tap RESET BOARD to replay.'; return true;
+                settleStake('draw'); document.getElementById('moveFeedback').textContent='Draw. Tap RESET BOARD to replay.'; return true;
             }
             document.getElementById('moveFeedback').textContent = game.in_check()
                 ? (game.turn()==='w'?'You are in check.':'Check!')
@@ -654,10 +659,8 @@
 
         function actionOfferCoins() {
             playSound('coin');
-            coinBalance += 50;
-            document.getElementById('coinBalance').textContent = `${coinBalance} COINS`;
-            try{ localStorage.setItem('rk_coins', String(coinBalance)); }catch(e){}
-            alert('🪙 50 Pass Coins Staked! Priority Queue Boosted.');
+            setCoins(coinBalance + 50);
+            alert('🪙 50 Pass Coins added.');
         }
 
         function actionProposeMeeting() {
@@ -753,6 +756,36 @@
         function startCheckout(i){ const p=COIN_PACKS[i]; playSound('coin');
             // Stripe Checkout wires in here (one line) once the account is connected.
             alert('🔒 Secure checkout for '+p.coins+' coins ($'+p.price+') opens here once Stripe is connected.');
+        }
+
+        // ─── COIN HELPER + RANKED STAKES + CONCIERGE INTRO ───
+        function setCoins(n){ coinBalance=Math.max(0, n|0); var el=document.getElementById('coinBalance'); if(el)el.textContent=coinBalance+' COINS'; try{localStorage.setItem('rk_coins',String(coinBalance));}catch(e){} }
+        let rkStaked=false;
+        try{ rkStaked = localStorage.getItem('rk_staked')==='1'; }catch(e){}
+        function setStaked(v){ rkStaked=!!v; try{localStorage.setItem('rk_staked', v?'1':'0');}catch(e){} }
+        function startRanked(){
+            if(coinBalance<50){ alert('You need 50 coins to enter a ranked duel.'); openModal('coinStoreModal'); return; }
+            setCoins(coinBalance-50); setStaked(true); newGame();
+            var mf=document.getElementById('moveFeedback'); if(mf) mf.textContent='⚔ RANKED — 50🪙 staked. Checkmate to win 100🪙 + rating.';
+            playSound('coin');
+        }
+        function settleStake(kind){
+            if(!rkStaked) return;
+            if(kind==='win'){ setCoins(coinBalance+100); }       /* net +50 */
+            else if(kind==='draw'){ setCoins(coinBalance+50); }  /* refund */
+            /* loss: stake already forfeited */
+            setStaked(false);
+        }
+        function requestIntro(){
+            if(coinBalance<100){ alert('You need 100 coins to stake an intro request.'); openModal('coinStoreModal'); return; }
+            var note=prompt('One line: what do you want from this intro?',''); if(note===null) return;
+            setCoins(coinBalance-100);
+            var q=[]; try{ q=JSON.parse(localStorage.getItem('rk_intro_requests')||'[]'); }catch(e){}
+            q.push({ts:Date.now(), note:String(note||'').slice(0,200), staked:100, status:'queued'});
+            try{ localStorage.setItem('rk_intro_requests', JSON.stringify(q)); }catch(e){}
+            playSound('unlock');
+            alert('🤝 Intro request received — 100🪙 held in escrow. We broker the intro and release escrow on a confirmed meeting. You will be contacted.');
+            closeModal('dealRoomModal');
         }
 
         // INITIALIZE ON LOAD
