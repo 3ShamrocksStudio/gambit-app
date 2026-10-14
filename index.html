@@ -1,836 +1,1520 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ROOKIE & KING™ | The High-Stakes Attention Marketplace</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        obsidian: '#101216',
-                        slateArmor: '#1A1D23',
-                        electricOrange: '#C2A661',
-                        royalPurple: '#8A94A6',
-                        titanium: '#ECEAE3',
-                        cyberAmber: '#C2A661',
-                        neonGreen: '#5E9C7C'
-                    },
-                    fontFamily: {
-                        mono: ['Inter', 'system-ui', 'sans-serif'],
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        serif: ['Fraunces', 'Georgia', 'serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Rookie & King™</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
+<style>
+/* ─── DESIGN TOKENS ─────────────────────────────── */
+:root {
+  --void:    #09090C;
+  --base:    #111115;
+  --surface: #18181D;
+  --raised:  #222228;
+  --border:  rgba(255,255,255,0.07);
+  --border-md: rgba(255,255,255,0.12);
+  --border-gold: rgba(191,155,48,0.30);
 
-        body {
-            background-color: #101216;
-            color: #ECEAE3;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-            letter-spacing: 0.1px;
-        }
-        /* Editorial display type for the wordmark + section titles */
-        h1, h2, .serif { font-family: 'Fraunces', Georgia, serif !important; letter-spacing: 0 !important; font-weight: 600 !important; }
+  --gold:    #C4A028;
+  --gold-lt: #D4B445;
+  --gold-bg: rgba(196,160,40,0.10);
+  --gold-bg2:rgba(196,160,40,0.18);
 
-        /* Minimal — flat surfaces, hairline borders, NO neon glows */
-        .neon-border-orange { border: 1px solid rgba(194,166,97,0.35); box-shadow: none; }
-        .neon-border-purple { border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
-        .neon-text-orange, .neon-text-purple { text-shadow: none; }
-        /* kill all coloured glow shadows app-wide → clean, flat, confident */
-        [class*="shadow-orange"], [class*="shadow-purple"], [class*="shadow-green"], [class*="shadow-2xl"], [class*="shadow-lg"] { box-shadow: 0 1px 2px rgba(0,0,0,0.25) !important; }
+  --text:    #E6E3D9;
+  --text-2:  #9B9AA4;
+  --text-3:  #5E5C67;
+  --text-inv:#09090C;
 
-        /* Classic flat 2D board — natural wood tones, focus on the concept not the game */
-        .stage-container {}
-        .isometric-board {
-            box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-            border-color: #5a4632 !important;
-            background: #5a4632 !important;
-        }
-        .board-square { transition: background-color 0.15s ease; position: relative; }
-        .board-square.dark  { background-color: #b58863; }
-        .board-square.light { background-color: #f0d9b5; }
-        .board-square.highlight { background-color: rgba(255,214,0,0.45) !important; }
-        .board-square.hint {
-            background-color: rgba(106,168,79,0.55) !important;
-            box-shadow: inset 0 0 0 3px rgba(106,168,79,0.85);
-        }
-        .chess-piece { transition: transform 0.12s ease; user-select: none; }
-        .chess-piece:hover, .chess-piece:active { transform: scale(1.12); }
+  --green:   #2FB06A;
+  --green-bg:rgba(47,176,106,0.10);
+  --red:     #E04848;
+  --red-bg:  rgba(224,72,72,0.10);
+  --purple:  #8B7FD4;
+  --purple-bg:rgba(139,127,212,0.10);
 
-        /* Monolithic Split Shield Logo Styling */
-        .split-shield {
-            position: relative;
-            width: 32px;
-            height: 38px;
-            background: linear-gradient(135deg, #C2A661 50%, #2A2E36 50%);
-            clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
-        }
+  --r: 14px;        /* border radius base */
+  --r-sm: 8px;
+  --r-lg: 20px;
 
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #06080D;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #121824;
-            border-radius: 2px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #C2A661;
-        }
-    </style>
+  color-scheme: dark;
+}
+
+/* ─── BASE ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+  min-height: 100%;
+  background: var(--void);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+}
+
+::selection { background: var(--gold); color: var(--text-inv); }
+
+/* ─── TYPOGRAPHY ─────────────────────────────── */
+.t-brand  { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+.t-tight  { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+.t-label  { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.t-mono   { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+/* ─── LAYOUT ─────────────────────────────────── */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+.container { width: 100%; max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+/* ─── SCROLLBAR ──────────────────────────────── */
+::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--raised); border-radius: 2px; }
+
+/* ─── SURFACES ───────────────────────────────── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.card-raised { background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-sm); }
+
+/* ─── BUTTONS ────────────────────────────────── */
+button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; transition: all 0.15s ease; white-space: nowrap; }
+.btn-primary { background: var(--gold); color: var(--text-inv); }
+.btn-primary:hover { background: var(--gold-lt); }
+.btn-secondary { background: var(--raised); color: var(--text); border: 1px solid var(--border-md); }
+.btn-secondary:hover { border-color: var(--border-gold); color: var(--text); }
+.btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--raised); color: var(--text); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(224,72,72,0.2); }
+.btn-success { background: var(--green); color: var(--text-inv); font-weight: 700; }
+.btn-success:hover { opacity: 0.9; }
+.btn-lg { padding: 14px 24px; font-size: 15px; border-radius: var(--r); }
+.btn-full { width: 100%; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ─── HEADER ─────────────────────────────────── */
+#header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(9,9,12,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rk-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.rk-shield {
+  width: 28px; height: 33px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gold) 50%, var(--raised) 50%);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
+}
+.rk-wordmark { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px; color: var(--text); letter-spacing: -0.01em; }
+.rk-wordmark span { color: var(--gold); }
+.rk-tagline { font-size: 10px; color: var(--text-3); font-weight: 500; letter-spacing: 0.02em; margin-top: -2px; }
+
+.vault-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer; transition: border-color 0.15s;
+}
+.vault-badge:hover { border-color: var(--border-gold); }
+.vault-num { font-size: 13px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.vault-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: -1px; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { background: transparent; border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px; color: var(--text-2); transition: all 0.15s; font-size: 15px; line-height: 1; }
+.icon-btn:hover { background: var(--surface); color: var(--text); border-color: var(--border-md); }
+
+/* ─── ONBOARDING ─────────────────────────────── */
+#onboard {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--base);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+#onboard.hidden { display: none; }
+
+.ob-slides { flex: 1; display: flex; overflow: hidden; position: relative; }
+.ob-slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 28px;
+  text-align: center;
+  opacity: 0; transform: translateX(40px);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.ob-slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+.ob-slide.past { opacity: 0; transform: translateX(-40px); }
+
+.ob-icon { font-size: 52px; margin-bottom: 20px; }
+.ob-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 10px; line-height: 1.2; text-wrap: balance; }
+.ob-sub { font-size: 15px; color: var(--text-2); line-height: 1.6; max-width: 320px; }
+.ob-highlight { color: var(--gold); font-weight: 600; }
+
+.ob-setup { padding: 24px 24px 32px; }
+.ob-setup-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+.ob-setup-sub { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 24px; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+.form-select, .form-input {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface); border: 1px solid var(--border-md);
+  border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 14px;
+  transition: border-color 0.15s; outline: none; -webkit-appearance: none;
+}
+.form-select:focus, .form-input:focus { border-color: var(--gold); }
+.form-select option { background: var(--surface); }
+
+.ob-dots { display: flex; gap: 6px; justify-content: center; padding: 16px; }
+.ob-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--raised); transition: all 0.2s; }
+.ob-dot.active { background: var(--gold); width: 20px; border-radius: 3px; }
+
+.ob-footer { padding: 0 24px 28px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ─── MATCH CARD ─────────────────────────────── */
+#matchCard {
+  padding: 16px;
+}
+.match-card-inner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.match-card-inner::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--purple));
+}
+.match-meta { display: flex; align-items: flex-start; gap: 12px; }
+.match-avatar-wrap { position: relative; flex-shrink: 0; }
+.match-avatar {
+  width: 52px; height: 52px; border-radius: 12px;
+  border: 2px solid var(--border-gold);
+  background: var(--raised);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--text-2);
+  overflow: hidden;
+}
+.match-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.match-badge {
+  position: absolute; -bottom: 4px; -right: 4px;
+  bottom: -4px; right: -4px;
+  padding: 2px 6px; border-radius: 4px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; border: 1px solid;
+}
+.badge-king { background: var(--purple-bg); color: var(--purple); border-color: rgba(139,127,212,0.30); }
+.badge-rookie { background: var(--gold-bg); color: var(--gold); border-color: var(--border-gold); }
+
+.match-info { flex: 1; min-width: 0; }
+.match-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.match-role { font-size: 12px; color: var(--text-2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.match-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.match-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; background: var(--raised); border: 1px solid var(--border); color: var(--text-2); }
+.verified-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 4px; }
+
+.match-intent {
+  margin-top: 12px; padding: 10px 12px;
+  background: var(--raised); border-radius: var(--r-sm);
+  font-size: 12px; color: var(--text-2); line-height: 1.5;
+}
+.match-intent strong { color: var(--text); }
+
+.match-actions { display: flex; gap: 8px; margin-top: 14px; }
+.match-actions .btn { flex: 1; font-size: 13px; }
+
+/* ─── PROGRESS / STAKES BAR ─────────────────── */
+#progressBar { padding: 0 16px 16px; }
+.stakes-bar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+}
+.stakes-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.stakes-item { text-align: center; }
+.stakes-value { font-size: 13px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.stakes-key { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); margin-top: 1px; }
+.stakes-divider { width: 1px; height: 28px; background: var(--border); }
+
+.move-dots { display: flex; gap: 5px; align-items: center; }
+.move-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--raised); border: 1px solid var(--border-md); transition: all 0.3s; }
+.move-dot.done { background: var(--gold); border-color: var(--gold); }
+.move-dot.active { background: transparent; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-bg2); }
+
+.unlock-track { height: 3px; background: var(--raised); border-radius: 2px; overflow: hidden; }
+.unlock-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold), var(--gold-lt)); border-radius: 2px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ─── ARENA ─────────────────────────────────── */
+#arena { padding: 0 16px; }
+
+.mode-tabs { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 4px; gap: 4px; margin-bottom: 14px; }
+.mode-tab {
+  flex: 1; padding: 8px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 600; color: var(--text-2);
+  background: transparent; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.mode-tab.active { background: var(--raised); color: var(--text); border: 1px solid var(--border-md); }
+.mode-tab:not(.active):hover { color: var(--text); }
+
+/* CHESS STAGE */
+#chessStage {}
+.board-feedback {
+  text-align: center; font-size: 12px; font-weight: 600;
+  color: var(--text-2); margin-bottom: 10px; letter-spacing: 0.02em;
+  height: 20px;
+}
+.board-feedback.your-turn { color: var(--gold); }
+.board-feedback.thinking { color: var(--purple); }
+.board-feedback.win { color: var(--green); }
+.board-feedback.lose { color: var(--red); }
+
+.board-wrap {
+  display: flex; justify-content: center; margin-bottom: 14px;
+}
+#board {
+  width: min(312px, calc(100vw - 48px));
+  height: min(312px, calc(100vw - 48px));
+  display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+  border-radius: 8px; overflow: hidden;
+  border: 3px solid #4a3520;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.sq { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.1s; }
+.sq.light { background: #F0D9B5; }
+.sq.dark  { background: #B58863; }
+.sq.sel   { background: rgba(255,210,0,0.6) !important; }
+.sq.hint::after { content: ''; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(0,0,0,0.18); }
+.sq.hint.has-piece::after { content: ''; position: absolute; inset: 1px; border-radius: 50%; background: transparent; border: 3px solid rgba(0,0,0,0.22); width: auto; height: auto; }
+.sq.last-from { background: rgba(255,214,0,0.35) !important; }
+.sq.last-to   { background: rgba(255,214,0,0.35) !important; }
+.piece {
+  font-size: clamp(22px, 7vw, 30px); line-height: 1;
+  user-select: none; pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  transition: transform 0.1s ease;
+}
+.sq:active .piece { transform: scale(1.1); }
+.w-piece { color: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+.b-piece { color: #1a1a1a; filter: drop-shadow(0 1px 1px rgba(255,255,255,0.15)); }
+
+.board-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.diff-group { display: flex; gap: 4px; }
+.diff-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  background: var(--raised); color: var(--text-3); border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.diff-btn.active { background: var(--gold-bg); color: var(--gold); border-color: var(--border-gold); }
+.rank-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(139,127,212,0.25);
+  transition: all 0.15s; white-space: nowrap;
+}
+.resign-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  background: transparent; color: var(--text-3); border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.resign-btn:hover { color: var(--red); border-color: rgba(224,72,72,0.3); }
+
+/* AI SCENARIO STAGE */
+#aiStage { display: none; }
+.scenario-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px; margin-bottom: 12px;
+}
+.scenario-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.scenario-num { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.scenario-timer {
+  font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--text); background: var(--raised); border: 1px solid var(--border-md);
+  padding: 4px 10px; border-radius: 5px;
+}
+.scenario-timer.urgent { color: var(--red); border-color: rgba(224,72,72,0.3); }
+.scenario-body { font-size: 13px; color: var(--text-2); line-height: 1.6; font-style: italic; }
+
+.choice-list { display: flex; flex-direction: column; gap: 8px; }
+.choice-btn {
+  width: 100%; text-align: left; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm); transition: all 0.15s;
+}
+.choice-btn:hover { border-color: var(--border-gold); background: var(--raised); }
+.choice-btn.selected-a { border-color: var(--gold); background: var(--gold-bg); }
+.choice-btn.selected-b { border-color: var(--purple); background: var(--purple-bg); }
+.choice-btn.selected-c { border-color: var(--green); background: var(--green-bg); }
+.choice-letter { font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+.choice-text { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+.choice-subtext { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+.choice-a .choice-letter { color: var(--gold); }
+.choice-b .choice-letter { color: var(--purple); }
+.choice-c .choice-letter { color: var(--green); }
+
+/* ─── PITCH DOCK ─────────────────────────────── */
+#pitchDock {
+  padding: 16px; margin-top: 8px;
+}
+.pitch-container {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden;
+}
+.pitch-header {
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.pitch-title { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); }
+.pitch-unlock-indicator {
+  font-size: 11px; font-weight: 600; color: var(--gold);
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* LEVEL 0 — LOCKED */
+.pitch-locked {
+  padding: 28px 16px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.lock-icon { font-size: 28px; color: var(--text-3); }
+.lock-msg { font-size: 13px; color: var(--text-2); max-width: 240px; line-height: 1.5; }
+.lock-msg strong { color: var(--text); }
+
+/* LEVEL 1+ — REVEALED */
+.pitch-body { padding: 14px 16px; }
+.pitch-person { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pitch-avatar { width: 42px; height: 42px; border-radius: 10px; background: var(--raised); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; }
+.pitch-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pitch-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.pitch-company { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+.pitch-seeking { font-size: 11px; color: var(--gold); margin-top: 2px; font-weight: 600; }
+
+/* LEVEL 2 — PITCH */
+.pitch-elevator {
+  background: var(--raised); border-radius: var(--r-sm); padding: 12px;
+  margin-bottom: 12px; font-size: 13px; color: var(--text-2); line-height: 1.6; font-style: italic;
+  border-left: 2px solid var(--gold);
+  display: none;
+}
+.pitch-elevator.visible { display: block; }
+
+/* LEVEL 3 — ACTIONS */
+.pitch-actions { display: none; flex-direction: column; gap: 8px; }
+.pitch-actions.visible { display: flex; }
+.action-note { font-size: 11px; color: var(--text-3); text-align: center; }
+
+/* ─── MODALS ─────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(9,9,12,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal-backdrop.center { align-items: center; }
+
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--surface); border: 1px solid var(--border-md);
+  border-radius: 24px 24px 16px 16px;
+  overflow: hidden;
+  transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-backdrop.center .modal-sheet { border-radius: 20px; transform: scale(0.97); }
+.modal-backdrop.open .modal-sheet { transform: translateY(0) !important; }
+
+.modal-handle { width: 36px; height: 4px; background: var(--raised); border-radius: 2px; margin: 12px auto 0; }
+.modal-header { padding: 20px 20px 0; position: relative; }
+.modal-close { position: absolute; top: 16px; right: 16px; background: var(--raised); border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--text-2); transition: all 0.15s; }
+.modal-close:hover { color: var(--text); background: var(--surface); }
+.modal-body { padding: 16px 20px 24px; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+.modal-sub { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 16px; }
+
+/* DEAL ROOM */
+.deal-badge {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--green-bg); border: 2px solid var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; margin: 0 auto 12px;
+}
+.deal-summary {
+  background: var(--raised); border-radius: var(--r-sm); padding: 14px;
+  margin-bottom: 16px;
+}
+.deal-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+.deal-row-label { color: var(--text-3); }
+.deal-row-val { color: var(--text); font-weight: 600; }
+.intro-input {
+  width: 100%; padding: 11px 14px; margin-bottom: 10px;
+  background: var(--raised); border: 1px solid var(--border-md);
+  border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 13px;
+  outline: none; transition: border-color 0.15s;
+}
+.intro-input:focus { border-color: var(--gold); }
+
+/* COIN STORE */
+.coin-pack {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--raised); border: 1px solid var(--border);
+  border-radius: var(--r-sm); margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
+}
+.coin-pack:hover { border-color: var(--border-gold); }
+.coin-pack-info { display: flex; align-items: center; gap: 10px; }
+.coin-pack-icon { font-size: 20px; }
+.coin-pack-coins { font-size: 15px; font-weight: 700; color: var(--text); }
+.coin-pack-bonus { font-size: 11px; color: var(--green); font-weight: 600; }
+.coin-pack-price { font-size: 14px; font-weight: 700; color: var(--gold); }
+
+/* SETTINGS MODAL */
+.setting-row { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.setting-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* ─── TOAST ──────────────────────────────────── */
+#toastContainer {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 500; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-md); border-radius: 10px;
+  padding: 10px 18px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0; transform: translateY(8px);
+  transition: all 0.2s ease;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.warn { border-color: var(--gold); color: var(--gold); }
+
+/* ─── FOOTER SPACER ──────────────────────────── */
+.bottom-safe { height: max(24px, env(safe-area-inset-bottom, 0px)); }
+
+/* ─── UTILS ──────────────────────────────────── */
+.hidden { display: none !important; }
+.gold { color: var(--gold); }
+.muted { color: var(--text-2); }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+</style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-electricOrange selection:text-obsidian">
+<body>
+<div id="app">
 
-    <!-- TOP HEADER / NAV BAR -->
-    <header class="sticky top-0 z-40 bg-obsidian/90 backdrop-blur-md border-b border-slateArmor px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="openIntentModal()">
-            <div class="split-shield flex items-center justify-center shadow-lg">
-                <span class="font-mono text-xs font-black text-obsidian tracking-tighter">RK</span>
-            </div>
-            <div>
-                <h1 class="font-mono font-black text-sm md:text-base tracking-wider text-titanium flex items-center gap-1.5">
-                    ROOKIE & KING<span class="text-xs text-electricOrange font-bold">3SDSTM</span>
-                </h1>
-                <p class="text-[10px] font-mono text-gray-400 tracking-tight">HIGH-STAKES ATTENTION MARKET</p>
-            </div>
-        </div>
+<!-- ─── ONBOARDING ──────────────────────────── -->
+<div id="onboard">
+  <!-- SLIDES AREA -->
+  <div class="ob-slides" id="obSlides">
 
-        <!-- STATS & VAULT COUNTER -->
-        <div class="flex items-center space-x-2 md:space-x-4">
-            <!-- PASS COIN VAULT -->
-            <div class="bg-slateArmor/80 border border-white/10 rounded-lg px-2.5 py-1 flex items-center space-x-1.5">
-                <span class="text-base">🪙</span>
-                <div>
-                    <div class="text-[9px] font-mono text-electricOrange font-semibold leading-none">VAULT</div>
-                    <div id="coinBalance" class="text-xs font-mono font-bold text-titanium leading-tight">250 COINS</div>
-                </div>
-            </div>
-
-            <!-- EDS SCORE -->
-            <div class="bg-slateArmor/80 border border-orange-500/30 rounded-lg px-2.5 py-1 hidden sm:flex items-center space-x-1.5">
-                <span class="text-xs font-mono text-electricOrange font-black">EDS</span>
-                <div>
-                    <div class="text-[9px] font-mono text-gray-400 leading-none">DEAL SCORE</div>
-                    <div class="text-xs font-mono font-bold text-electricOrange leading-tight">98.4 %</div>
-                </div>
-            </div>
-
-            <!-- INTENT SETTINGS BTN -->
-            <button onclick="showIntro()" class="bg-slateArmor hover:bg-slate-800 text-titanium p-2 rounded-lg border border-gray-700 transition-all text-xs font-mono flex items-center space-x-1" aria-label="How it works">
-                <span>❔</span>
-                <span class="hidden md:inline">HOW</span>
-            </button>
-            <button onclick="openIntentModal()" class="bg-slateArmor hover:bg-slate-800 text-titanium p-2 rounded-lg border border-gray-700 transition-all text-xs font-mono flex items-center space-x-1">
-                <span>⚙️</span>
-                <span class="hidden md:inline">INTENT</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- MATCH & GAME MODE SELECTOR -->
-    <div class="max-w-4xl w-full mx-auto px-4 pt-3 pb-1 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <!-- MODE TOGGLE BUTTONS -->
-        <div class="bg-slateArmor p-1 rounded-xl border border-gray-800 flex w-full sm:w-auto">
-            <button id="btnModeChess" onclick="switchMode('chess')" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all bg-electricOrange text-white shadow-md">
-                ♟️ TACTICAL CHESS PUZZLE
-            </button>
-            <button id="btnModeAI" onclick="switchMode('ai')" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all text-gray-400 hover:text-white">
-                ⚡ AI SCENARIO DUEL
-            </button>
-        </div>
-
-        <!-- STAKED ESCROW STATUS BADGE -->
-        <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end bg-slateArmor/50 border border-gray-800 px-3 py-1.5 rounded-lg">
-            <span class="text-[11px] font-mono text-cyberAmber flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-cyberAmber animate-ping"></span>
-                ESCROW: <strong class="text-titanium" id="escrowAmount">250 COINS</strong>
-            </span>
-            <span class="text-[10px] font-mono text-gray-500">| 72H AUTO-REFUND</span>
-        </div>
+    <!-- Slide 0 — What is this -->
+    <div class="ob-slide active" id="slide0">
+      <div class="ob-icon">♟️</div>
+      <div class="ob-title">Stop cold DMing.<br>Earn the meeting.</div>
+      <p class="ob-sub">
+        <span class="ob-highlight">Rookie & King™</span> is the attention marketplace where you play your way into a verified professional connection — no spray-and-pray, no ignored InMails.
+      </p>
     </div>
 
-    <!-- MAIN GAME / DUEL CONTAINER -->
-    <main class="max-w-4xl w-full mx-auto px-4 py-2 flex-1 flex flex-col justify-center items-center relative">
-
-        <!-- MODE 1: CHESS PUZZLE STAGE (DEFAULT) -->
-        <div id="chessStage" class="w-full flex flex-col items-center">
-            
-            <!-- OPPONENT / KING BRIEF BAR -->
-            <div class="w-full max-w-md bg-slateArmor/90 border border-purple-500/40 rounded-xl p-3 mb-4 flex items-center justify-between shadow-lg">
-                <div class="flex items-center space-x-3">
-                    <div class="relative">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Executive" class="w-10 h-10 rounded-full border-2 border-royalPurple object-cover">
-                        <span class="absolute -bottom-1 -right-1 bg-royalPurple text-[9px] font-mono px-1 rounded text-white font-bold">KING</span>
-                    </div>
-                    <div>
-                        <div class="flex items-center space-x-1.5">
-                            <h3 class="text-xs font-mono font-bold text-titanium">Elena Rostova</h3>
-                            <span class="text-[10px] bg-green-500/20 text-green-400 border border-green-500/30 px-1.5 py-0.2 rounded">VERIFIED VC</span>
-                        </div>
-                        <p class="text-[11px] text-gray-400">Managing Partner @ Apex Cyber Ventures</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-mono text-gray-400">GAME GOAL</div>
-                    <div class="text-xs font-mono font-bold text-electricOrange" id="puzzleObjective">CHECKMATE THE BOARD</div>
-                </div>
-            </div>
-
-            <!-- ISOMETRIC CHESSBOARD STAGE -->
-            <div class="stage-container w-full max-w-sm h-72 sm:h-80 flex items-center justify-center my-2">
-                <div id="board" class="isometric-board grid grid-cols-8 grid-rows-8 w-64 h-64 sm:w-72 sm:h-72 border-4 border-slateArmor rounded-md p-1 bg-obsidian">
-                    <!-- Dynamic Chess Squares Rendered by JS -->
-                </div>
-            </div>
-
-            <!-- DIFFICULTY + RANK BAR -->
-            <div class="w-full max-w-md flex items-center justify-between mt-1 gap-2 font-mono">
-                <div class="flex gap-1" id="diffBar">
-                    <button onclick="setDiff('easy')" data-diff="easy" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">ROOKIE</button>
-                    <button onclick="setDiff('med')" data-diff="med" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">PRO</button>
-                    <button onclick="setDiff('hard')" data-diff="hard" class="diff-btn px-2 py-1 rounded-lg text-[10px] border border-gray-700 text-gray-300 transition-all">MASTER</button>
-                </div>
-                <div class="text-[10px] text-gray-400 whitespace-nowrap">RANK <span id="rkRating" class="text-titanium font-bold">1000</span> · <span id="rkRecord" class="text-electricOrange">0W-0L</span></div>
-                <button onclick="startRanked()" class="px-2 py-1 rounded-lg text-[10px] border border-royalPurple/60 text-royalPurple hover:bg-royalPurple/10 transition-all font-bold">⚔ RANKED 50🪙</button>
-                <button onclick="openModal('coinStoreModal')" class="px-2 py-1 rounded-lg text-[10px] border border-orange-500/40 text-electricOrange hover:bg-orange-500/10 transition-all">🪙 BUY</button>
-            </div>
-
-            <!-- PUZZLE CONTROLS & HINT BAR -->
-            <div class="w-full max-w-md flex items-center justify-between mt-2 gap-2">
-                <button onclick="resetPuzzle()" class="bg-slateArmor hover:bg-slate-800 text-gray-300 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-mono transition-all">
-                    🔄 RESET BOARD
-                </button>
-                
-                <div id="moveFeedback" class="text-xs font-mono text-electricOrange font-bold tracking-wide animate-pulse">
-                    YOUR MOVE (WHITE)
-                </div>
-
-                <button onclick="triggerHandshake()" class="bg-slateArmor hover:bg-red-950/40 text-red-400 border border-red-900/40 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center space-x-1">
-                    <span>🤝</span>
-                    <span>RESIGN</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- MODE 2: AI SCENARIO DUEL STAGE (HIDDEN BY DEFAULT) -->
-        <div id="aiStage" class="w-full max-w-md bg-slateArmor border border-orange-500/30 rounded-2xl p-5 shadow-2xl hidden my-auto">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-3 mb-4">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xl">⚡</span>
-                    <div>
-                        <h3 class="text-xs font-mono font-bold text-titanium">AI EXECUTIVE DUEL</h3>
-                        <p class="text-[10px] font-mono text-gray-400">ZERO CHESS SKILL REQUIRED</p>
-                    </div>
-                </div>
-                <div id="scenarioTimer" class="bg-obsidian border border-electricOrange text-electricOrange font-mono text-sm font-bold px-2.5 py-1 rounded-md">
-                    15s
-                </div>
-            </div>
-
-            <div class="space-y-3">
-                <div class="bg-obsidian/70 border border-gray-800 p-3 rounded-xl">
-                    <span class="text-[10px] font-mono text-cyberAmber font-bold">SCENARIO #849</span>
-                    <p class="text-xs text-gray-200 mt-1 font-sans leading-relaxed">
-                        "Your lead Series A investor pulls out 24 hours before payroll due to market volatility. You have $15k in reserve and $120k payroll liability. What is your immediate executive move?"
-                    </p>
-                </div>
-
-                <!-- SCENARIO OPTIONS -->
-                <div class="space-y-2 pt-1">
-                    <button onclick="submitScenarioChoice('A')" class="w-full text-left bg-obsidian hover:bg-slate-800 border border-gray-800 hover:border-electricOrange p-3 rounded-xl transition-all group">
-                        <div class="text-xs font-mono font-bold text-electricOrange group-hover:text-white">OPTION A: Emergency Bridge Debt</div>
-                        <div class="text-[11px] text-gray-400 mt-0.5">Offer 2x warrants to existing angels for 48h emergency capital wire.</div>
-                    </button>
-
-                    <button onclick="submitScenarioChoice('B')" class="w-full text-left bg-obsidian hover:bg-slate-800 border border-gray-800 hover:border-royalPurple p-3 rounded-xl transition-all group">
-                        <div class="text-xs font-mono font-bold text-royalPurple group-hover:text-white">OPTION B: Transparent Deferred Payroll</div>
-                        <div class="text-[11px] text-gray-400 mt-0.5">Call all-hands, defer 50% executive pay, protect junior staff 100%.</div>
-                    </button>
-
-                    <button onclick="submitScenarioChoice('C')" class="w-full text-left bg-obsidian hover:bg-slate-800 border border-gray-800 hover:border-green-500 p-3 rounded-xl transition-all group">
-                        <div class="text-xs font-mono font-bold text-neonGreen group-hover:text-white">OPTION C: Immediate Strategic M&A Signal</div>
-                        <div class="text-[11px] text-gray-400 mt-0.5">Accelerate pending competitor partnership into emergency acqui-hire.</div>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- PROGRESSIVE PITCH SHEET (BOTTOM DOCK) -->
-    <div id="pitchSheet" class="max-w-4xl w-full mx-auto px-4 pb-4">
-        <div class="bg-slateArmor border border-slate-700/60 rounded-2xl p-4 shadow-2xl relative overflow-hidden">
-            <!-- BACKGROUND GLOW ACCENT -->
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-electricOrange/10 rounded-full blur-2xl pointer-events-none"></div>
-
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <!-- EXECUTIVE / FOUNDER SUMMARY -->
-                <div class="flex items-center space-x-3">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="Founder" class="w-12 h-12 rounded-xl border-2 border-electricOrange object-cover">
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <h2 class="text-sm font-mono font-bold text-titanium">Alex Mercer</h2>
-                            <span class="bg-orange-500/20 text-electricOrange border border-orange-500/30 text-[9px] font-mono px-1.5 py-0.5 rounded font-bold">ROOKIE (FOUNDER)</span>
-                        </div>
-                        <p class="text-xs text-gray-300">Founder & CEO @ NeuralPulse AI</p>
-                        <p class="text-[10px] font-mono text-gray-500">SEEKING: $1.5M Seed | B2B Infrastructure</p>
-                    </div>
-                </div>
-
-                <!-- PITCH UNLOCK PROGRESS BAR -->
-                <div class="w-full md:w-48 bg-obsidian p-2 rounded-xl border border-gray-800">
-                    <div class="flex justify-between text-[9px] font-mono mb-1">
-                        <span class="text-gray-400">PITCH UNLOCK STATUS</span>
-                        <span id="unlockPct" class="text-electricOrange font-bold">33% (MOVE 1/3)</span>
-                    </div>
-                    <div class="w-full bg-slateArmor h-2 rounded-full overflow-hidden">
-                        <div id="unlockBar" class="bg-gradient-to-r from-electricOrange to-royalPurple h-full w-1/3 transition-all duration-500"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- DYNAMIC UNLOCKED CONTENT SHEET -->
-            <div id="unlockedPitchContent" class="mt-3 pt-3 border-t border-gray-800/80 text-xs text-gray-300">
-                <div class="bg-obsidian/60 p-3 rounded-xl border border-gray-800 mb-3">
-                    <div class="text-[10px] font-mono text-electricOrange font-bold mb-1">15-SECOND ELEVATOR PITCH</div>
-                    <p class="italic text-gray-200">
-                        "NeuralPulse reduces LLM API latency by 64% using real-time edge quantization. $45k MRR, growing 28% MoM with 12 enterprise contracts closed."
-                    </p>
-                </div>
-
-                <!-- STRATEGIC ACTION BUTTON TRIO -->
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="actionRequestDeck()" class="bg-obsidian hover:bg-slate-800 border border-gray-700 hover:border-electricOrange p-2 rounded-xl text-center transition-all group">
-                        <span class="text-sm block">📄</span>
-                        <span class="text-[10px] font-mono font-bold text-gray-300 group-hover:text-white block">REQUEST DECK</span>
-                    </button>
-
-                    <button onclick="actionOfferCoins()" class="bg-obsidian hover:bg-slate-800 border border-gray-700 hover:border-purple-500 p-2 rounded-xl text-center transition-all group">
-                        <span class="text-sm block">🪙</span>
-                        <span class="text-[10px] font-mono font-bold text-gray-300 group-hover:text-electricOrange block">+50 COINS</span>
-                    </button>
-
-                    <button onclick="actionProposeMeeting()" class="bg-electricOrange hover:bg-orange-600 text-white p-2 rounded-xl text-center transition-all font-bold shadow-lg shadow-orange-950/50">
-                        <span class="text-sm block">☕</span>
-                        <span class="text-[10px] font-mono block">15m MEETING</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+    <!-- Slide 1 — How it works -->
+    <div class="ob-slide" id="slide1">
+      <div class="ob-icon">🔓</div>
+      <div class="ob-title">Three moves.<br>Full access.</div>
+      <p class="ob-sub">
+        Make 3 meaningful moves in a chess duel or business scenario. Each move <span class="ob-highlight">unlocks more</span> of your match's pitch, portfolio, or goals — and earns you the right to request a real intro.
+      </p>
     </div>
 
-    <!-- DEAL ROOM & POST-MATCH OVERLAY MODAL (HIDDEN BY DEFAULT) -->
-    <div id="dealRoomModal" class="fixed inset-0 z-50 bg-obsidian/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
-        <div class="max-w-md w-full bg-slateArmor border border-green-500/40 rounded-2xl p-5 shadow-2xl relative">
-            <button onclick="closeModal('dealRoomModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white font-mono text-sm">✕</button>
-
-            <div class="text-center mb-4">
-                <div class="w-12 h-12 bg-green-500/20 text-neonGreen border border-neonGreen rounded-full flex items-center justify-center text-2xl mx-auto mb-2 shadow-lg shadow-green-950">
-                    🤝
-                </div>
-                <h2 class="text-base font-mono font-bold text-titanium">DEAL ROOM UNLOCKED</h2>
-                <p class="text-xs text-gray-400 font-mono">MATCH SOLVED • COIN ESCROW REFUNDED</p>
-            </div>
-
-            <!-- EXECUTIVE BRIEF CARD SUMMARY -->
-            <div class="bg-obsidian border border-gray-800 p-3.5 rounded-xl space-y-2 mb-4">
-                <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 border-b border-gray-800 pb-2">
-                    <span>MATCH ID: #RK-9982</span>
-                    <span class="text-neonGreen">SOLVED IN 11.4s</span>
-                </div>
-                <div class="text-xs font-mono text-titanium font-bold">MATCH BRIEF SUMMARY:</div>
-                <p class="text-xs text-gray-300 font-sans">
-                    <strong>Elena Rostova (VC)</strong> & <strong>Alex Mercer (NeuralPulse AI)</strong> have aligned intent vectors. Pitch unlocked, deck approved, 15m calendar window granted.
-                </p>
-            </div>
-
-            <!-- ACTION CONTROLS -->
-            <div class="space-y-2.5">
-                <div class="mb-1">
-                    <input id="introNoteInput" type="text" maxlength="160" placeholder="One line: what do you want from this intro?" class="w-full bg-obsidian border border-gray-700 focus:border-royalPurple text-titanium text-xs font-mono p-2.5 rounded-xl outline-none transition-colors placeholder-gray-600">
-                </div>
-                <button onclick="requestIntro()" class="w-full bg-royalPurple hover:bg-purple-600 text-white font-mono font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg">
-                    <span>🤝</span>
-                    <span>REQUEST INTRO · STAKE 100🪙 ESCROW</span>
-                </button>
-                <button onclick="triggerCalendlyMock()" class="w-full bg-neonGreen hover:bg-emerald-600 text-obsidian font-mono font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg">
-                    <span>📅</span>
-                    <span>BOOK 15m VIA CALENDLY</span>
-                </button>
-
-                <button onclick="copyExecutiveBrief()" class="w-full bg-obsidian hover:bg-slate-800 border border-electricOrange text-electricOrange font-mono font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2">
-                    <span>📋</span>
-                    <span id="copyBtnText">COPY INMAIL EXECUTIVE BRIEF</span>
-                </button>
-            </div>
-        </div>
+    <!-- Slide 2 — The stake -->
+    <div class="ob-slide" id="slide2">
+      <div class="ob-icon">🪙</div>
+      <div class="ob-title">Both sides<br>have skin in the game.</div>
+      <p class="ob-sub">
+        Stake coins to request a meeting. Coins <span class="ob-highlight">stay in escrow</span> until the meeting actually happens — then they're returned. Spam has a cost. Real intent gets rewarded.
+      </p>
     </div>
 
-    <!-- ONBOARDING & INTENT VECTOR MODAL (LINKEDIN AUTH MOCK) -->
-    <div id="intentModal" class="fixed inset-0 z-50 bg-obsidian/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
-        <div class="max-w-md w-full bg-slateArmor border border-purple-500/40 rounded-2xl p-5 shadow-2xl relative">
-            <button onclick="closeModal('intentModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white font-mono text-sm">✕</button>
-
-            <div class="text-center mb-4">
-                <div class="split-shield mx-auto mb-2"></div>
-                <h2 class="text-base font-mono font-bold text-titanium">INTENT VECTOR SETUP</h2>
-                <p class="text-xs text-gray-400 font-mono">LINKEDIN AUTHENTICATED PROFILE</p>
-            </div>
-
-            <div class="space-y-3 font-mono text-xs">
-                <div>
-                    <label class="block text-gray-400 mb-1 text-[10px]">YOUR PRIMARY ROLE (I AM A...)</label>
-                    <select id="roleSelect" onchange="toggleOther('role')" class="w-full bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
-                        <option value="founder">🚀 Founder / CEO</option>
-                        <option value="operator">🧭 Operator / Exec (COO, CMO, CPO…)</option>
-                        <option value="investor">💼 Investor (VC / Angel)</option>
-                        <option value="recruiter">🎯 Recruiter / Hiring manager</option>
-                        <option value="jobseeker">💻 Job seeker (any field)</option>
-                        <option value="freelancer">🛠️ Freelancer / Consultant</option>
-                        <option value="sales">📈 Sales / Business development</option>
-                        <option value="partner">🤝 Partnerships / BizDev</option>
-                        <option value="creator">🎨 Creator / Marketer</option>
-                        <option value="student">🎓 Student / Early-career</option>
-                        <option value="other">✳️ Other…</option>
-                    </select>
-                    <input id="roleOther" type="text" maxlength="60" placeholder="Describe your role" class="hidden w-full mt-2 bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
-                </div>
-
-                <div>
-                    <label class="block text-gray-400 mb-1 text-[10px]">TARGET MATCH (LOOKING FOR...)</label>
-                    <select id="targetSelect" onchange="toggleOther('target')" class="w-full bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
-                        <option value="investors">💼 Investors / capital</option>
-                        <option value="founders">🚀 Founders / startups</option>
-                        <option value="clients">🏢 Clients / customers</option>
-                        <option value="talent">👩‍💻 Talent / co-founders</option>
-                        <option value="job">💼 A job / new role</option>
-                        <option value="partners">🤝 Partners / collaborators</option>
-                        <option value="mentors">🧠 Mentors / advisors</option>
-                        <option value="press">📰 Press / exposure</option>
-                        <option value="other">✳️ Other…</option>
-                    </select>
-                    <input id="targetOther" type="text" maxlength="60" placeholder="What are you looking for?" class="hidden w-full mt-2 bg-obsidian border border-gray-700 text-titanium p-2.5 rounded-xl">
-                </div>
-
-                <div class="pt-2">
-                    <button onclick="saveIntentVector()" class="w-full bg-royalPurple hover:bg-purple-600 text-white font-mono font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-purple-950">
-                        SAVE INTENT & RE-MATCH BOARD
-                    </button>
-                </div>
-            </div>
+    <!-- Slide 3 — Intent setup -->
+    <div class="ob-slide" id="slide3" style="justify-content:flex-start; padding-top: 24px; overflow-y: auto;">
+      <div style="width:100%; max-width:380px;">
+        <div style="text-align:center; margin-bottom:20px;">
+          <div class="rk-shield" style="margin:0 auto 12px;"></div>
+          <div class="ob-title" style="font-size:22px;">Set your intent</div>
+          <p style="font-size:13px; color:var(--text-2); margin-top:6px;">We'll match you with the right people.</p>
         </div>
-    </div>
-
-    <!-- INTRO / HOW IT WORKS -->
-    <div id="introModal" class="fixed inset-0 z-[60] bg-obsidian/98 backdrop-blur-xl flex items-center justify-center p-4 hidden">
-      <div class="max-w-md w-full bg-slateArmor border border-royalPurple/40 rounded-2xl p-6 shadow-2xl relative text-center">
-        <div class="split-shield mx-auto mb-3"></div>
-        <h2 class="text-lg font-mono font-black text-titanium tracking-wider">ROOKIE &amp; KING<span class="text-electricOrange">™</span></h2>
-        <p class="text-xs text-gray-400 font-mono mb-5">The High-Stakes Attention Marketplace</p>
-        <div class="space-y-3 text-start mb-5">
-          <div class="flex items-start gap-3"><span class="text-xl">♟️</span><div><div class="text-sm font-mono font-bold text-titanium">1 &middot; Win the duel</div><div class="text-xs text-gray-400">Beat the board — or a matched player — in a real chess or scenario duel.</div></div></div>
-          <div class="flex items-start gap-3"><span class="text-xl">🔓</span><div><div class="text-sm font-mono font-bold text-titanium">2 &middot; Unlock the Deal Room</div><div class="text-xs text-gray-400">A verified match opens — founder meets investor, talent meets recruiter.</div></div></div>
-          <div class="flex items-start gap-3"><span class="text-xl">🤝</span><div><div class="text-sm font-mono font-bold text-titanium">3 &middot; Get the intro</div><div class="text-xs text-gray-400">Stake coins into escrow; we broker a real meeting. Escrow releases when it happens.</div></div></div>
+        <div class="form-group">
+          <label class="form-label">I am a…</label>
+          <select class="form-select" id="roleSelect">
+            <option value="founder">🚀 Founder / CEO</option>
+            <option value="operator">🧭 Operator / Exec (COO, CMO, CPO…)</option>
+            <option value="investor">💼 Investor (VC / Angel)</option>
+            <option value="recruiter">🎯 Recruiter / Hiring Manager</option>
+            <option value="jobseeker">💻 Job Seeker</option>
+            <option value="freelancer">🛠️ Freelancer / Consultant</option>
+            <option value="sales">📈 Sales / Business Development</option>
+            <option value="partner">🤝 Partnerships / BizDev</option>
+            <option value="other">✳️ Other</option>
+          </select>
         </div>
-        <button onclick="startFromIntro()" class="w-full bg-electricOrange hover:bg-orange-600 text-obsidian font-mono font-black py-3 rounded-xl transition-all shadow-lg mb-2">ENTER THE ARENA ♟</button>
-        <button onclick="closeIntro()" class="w-full text-gray-400 hover:text-titanium font-mono text-xs py-1">Skip — just play</button>
+        <div class="form-group">
+          <label class="form-label">I'm looking for…</label>
+          <select class="form-select" id="targetSelect">
+            <option value="investors">💼 Investors / Capital</option>
+            <option value="founders">🚀 Founders / Startups</option>
+            <option value="clients">🏢 Clients / Customers</option>
+            <option value="talent">👩‍💻 Talent / Co-founders</option>
+            <option value="job">💼 A New Role</option>
+            <option value="partners">🤝 Partners / Collaborators</option>
+            <option value="mentors">🧠 Mentors / Advisors</option>
+            <option value="other">✳️ Something else</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your name (display)</label>
+          <input class="form-input" id="nameInput" type="text" placeholder="e.g. Alex M." maxlength="30">
+        </div>
       </div>
     </div>
 
-    <!-- COIN STORE MODAL -->
-    <div id="coinStoreModal" class="fixed inset-0 z-50 bg-obsidian/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
-        <div class="max-w-md w-full bg-slateArmor border border-orange-500/40 rounded-2xl p-5 shadow-2xl relative">
-            <button onclick="closeModal('coinStoreModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white font-mono text-sm">✕</button>
-            <div class="text-center mb-4">
-                <div class="split-shield mx-auto mb-2"></div>
-                <h2 class="text-base font-mono font-bold text-titanium">COIN VAULT</h2>
-                <p class="text-xs text-gray-400 font-mono">Stake coins for ranked duels &amp; to unlock real intros</p>
-            </div>
-            <div class="space-y-2 font-mono text-xs" id="coinPacks"></div>
+  </div>
+
+  <!-- DOTS -->
+  <div class="ob-dots">
+    <div class="ob-dot active" id="dot0"></div>
+    <div class="ob-dot" id="dot1"></div>
+    <div class="ob-dot" id="dot2"></div>
+    <div class="ob-dot" id="dot3"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ob-footer">
+    <button class="btn btn-primary btn-lg btn-full" id="obNextBtn" onclick="obNext()">Continue →</button>
+    <button class="btn btn-ghost btn-sm" style="align-self:center;" onclick="obSkip()">Skip intro — just play</button>
+  </div>
+</div><!-- /onboard -->
+
+
+<!-- ─── MAIN APP ────────────────────────────── -->
+<header id="header">
+  <div class="rk-logo" onclick="openModal('settingsModal')">
+    <div class="rk-shield"></div>
+    <div>
+      <div class="rk-wordmark">Rookie &amp; King<span>™</span></div>
+      <div class="rk-tagline">Earn the intro. Win the room.</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="vault-badge" onclick="openModal('coinModal')">
+      <span style="font-size:16px;">🪙</span>
+      <div>
+        <div class="vault-num t-mono" id="coinDisplay">250</div>
+        <div class="vault-label">coins</div>
+      </div>
+    </div>
+    <button class="icon-btn" onclick="openModal('settingsModal')" title="Settings">⚙</button>
+  </div>
+</header>
+
+<!-- MATCH CARD -->
+<section id="matchCard">
+  <div class="match-card-inner">
+    <div class="match-meta">
+      <div class="match-avatar-wrap">
+        <div class="match-avatar" id="matchAvatarEl">👤</div>
+        <span class="match-badge badge-king" id="matchBadgeEl">KING</span>
+      </div>
+      <div class="match-info">
+        <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+          <div class="match-name" id="matchName">Elena Rostova</div>
+          <span style="font-size:10px; background:var(--green-bg); color:var(--green); border:1px solid rgba(47,176,106,0.25); padding:2px 7px; border-radius:4px; font-weight:700;">
+            <span class="verified-dot"></span>VERIFIED
+          </span>
         </div>
+        <div class="match-role" id="matchRole">Managing Partner @ Apex Cyber Ventures</div>
+        <div class="match-tags" id="matchTags">
+          <span class="match-tag">Series A</span>
+          <span class="match-tag">B2B SaaS</span>
+          <span class="match-tag">Cyber / AI</span>
+        </div>
+      </div>
     </div>
 
-    <script>
-        // APP STATE MANAGEMENT
-        let currentMode = 'chess';
-        let coinBalance = 250;
-        let escrowAmount = 250;
-        let puzzleStep = 0; // 0, 1, 2 for checkmate puzzle
-        let audioCtx = null;
+    <div class="match-intent" id="matchIntent">
+      <strong>Looking for:</strong> Pre-seed to Series A founders in B2B infrastructure, cybersecurity, and enterprise AI. Prefers founders with technical co-founder and &gt;$50k MRR signal.
+    </div>
 
-        // WEB AUDIO API SYNTHESIZER (3SDSTM SOUND FX)
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
+    <div class="match-actions">
+      <button class="btn btn-ghost" onclick="skipMatch()">Skip match</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="acceptChallenge()">⚔ Accept challenge</button>
+    </div>
+  </div>
+</section>
 
-        function playSound(type) {
-            initAudio();
-            if (!audioCtx) return;
+<!-- PROGRESS / STAKES BAR -->
+<section id="progressBar">
+  <div class="stakes-bar">
+    <div class="stakes-row">
+      <div class="stakes-item">
+        <div class="stakes-value t-mono" id="stakeDisplay">50 🪙</div>
+        <div class="stakes-key">At stake</div>
+      </div>
+      <div class="stakes-divider"></div>
+      <div class="stakes-item" style="text-align:center;">
+        <div style="display:flex; gap:5px; justify-content:center; margin-bottom:3px;">
+          <div class="move-dot" id="md0"></div>
+          <div class="move-dot" id="md1"></div>
+          <div class="move-dot" id="md2"></div>
+        </div>
+        <div class="stakes-key">Moves to unlock</div>
+      </div>
+      <div class="stakes-divider"></div>
+      <div class="stakes-item" style="text-align:right;">
+        <div class="stakes-value" id="moveLabel" style="font-size:12px;">MOVE 0/3</div>
+        <div class="stakes-key">Progress</div>
+      </div>
+    </div>
+    <div class="unlock-track"><div class="unlock-fill" id="unlockFill"></div></div>
+  </div>
+</section>
 
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+<!-- GAME ARENA -->
+<section id="arena">
 
-            const now = audioCtx.currentTime;
+  <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabChess" onclick="switchMode('chess')">♟ Chess Duel</button>
+    <button class="mode-tab" id="tabAI" onclick="switchMode('ai')">⚡ Scenario Duel</button>
+  </div>
 
-            if (type === 'move') {
-                // Low mechanical move thump
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'unlock') {
-                // High futuristic dual chime
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(880, now);
-                osc.frequency.exponentialRampToValueAtTime(1760, now + 0.25);
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-                osc.start(now);
-                osc.stop(now + 0.25);
-            } else if (type === 'coin') {
-                // Metallic coin resonance
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(1200, now);
-                osc.frequency.exponentialRampToValueAtTime(2400, now + 0.15);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            } else if (type === 'resign') {
-                // Soft sub-bass drop
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(220, now);
-                osc.frequency.exponentialRampToValueAtTime(55, now + 0.3);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            }
-        }
+  <!-- CHESS STAGE -->
+  <div id="chessStage">
+    <div class="board-feedback your-turn" id="boardFeedback">Your move (White) — make 3 moves to unlock the Deal Room</div>
+    <div class="board-wrap">
+      <div id="board"></div>
+    </div>
+    <div class="board-controls">
+      <div class="diff-group">
+        <button class="diff-btn" id="diff-easy" onclick="setDiff('easy')">Rookie</button>
+        <button class="diff-btn active" id="diff-med" onclick="setDiff('med')">Pro</button>
+        <button class="diff-btn" id="diff-hard" onclick="setDiff('hard')">Master</button>
+      </div>
+      <button class="rank-btn" onclick="startRanked()">⚔ Ranked +50🪙</button>
+      <button class="resign-btn" onclick="resignGame()">↩ Resign</button>
+    </div>
+  </div>
 
-        // ─── TOAST NOTIFICATION SYSTEM (replaces all alert/prompt) ───
-        function toast(msg, type) {
-            const colors = { ok:'#5E9C7C', warn:'#C2A661', info:'rgba(194,166,97,0.5)' };
-            const t = document.createElement('div');
-            t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(8px);background:#1A1D23;color:#ECEAE3;border:1px solid '+(colors[type]||colors.info)+';padding:11px 20px;border-radius:12px;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;z-index:99999;letter-spacing:0.3px;text-align:center;max-width:88vw;box-shadow:0 8px 32px rgba(0,0,0,0.6);opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;';
-            t.textContent = msg;
-            document.body.appendChild(t);
-            requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
-            setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(8px)'; setTimeout(()=>t.remove(),250); }, 3000);
-        }
+  <!-- AI SCENARIO STAGE -->
+  <div id="aiStage">
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <span class="scenario-num" id="scenNum">SCENARIO #849</span>
+        <span class="scenario-timer" id="scenTimer">15s</span>
+      </div>
+      <div class="scenario-body" id="scenBody">
+        "Your lead Series A investor pulls out 24 hours before payroll — $120k liability, $15k reserves. You have one call to make. What's your immediate move?"
+      </div>
+    </div>
+    <div class="choice-list">
+      <button class="choice-btn choice-a" onclick="submitScenario('A')">
+        <div class="choice-letter">A — Emergency Bridge</div>
+        <div class="choice-text">2× warrants to existing angels for 48h emergency wire</div>
+        <div class="choice-subtext">Dilutive but fast. Tests angel relationships.</div>
+      </button>
+      <button class="choice-btn choice-b" onclick="submitScenario('B')">
+        <div class="choice-letter">B — Transparent Deferral</div>
+        <div class="choice-text">All-hands, defer 50% exec pay, protect all junior staff</div>
+        <div class="choice-subtext">Trust-building. No cash solution though.</div>
+      </button>
+      <button class="choice-btn choice-c" onclick="submitScenario('C')">
+        <div class="choice-letter">C — Strategic M&amp;A Signal</div>
+        <div class="choice-text">Accelerate competitor partnership into emergency acqui-hire</div>
+        <div class="choice-subtext">Drastic. Could preserve jobs and unlock capital.</div>
+      </button>
+    </div>
+  </div>
+</section>
 
-        // ─── REAL CHESS ENGINE (chess.js 0.13.x) + computer opponent ───
-        let game = null, selectedSq = null;
-        const FILES = ['a','b','c','d','e','f','g','h'];
-        const GLYPH = { w:{k:'♔',q:'♕',r:'♖',b:'♗',n:'♘',p:'♙'}, b:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'} };
-        function mkChess(fen){ let C=window.Chess; C=(typeof C==='function')?C:(C&&C.Chess); return fen? new C(fen): new C(); }
-        function sqName(r,c){ return FILES[c] + (8 - r); }   // r0 = rank 8
-        function persist(){ try{ localStorage.setItem('rk_fen', game.fen()); }catch(e){} }
-        function pickRandom(a){ return a&&a.length ? a[Math.floor(Math.random()*a.length)] : null; }
+<!-- PROGRESSIVE PITCH DOCK -->
+<section id="pitchDock">
+  <div class="pitch-container">
+    <div class="pitch-header">
+      <span class="pitch-title">Their pitch</span>
+      <span class="pitch-unlock-indicator" id="pitchStatus">🔒 Locked</span>
+    </div>
 
-        function newGame(){
-            game = mkChess();
-            selectedSq = null; persist();
-            updateUnlockProgress(0,'YOUR MOVE (WHITE)');
-            document.getElementById('moveFeedback').textContent = 'YOUR MOVE (WHITE) — checkmate the board to unlock the Deal Room';
-            renderBoard();
-        }
-        function loadGame(){
-            try{ const f=localStorage.getItem('rk_fen'); game = f? mkChess(f): mkChess(); }
-            catch(e){ game = mkChess(); }
-            if(!game) game = mkChess();
-        }
-        function renderBoard(){
-            const boardEl = document.getElementById('board'); boardEl.innerHTML='';
-            const targets = selectedSq ? game.moves({square:selectedSq, verbose:true}).map(m=>m.to) : [];
-            const b = game.board();
-            for(let r=0;r<8;r++){ for(let c=0;c<8;c++){
-                const square=document.createElement('div');
-                const isDark=(r+c)%2===1;
-                square.className=`board-square ${isDark?'dark':'light'} flex items-center justify-center cursor-pointer rounded-sm`;
-                const name=sqName(r,c); square.dataset.sq=name;
-                if(selectedSq===name || targets.includes(name)) square.classList.add('hint');
-                const cell=b[r][c];
-                if(cell){
-                    const p=document.createElement('span');
-                    p.className='chess-piece text-xl sm:text-2xl font-bold font-mono';
-                    p.textContent=GLYPH[cell.color][cell.type];
-                    if(cell.color==='w'){ p.style.color='#f8f8f8'; p.style.textShadow='0 1px 1px rgba(0,0,0,.5), 0 0 2px rgba(0,0,0,.4)'; }
-                    else { p.style.color='#2b2b2b'; p.style.textShadow='0 1px 1px rgba(255,255,255,.3)'; }
-                    square.appendChild(p);
-                }
-                square.onclick=()=>handleSquareClick(name);
-                boardEl.appendChild(square);
-            }}
-        }
-        function handleSquareClick(name){
-            if(!game || game.game_over() || game.turn()!=='w') return;
-            const piece=game.get(name);
-            if(selectedSq){
-                const mv=game.moves({square:selectedSq,verbose:true}).find(m=>m.to===name);
-                if(mv){
-                    game.move({from:selectedSq,to:name,promotion:'q'});
-                    selectedSq=null; playSound('move'); persist(); renderBoard();
-                    if(checkEnd()) return;
-                    setTimeout(aiMove,450); return;
-                }
-                if(piece && piece.color==='w'){ selectedSq=name; renderBoard(); return; }
-                selectedSq=null; renderBoard(); return;
-            }
-            if(piece && piece.color==='w'){ selectedSq=name; playSound('move'); renderBoard(); }
-        }
-        function aiMove(){
-            if(game.game_over()) return;
-            const moves=game.moves({verbose:true}); if(!moves.length) return;
-            const pick = moves.find(m=>m.san.includes('#'))
-                      || pickRandom(moves.filter(m=>m.flags.includes('c')))
-                      || pickRandom(moves);
-            game.move(pick); playSound('move'); persist(); renderBoard(); checkEnd();
-        }
-        function checkEnd(){
-            if(game.in_checkmate()){
-                if(game.turn()==='b'){ // black to move and mated → player (white) won
-                    updateUnlockProgress(100,'CHECKMATE — DEAL ROOM UNLOCKED');
-                    document.getElementById('moveFeedback').textContent='CHECKMATE! You beat the board — match unlocked.';
-                    playSound('unlock'); recordResult('win'); settleStake('win'); setTimeout(()=>openModal('dealRoomModal'),700);
-                } else {
-                    updateUnlockProgress(0,'CHECKMATED — TAP RESET');
-                    document.getElementById('moveFeedback').textContent='Checkmated. Tap RESET BOARD to replay.';
-                    recordResult('loss'); settleStake('loss'); playSound('resign');
-                }
-                return true;
-            }
-            if(game.in_draw() || game.in_stalemate()){
-                settleStake('draw'); document.getElementById('moveFeedback').textContent='Draw. Tap RESET BOARD to replay.'; return true;
-            }
-            document.getElementById('moveFeedback').textContent = game.in_check()
-                ? (game.turn()==='w'?'You are in check.':'Check!')
-                : (game.turn()==='w'?'YOUR MOVE (WHITE)':'AI thinking…');
-            return false;
-        }
-        function resetPuzzle(){ newGame(); }
+    <!-- LOCKED STATE (Level 0) -->
+    <div class="pitch-locked" id="pitchLocked">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-msg">Make your <strong>first move</strong> to start unlocking Elena's pitch deck and contact details.</div>
+    </div>
 
-        function updateUnlockProgress(pct, label) {
-            document.getElementById('unlockBar').style.width = `${pct}%`;
-            document.getElementById('unlockPct').textContent = `${pct}% (${label})`;
-        }
+    <!-- REVEALED CONTENT (Level 1+) -->
+    <div class="pitch-body hidden" id="pitchBody">
+      <div class="pitch-person">
+        <div class="pitch-avatar" id="pitchAvatarEl">👤</div>
+        <div>
+          <div class="pitch-name" id="pitchName">—</div>
+          <div class="pitch-company" id="pitchCompany">—</div>
+          <div class="pitch-seeking" id="pitchSeeking">—</div>
+        </div>
+      </div>
 
-        function switchMode(mode) {
-            currentMode = mode;
-            playSound('move');
+      <!-- Level 2 reveal — elevator pitch -->
+      <div class="pitch-elevator" id="pitchElevator">
+        "NeuralPulse reduces LLM API latency by 64% using real-time edge quantization. $45k MRR, growing 28% MoM, 12 enterprise contracts closed."
+      </div>
 
-            const chessStage = document.getElementById('chessStage');
-            const aiStage = document.getElementById('aiStage');
-            const btnChess = document.getElementById('btnModeChess');
-            const btnAI = document.getElementById('btnModeAI');
+      <!-- Level 3 reveal — actions -->
+      <div class="pitch-actions" id="pitchActions">
+        <div class="intro-input-wrap">
+          <input class="intro-input" id="introNote" type="text" maxlength="160" placeholder="What do you want from this intro? (one line)">
+        </div>
+        <button class="btn btn-success btn-full btn-lg" onclick="openDealRoom()">
+          🤝 Request intro — 100 🪙 escrow
+        </button>
+        <button class="btn btn-secondary btn-full" onclick="openDealRoom()">
+          📅 Book 15-min meeting
+        </button>
+        <div class="action-note">Coins held in escrow until meeting occurs, then returned.</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-            if (mode === 'chess') {
-                chessStage.classList.remove('hidden');
-                aiStage.classList.add('hidden');
+<div class="bottom-safe"></div>
 
-                btnChess.className = "flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all bg-electricOrange text-white shadow-md";
-                btnAI.className = "flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all text-gray-400 hover:text-white";
-            } else {
-                chessStage.classList.add('hidden');
-                aiStage.classList.remove('hidden');
+</div><!-- /app -->
 
-                btnAI.className = "flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all bg-royalPurple text-white shadow-md";
-                btnChess.className = "flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-mono font-bold transition-all text-gray-400 hover:text-white";
-            }
-        }
+<!-- ─── DEAL ROOM MODAL ──────────────────────── -->
+<div class="modal-backdrop center" id="dealModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal('dealModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="deal-badge">🤝</div>
+      <div class="modal-title">Deal Room Unlocked</div>
+      <div class="modal-sub">Match solved · Escrow pending release</div>
 
-        function submitScenarioChoice(choice) {
-            playSound('unlock');
-            updateUnlockProgress(100, `OPTION ${choice} SUBMITTED`);
-            openModal('dealRoomModal');
-        }
+      <div class="deal-summary">
+        <div class="deal-row"><span class="deal-row-label">Match</span><span class="deal-row-val" id="dealMatchName">—</span></div>
+        <div class="deal-row"><span class="deal-row-label">Solved in</span><span class="deal-row-val" id="dealTime">—</span></div>
+        <div class="deal-row"><span class="deal-row-label">Move count</span><span class="deal-row-val" id="dealMoves">—</span></div>
+        <div class="deal-row"><span class="deal-row-label">Intent aligned</span><span class="deal-row-val" style="color:var(--green);">✓ Yes</span></div>
+      </div>
 
-        function actionRequestDeck() {
-            playSound('coin');
-            toast('📄 Deck request sent — the executive will be notified.', 'ok');
-        }
+      <input class="intro-input" id="dealNote" type="text" maxlength="160" placeholder="One line: what do you want from this intro?">
 
-        function actionOfferCoins() {
-            playSound('coin');
-            setCoins(coinBalance + 50);
-            toast('🪙 50 Pass Coins added to your vault.', 'ok');
-        }
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-success btn-full btn-lg" onclick="confirmIntro()">
+          🤝 Request intro — stake 100 🪙
+        </button>
+        <button class="btn btn-secondary btn-full" onclick="closeModal('dealModal')">
+          📋 Copy executive brief first
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function actionProposeMeeting() {
-            playSound('unlock');
-            openModal('dealRoomModal');
-        }
+<!-- ─── COIN STORE MODAL ────────────────────── -->
+<div class="modal-backdrop" id="coinModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal('coinModal')">✕</button>
+      <div style="text-align:center; padding: 4px 0 16px;">
+        <div class="modal-title" style="font-size:18px;">Coin Vault</div>
+        <div class="modal-sub" style="margin-bottom:0;">Stake to play ranked · Escrow for real intros</div>
+      </div>
+    </div>
+    <div class="modal-body" style="padding-top:0;">
+      <div style="background:var(--raised); border-radius:var(--r-sm); padding:12px; margin-bottom:16px; text-align:center;">
+        <div style="font-size:28px; font-weight:700; color:var(--gold); font-variant-numeric: tabular-nums;" id="coinModalBalance">250 🪙</div>
+        <div style="font-size:11px; color:var(--text-3); margin-top:2px;">Current balance</div>
+      </div>
 
-        function triggerHandshake() {
-            playSound('resign');
-            toast('🤝 Gentleman\'s Handshake — match ended with a courtesy gesture.', 'warn');
-            resetPuzzle();
-        }
+      <div class="t-label" style="margin-bottom:10px;">Top up</div>
+      <div id="coinPacks">
+        <div class="coin-pack" onclick="buyCoinPack(100,4.99)">
+          <div class="coin-pack-info">
+            <div class="coin-pack-icon">🪙</div>
+            <div>
+              <div class="coin-pack-coins">100 Coins</div>
+              <div class="coin-pack-bonus">Good for 2 ranked duels</div>
+            </div>
+          </div>
+          <div class="coin-pack-price">$4.99</div>
+        </div>
+        <div class="coin-pack" onclick="buyCoinPack(350,14.99)" style="border-color:var(--border-gold);">
+          <div class="coin-pack-info">
+            <div class="coin-pack-icon">💰</div>
+            <div>
+              <div class="coin-pack-coins">350 Coins <span style="font-size:10px;background:var(--gold-bg);color:var(--gold);padding:1px 5px;border-radius:3px;">POPULAR</span></div>
+              <div class="coin-pack-bonus">3 intros + 5 ranked matches</div>
+            </div>
+          </div>
+          <div class="coin-pack-price">$14.99</div>
+        </div>
+        <div class="coin-pack" onclick="buyCoinPack(1200,49.99)">
+          <div class="coin-pack-info">
+            <div class="coin-pack-icon">💎</div>
+            <div>
+              <div class="coin-pack-coins">1,200 Coins <span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px;">BEST VALUE</span></div>
+              <div class="coin-pack-bonus">12 intros + unlimited ranked for a month</div>
+            </div>
+          </div>
+          <div class="coin-pack-price">$49.99</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="t-label" style="margin-bottom:8px;">Earn free coins</div>
+      <div style="font-size:12px; color:var(--text-2); line-height:1.6;">
+        Win a ranked duel → +25 coins · Refer a colleague → +50 coins · Complete your profile → +10 coins
+      </div>
+    </div>
+  </div>
+</div>
 
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-        }
+<!-- ─── SETTINGS MODAL ─────────────────────── -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header" style="padding-bottom:16px;">
+      <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="rk-shield"></div>
+        <div>
+          <div style="font-family:'Playfair Display',serif; font-size:18px; font-weight:700;">Rookie &amp; King™</div>
+          <div style="font-size:11px; color:var(--text-3);">Settings &amp; Intent</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body" style="padding-top:0;">
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
+      <div class="t-label" style="margin-bottom:10px;">Your intent</div>
+      <div class="form-group">
+        <label class="form-label">I am a…</label>
+        <select class="form-select" id="settingsRole" onchange="updateRole()">
+          <option value="founder">🚀 Founder / CEO</option>
+          <option value="operator">🧭 Operator / Exec</option>
+          <option value="investor">💼 Investor (VC / Angel)</option>
+          <option value="recruiter">🎯 Recruiter</option>
+          <option value="jobseeker">💻 Job Seeker</option>
+          <option value="freelancer">🛠️ Freelancer / Consultant</option>
+          <option value="sales">📈 Sales / BizDev</option>
+          <option value="partner">🤝 Partnerships</option>
+          <option value="other">✳️ Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Looking for…</label>
+        <select class="form-select" id="settingsTarget" onchange="updateTarget()">
+          <option value="investors">💼 Investors / Capital</option>
+          <option value="founders">🚀 Founders / Startups</option>
+          <option value="clients">🏢 Clients / Customers</option>
+          <option value="talent">👩‍💻 Talent / Co-founders</option>
+          <option value="job">💼 A New Role</option>
+          <option value="partners">🤝 Partners</option>
+          <option value="mentors">🧠 Mentors / Advisors</option>
+          <option value="other">✳️ Something else</option>
+        </select>
+      </div>
 
-        function openIntentModal() {
-            openModal('intentModal');
-        }
+      <div class="divider"></div>
+      <div class="t-label" style="margin-bottom:10px;">Game</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Sound effects</div><div class="setting-sub">Move, unlock, and win sounds</div></div>
+        <input type="checkbox" id="soundToggle" checked style="accent-color:var(--gold); width:18px; height:18px; cursor:pointer;">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Auto-flip board</div><div class="setting-sub">Show your colour at bottom</div></div>
+        <input type="checkbox" id="flipToggle" style="accent-color:var(--gold); width:18px; height:18px; cursor:pointer;">
+      </div>
 
-        function toggleOther(which){
-            var sel=document.getElementById(which+'Select'), inp=document.getElementById(which+'Other');
-            if(sel&&inp){ if(sel.value==='other'){ inp.classList.remove('hidden'); inp.focus(); } else { inp.classList.add('hidden'); } }
-        }
-        function saveIntentVector() {
-            try{
-                var role=(document.getElementById('roleSelect')||{}).value||'';
-                var target=(document.getElementById('targetSelect')||{}).value||'';
-                if(role==='other'){ role=((document.getElementById('roleOther')||{}).value||'').trim()||'other'; }
-                if(target==='other'){ target=((document.getElementById('targetOther')||{}).value||'').trim()||'other'; }
-                localStorage.setItem('rk_intent', JSON.stringify({role:role,target:target,ts:Date.now()}));
-                localStorage.setItem('rk_intent_set','1');
-            }catch(e){}
-            closeModal('intentModal');
-            playSound('unlock');
-            toast('⚙️ Intent saved — your match board is tuned.', 'ok');
-        }
+      <div class="divider"></div>
+      <div class="t-label" style="margin-bottom:10px;">Account</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Connect LinkedIn</div><div class="setting-sub">Verify your profile for real matches</div></div>
+        <button class="btn btn-sm btn-secondary" style="font-size:11px;" onclick="toast('LinkedIn connection coming soon.','warn')">Connect</button>
+      </div>
+      <div style="height:8px;"></div>
+      <button class="btn btn-ghost btn-full" onclick="resetOnboarding()">↩ Redo onboarding</button>
+    </div>
+  </div>
+</div>
 
-        function triggerCalendlyMock() {
-            playSound('unlock');
-            toast('📅 Opening Elena Rostova\'s verified calendar…', 'ok');
-        }
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
 
-        function copyExecutiveBrief() {
-            const briefText = "ROOKIE & KING™ EXECUTIVE BRIEF\nMatch: Elena Rostova (VC) x Alex Mercer (Founder)\nPitch: NeuralPulse AI (Edge Quantization, $45k MRR)\nStatus: Puzzle Duel Verified. Requesting 15m Meeting.";
-            
-            // Native ExecCommand Fallback for iframe safety
-            const dummy = document.createElement("textarea");
-            document.body.appendChild(dummy);
-            dummy.value = briefText;
-            dummy.select();
-            document.execCommand("copy");
-            document.body.removeChild(dummy);
+<!-- ─── JAVASCRIPT ──────────────────────────── -->
+<script>
+'use strict';
 
-            playSound('coin');
-            document.getElementById('copyBtnText').textContent = 'COPIED TO CLIPBOARD!';
-            setTimeout(() => {
-                document.getElementById('copyBtnText').textContent = 'COPY INMAIL EXECUTIVE BRIEF';
-            }, 2500);
-        }
+/* ═══════════════════════════════════════════════
+   APP STATE
+   ═══════════════════════════════════════════════ */
+const S = {
+  coins: 250,
+  role: 'founder',
+  target: 'investors',
+  displayName: '',
+  movesMade: 0,
+  gameMode: 'chess',
+  difficulty: 'med',
+  ranked: false,
+  matchAccepted: false,
+  gameOver: false,
+  moveCount: 0,
+  scenarioStep: 0,
+  scenarioTimer: null,
+  scenarioSec: 15,
+  audioCtx: null,
+};
 
-        // ─── DIFFICULTY + MINIMAX AI ───
-        let rkDifficulty = 'easy';
-        const PV = {p:1,n:3,b:3,r:5,q:9,k:0};
-        function setDiff(d){ rkDifficulty=d; try{localStorage.setItem('rk_diff',d);}catch(e){} highlightDiff(); document.getElementById('moveFeedback').textContent='Difficulty: '+({easy:'ROOKIE',med:'PRO',hard:'MASTER'}[d])+' — your move'; }
-        function highlightDiff(){ document.querySelectorAll('.diff-btn').forEach(b=>{ const on=b.dataset.diff===rkDifficulty; b.classList.toggle('bg-electricOrange',on); b.classList.toggle('text-obsidian',on); b.classList.toggle('border-electricOrange',on); b.classList.toggle('text-gray-300',!on); }); }
-        function evalBoard(){ let s=0; const b=game.board(); for(const row of b) for(const cell of row){ if(cell) s+=(cell.color==='w'?1:-1)*PV[cell.type]; } return s; }
-        function minimax(depth,a,b,maximizing){
-            if(depth===0 || game.game_over()){ let e=evalBoard(); if(game.in_checkmate()) e += (game.turn()==='w'? -1000:1000); return e; }
-            const moves=game.moves({verbose:true});
-            if(maximizing){ let v=-Infinity; for(const m of moves){ game.move(m); v=Math.max(v,minimax(depth-1,a,b,false)); game.undo(); a=Math.max(a,v); if(b<=a)break; } return v; }
-            let v=Infinity; for(const m of moves){ game.move(m); v=Math.min(v,minimax(depth-1,a,b,true)); game.undo(); b=Math.min(b,v); if(b<=a)break; } return v;
-        }
-        function bestMove(depth){
-            const moves=game.moves({verbose:true}); let best=null,bestVal=Infinity;
-            for(const m of moves){ game.move(m); const val=minimax(depth-1,-Infinity,Infinity,true); game.undo();
-                if(val<bestVal || (val===bestVal && Math.random()<0.3)){ bestVal=val; best=m; } }
-            return best || pickRandom(moves);
-        }
-        // override: difficulty-aware AI
-        function aiMove(){
-            if(game.game_over()) return;
-            const moves=game.moves({verbose:true}); if(!moves.length) return;
-            let pick;
-            if(rkDifficulty==='easy'){ pick = moves.find(m=>m.san.includes('#')) || pickRandom(moves.filter(m=>m.flags.includes('c'))) || pickRandom(moves); }
-            else { pick = bestMove(rkDifficulty==='hard'?3:2); }
-            game.move(pick); playSound('move'); persist(); renderBoard(); checkEnd();
-        }
-        // ─── RANKED LADDER (ELO-lite) ───
-        let rkRating=1000, rkWins=0, rkLosses=0;
-        function loadStats(){ try{ rkRating=+(localStorage.getItem('rk_rating')||1000); rkWins=+(localStorage.getItem('rk_wins')||0); rkLosses=+(localStorage.getItem('rk_losses')||0);}catch(e){} }
-        function saveStats(){ try{ localStorage.setItem('rk_rating',rkRating); localStorage.setItem('rk_wins',rkWins); localStorage.setItem('rk_losses',rkLosses);}catch(e){} }
-        function renderStats(){ const r=document.getElementById('rkRating'), rec=document.getElementById('rkRecord'); if(r)r.textContent=rkRating; if(rec)rec.textContent=rkWins+'W-'+rkLosses+'L'; }
-        function recordResult(kind){ const g={easy:12,med:20,hard:32}[rkDifficulty]||20; if(kind==='win'){rkRating+=g; rkWins++;} else if(kind==='loss'){rkRating=Math.max(100,rkRating-Math.round(g*0.6)); rkLosses++;} saveStats(); renderStats(); }
-        // ─── COIN STORE ───
-        const COIN_PACKS=[{coins:100,price:4.99},{coins:500,price:19.99,tag:'POPULAR'},{coins:1200,price:39.99,tag:'BEST VALUE'}];
-        function renderCoinPacks(){ const el=document.getElementById('coinPacks'); if(!el) return;
-            el.innerHTML=COIN_PACKS.map((p,i)=>`<button onclick="startCheckout(${i})" class="w-full flex items-center justify-between bg-obsidian border border-gray-700 hover:border-electricOrange text-titanium p-3 rounded-xl transition-all"><span>🪙 <b>${p.coins}</b> coins ${p.tag?'<span class=\'text-[9px] text-electricOrange ml-1\'>'+p.tag+'</span>':''}</span><span class="text-electricOrange font-bold">$${p.price}</span></button>`).join('');
-        }
-        function startCheckout(i){ const p=COIN_PACKS[i]; playSound('coin');
-            // Stripe Checkout wires in here (one line) once the account is connected.
-            toast('🔒 '+p.coins+' coins ($'+p.price+') — Stripe checkout coming soon.', 'warn');
-        }
+const MATCH = {
+  name: 'Elena Rostova',
+  role: 'Managing Partner @ Apex Cyber Ventures',
+  badge: 'KING',
+  tags: ['Series A', 'B2B SaaS', 'Cyber / AI'],
+  intent: 'Looking for: Pre-seed to Series A founders in B2B infrastructure, cybersecurity, and enterprise AI. Prefers founders with technical co-founder and >$50k MRR signal.',
+  pitchName: 'Alex Mercer',
+  pitchCompany: 'Founder & CEO — NeuralPulse AI',
+  pitchSeeking: 'Seeking: $1.5M Seed · B2B Infrastructure',
+  elevator: '"NeuralPulse reduces LLM API latency by 64% using real-time edge quantization. $45k MRR, growing 28% MoM, 12 enterprise contracts closed."',
+};
 
-        // ─── COIN HELPER + RANKED STAKES + CONCIERGE INTRO ───
-        function setCoins(n){ coinBalance=Math.max(0, n|0); var el=document.getElementById('coinBalance'); if(el)el.textContent=coinBalance+' COINS'; try{localStorage.setItem('rk_coins',String(coinBalance));}catch(e){} }
-        let rkStaked=false;
-        try{ rkStaked = localStorage.getItem('rk_staked')==='1'; }catch(e){}
-        function setStaked(v){ rkStaked=!!v; try{localStorage.setItem('rk_staked', v?'1':'0');}catch(e){} }
-        function startRanked(){
-            if(coinBalance<50){ toast('You need 50 coins to enter a ranked duel.','warn'); openModal('coinStoreModal'); return; }
-            setCoins(coinBalance-50); setStaked(true); newGame();
-            var mf=document.getElementById('moveFeedback'); if(mf) mf.textContent='⚔ RANKED — 50🪙 staked. Checkmate to win 100🪙 + rating.';
-            playSound('coin');
-        }
-        function settleStake(kind){
-            if(!rkStaked) return;
-            if(kind==='win'){ setCoins(coinBalance+100); }       /* net +50 */
-            else if(kind==='draw'){ setCoins(coinBalance+50); }  /* refund */
-            /* loss: stake already forfeited */
-            setStaked(false);
-        }
-        function requestIntro(){
-            if(coinBalance<100){ toast('You need 100 coins to stake an intro request.','warn'); openModal('coinStoreModal'); return; }
-            var noteEl=document.getElementById('introNoteInput');
-            var note=noteEl ? noteEl.value.trim() : '';
-            if(!note){ toast('Add a one-line intent note first.','warn'); if(noteEl)noteEl.focus(); return; }
-            setCoins(coinBalance-100);
-            var q=[]; try{ q=JSON.parse(localStorage.getItem('rk_intro_requests')||'[]'); }catch(e){}
-            q.push({ts:Date.now(), note:String(note).slice(0,200), staked:100, status:'queued'});
-            try{ localStorage.setItem('rk_intro_requests', JSON.stringify(q)); }catch(e){}
-            playSound('unlock');
-            toast('🤝 100🪙 staked — intro queued. Escrow releases on confirmed meeting.','ok');
-            closeModal('dealRoomModal');
-            if(noteEl) noteEl.value='';
-        }
+/* ═══════════════════════════════════════════════
+   ONBOARDING
+   ═══════════════════════════════════════════════ */
+let obIdx = 0;
+const OB_COUNT = 4; // 0,1,2,3
 
-        // ─── INTRO / ONBOARDING ───
-        function showIntro(){ openModal('introModal'); }
-        function closeIntro(){ closeModal('introModal'); try{localStorage.setItem('rk_seen_intro','1');}catch(e){} }
-        function startFromIntro(){ closeIntro(); playSound('unlock'); try{ if(!localStorage.getItem('rk_intent_set')) openIntentModal(); }catch(e){ try{openIntentModal();}catch(_){} } }
+function obNext() {
+  const isLast = obIdx >= OB_COUNT - 1;
+  if (isLast) { finishOnboard(); return; }
+  obGo(obIdx + 1);
+}
 
-        // INITIALIZE ON LOAD
-        window.onload = function() {
-            try{ rkDifficulty=localStorage.getItem('rk_diff')||'easy'; }catch(e){}
-            loadGame(); renderBoard();
-            updateUnlockProgress(0, 'YOUR MOVE (WHITE)');
-            highlightDiff(); loadStats(); renderStats(); renderCoinPacks();
-            try{ const cb=localStorage.getItem('rk_coins'); if(cb){ coinBalance=parseInt(cb,10)||coinBalance; document.getElementById('coinBalance').textContent=coinBalance+' COINS'; } }catch(e){}
-            try{ if(!localStorage.getItem('rk_seen_intro')) showIntro(); }catch(e){}
-        };
-    </script>
+function obSkip() {
+  obIdx = OB_COUNT - 1;
+  obGo(obIdx);
+}
+
+function obGo(idx) {
+  const slides = document.querySelectorAll('.ob-slide');
+  slides.forEach((s, i) => {
+    s.classList.remove('active','past');
+    if (i < idx) s.classList.add('past');
+    if (i === idx) s.classList.add('active');
+  });
+  document.querySelectorAll('.ob-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+  obIdx = idx;
+  const btn = document.getElementById('obNextBtn');
+  btn.textContent = idx < OB_COUNT - 1 ? 'Continue →' : 'Enter the Arena ♟';
+}
+
+function finishOnboard() {
+  // Capture intent
+  const role = document.getElementById('roleSelect').value;
+  const target = document.getElementById('targetSelect').value;
+  const name = document.getElementById('nameInput').value.trim();
+  S.role = role; S.target = target; S.displayName = name || 'You';
+  // Sync settings dropdowns
+  try { document.getElementById('settingsRole').value = role; } catch(e){}
+  try { document.getElementById('settingsTarget').value = target; } catch(e){}
+  // Persist
+  try { localStorage.setItem('rk_intent', JSON.stringify({role,target,name,v:1})); } catch(e){}
+  // Hide onboard
+  document.getElementById('onboard').classList.add('hidden');
+  toast('Welcome to Rookie & King™ ♟', 'ok');
+}
+
+function resetOnboarding() {
+  closeModal('settingsModal');
+  obGo(0);
+  document.getElementById('onboard').classList.remove('hidden');
+  try { localStorage.removeItem('rk_intent'); } catch(e){}
+}
+
+function checkFirstVisit() {
+  try {
+    const saved = localStorage.getItem('rk_intent');
+    if (saved) {
+      const d = JSON.parse(saved);
+      S.role = d.role || 'founder';
+      S.target = d.target || 'investors';
+      S.displayName = d.name || 'You';
+      try { document.getElementById('settingsRole').value = S.role; } catch(e){}
+      try { document.getElementById('settingsTarget').value = S.target; } catch(e){}
+      document.getElementById('onboard').classList.add('hidden');
+      return;
+    }
+  } catch(e){}
+  // First visit — show onboarding
+  document.getElementById('onboard').classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════════
+   MATCH FLOW
+   ═══════════════════════════════════════════════ */
+function skipMatch() {
+  toast('Finding next match…', 'info');
+  // In demo, just rotate persona feel
+  setTimeout(() => toast('Same match in demo mode — connect LinkedIn for real matches', 'warn'), 1200);
+}
+
+function acceptChallenge() {
+  if (S.matchAccepted) { toast('Challenge already accepted — play on!', 'warn'); return; }
+  S.matchAccepted = true;
+  toast('Challenge accepted! Make your first move.', 'ok');
+  document.querySelector('.match-actions .btn-primary').textContent = '✓ Challenge accepted';
+  document.querySelector('.match-actions .btn-primary').disabled = true;
+  document.querySelector('.match-actions .btn-primary').style.opacity = '0.6';
+}
+
+/* ═══════════════════════════════════════════════
+   CHESS ENGINE
+   ═══════════════════════════════════════════════ */
+let game = null;
+let selectedSq = null;
+let lastFrom = null, lastTo = null;
+
+const FILES = ['a','b','c','d','e','f','g','h'];
+const GLYPHS = {
+  w: { k:'♔', q:'♕', r:'♖', b:'♗', n:'♘', p:'♙' },
+  b: { k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' }
+};
+
+function mkChess(fen) {
+  const C = window.Chess;
+  const Ctor = typeof C === 'function' ? C : (C && C.Chess);
+  return fen ? new Ctor(fen) : new Ctor();
+}
+
+function sqName(r, c) { return FILES[c] + (8 - r); }
+
+function newGame() {
+  game = mkChess();
+  selectedSq = lastFrom = lastTo = null;
+  S.moveCount = 0;
+  S.gameOver = false;
+  updateFeedback('your-turn', 'Your move (White) — make 3 moves to unlock the Deal Room');
+  renderBoard();
+}
+
+function renderBoard() {
+  const el = document.getElementById('board');
+  el.innerHTML = '';
+  if (!game) return;
+  const hints = selectedSq ? game.moves({ square: selectedSq, verbose: true }).map(m => m.to) : [];
+  const b = game.board();
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const name = sqName(r, c);
+      const sq = document.createElement('div');
+      sq.className = 'sq ' + ((r + c) % 2 === 1 ? 'dark' : 'light');
+      if (selectedSq === name) sq.classList.add('sel');
+      if (name === lastFrom || name === lastTo) sq.classList.add(name === lastFrom ? 'last-from' : 'last-to');
+      const cell = b[r][c];
+      const isHint = hints.includes(name);
+      if (isHint) {
+        sq.classList.add('hint');
+        if (cell) sq.classList.add('has-piece');
+      }
+      if (cell) {
+        const p = document.createElement('span');
+        p.className = 'piece ' + (cell.color === 'w' ? 'w-piece' : 'b-piece');
+        p.textContent = GLYPHS[cell.color][cell.type];
+        sq.appendChild(p);
+      }
+      sq.dataset.sq = name;
+      sq.onclick = () => handleSqClick(name);
+      el.appendChild(sq);
+    }
+  }
+}
+
+function handleSqClick(name) {
+  if (!game || S.gameOver || game.game_over()) return;
+  if (game.turn() !== 'w') return;
+  const piece = game.get(name);
+
+  if (selectedSq) {
+    const mv = game.moves({ square: selectedSq, verbose: true }).find(m => m.to === name);
+    if (mv) {
+      game.move({ from: selectedSq, to: name, promotion: 'q' });
+      lastFrom = selectedSq; lastTo = name;
+      selectedSq = null;
+      playSound('move');
+      S.moveCount++;
+      onPlayerMove();
+      renderBoard();
+      if (checkGameOver()) return;
+      setTimeout(aiMove, 480);
+      return;
+    }
+    if (piece && piece.color === 'w') { selectedSq = name; renderBoard(); return; }
+    selectedSq = null; renderBoard(); return;
+  }
+  if (piece && piece.color === 'w') { selectedSq = name; renderBoard(); }
+}
+
+function aiMove() {
+  if (!game || S.gameOver || game.game_over()) return;
+  const moves = game.moves({ verbose: true });
+  if (!moves.length) return;
+  let mv;
+  if (S.difficulty === 'easy') {
+    mv = moves[Math.floor(Math.random() * moves.length)];
+  } else if (S.difficulty === 'hard') {
+    // Prefer captures, checks
+    const captures = moves.filter(m => m.captured);
+    const checks = moves.filter(m => m.san && m.san.includes('+'));
+    if (checks.length) mv = checks[Math.floor(Math.random() * checks.length)];
+    else if (captures.length) mv = captures[Math.floor(Math.random() * captures.length)];
+    else mv = moves[Math.floor(Math.random() * moves.length)];
+  } else {
+    // Medium: occasionally prefer center/development
+    const center = moves.filter(m => ['e4','e5','d4','d5','c4','c5','f4','f5'].some(sq => m.to.includes(sq)));
+    mv = (center.length && Math.random() > 0.4) ? center[Math.floor(Math.random() * center.length)] : moves[Math.floor(Math.random() * moves.length)];
+  }
+  game.move(mv);
+  lastFrom = mv.from; lastTo = mv.to;
+  playSound('move');
+  renderBoard();
+  checkGameOver();
+  if (!S.gameOver) updateFeedback('your-turn', 'Your move');
+}
+
+function checkGameOver() {
+  if (!game.game_over()) return false;
+  S.gameOver = true;
+  if (game.in_checkmate()) {
+    if (game.turn() === 'b') {
+      updateFeedback('win', '♔ Checkmate! You win — Deal Room unlocked!');
+      advanceProgress(3); playSound('unlock');
+      setTimeout(() => openDealRoom(), 1200);
+    } else {
+      updateFeedback('lose', '♚ Checkmate — you were beaten. Try again.');
+      playSound('resign');
+    }
+  } else if (game.in_draw()) {
+    updateFeedback('win', '½–½ Draw — partial unlock granted');
+  }
+  return true;
+}
+
+function onPlayerMove() {
+  // Count player moves (not AI moves) for unlock progression
+  const pm = Math.ceil(S.moveCount); // each click = 1 player move
+  if (pm === 1) advanceProgress(1);
+  else if (pm === 2) advanceProgress(2);
+  else if (pm >= 3) advanceProgress(3);
+  if (game.in_check() && game.turn() === 'b') {
+    updateFeedback('thinking', '♗ Check! AI is thinking…');
+  } else {
+    updateFeedback('thinking', 'AI is thinking…');
+  }
+}
+
+function updateFeedback(cls, msg) {
+  const el = document.getElementById('boardFeedback');
+  el.className = 'board-feedback ' + cls;
+  el.textContent = msg;
+}
+
+function setDiff(d) {
+  S.difficulty = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('diff-'+d).classList.add('active');
+  newGame();
+  toast('Difficulty: ' + {easy:'Rookie',med:'Pro',hard:'Master'}[d], 'info');
+}
+
+function resignGame() {
+  if (!game || S.gameOver) return;
+  S.gameOver = true;
+  updateFeedback('lose', '↩ You resigned. Try again!');
+  playSound('resign');
+  if (S.ranked && S.coins >= 0) {
+    toast('Ranked game lost — 50 coins forfeited', 'warn');
+  }
+  setTimeout(() => { newGame(); }, 2000);
+}
+
+function startRanked() {
+  if (S.coins < 50) { toast('Not enough coins — top up to play ranked', 'warn'); openModal('coinModal'); return; }
+  S.ranked = true;
+  S.coins -= 50;
+  updateCoinDisplay();
+  toast('Ranked mode: 50 🪙 at stake — win to get 100 🪙', 'ok');
+  newGame();
+}
+
+/* ═══════════════════════════════════════════════
+   MODE SWITCHING
+   ═══════════════════════════════════════════════ */
+function switchMode(m) {
+  S.gameMode = m;
+  document.getElementById('tabChess').classList.toggle('active', m === 'chess');
+  document.getElementById('tabAI').classList.toggle('active', m === 'ai');
+  document.getElementById('chessStage').style.display = m === 'chess' ? '' : 'none';
+  document.getElementById('aiStage').style.display = m === 'ai' ? '' : 'none';
+  if (m === 'ai') startScenario();
+}
+
+/* ═══════════════════════════════════════════════
+   AI SCENARIO
+   ═══════════════════════════════════════════════ */
+const SCENARIOS = [
+  {
+    id: '#849',
+    q: '"Your lead Series A investor pulls out 24 hours before payroll — $120k liability, $15k reserves. You have one call to make. What\'s your immediate move?"',
+    a: 'B', reason: 'Transparency builds trust and preserves optionality. B is the move seasoned operators make.'
+  },
+  {
+    id: '#612',
+    q: '"Your top engineer hands in notice — 3 weeks before your most important product launch. You can\'t counter-offer on salary. What do you do?"',
+    a: 'A', reason: 'Retain knowledge, ship the launch, then reorg. Panic-hiring pre-launch is nearly always fatal.'
+  },
+  {
+    id: '#401',
+    q: '"A competitor announces a feature you were 4 weeks from shipping — it\'s almost identical to yours. Do you speed up launch, pivot, or double down on differentiation?"',
+    a: 'C', reason: 'First-mover on a feature rarely wins long-term. Deeper differentiation is the durable advantage.'
+  }
+];
+let scenIdx = 0;
+
+function startScenario() {
+  clearInterval(S.scenarioTimer);
+  const sc = SCENARIOS[scenIdx % SCENARIOS.length];
+  document.getElementById('scenNum').textContent = 'SCENARIO ' + sc.id;
+  document.getElementById('scenBody').textContent = sc.q;
+  S.scenarioSec = 15;
+  updateScenTimer();
+  document.querySelectorAll('.choice-btn').forEach(b => { b.className = b.className.replace(/selected-[abc]/g,'').trim(); });
+  S.scenarioTimer = setInterval(() => {
+    S.scenarioSec--;
+    updateScenTimer();
+    if (S.scenarioSec <= 0) { clearInterval(S.scenarioTimer); submitScenario('timeout'); }
+  }, 1000);
+}
+
+function updateScenTimer() {
+  const el = document.getElementById('scenTimer');
+  el.textContent = S.scenarioSec + 's';
+  el.classList.toggle('urgent', S.scenarioSec <= 5);
+}
+
+function submitScenario(choice) {
+  clearInterval(S.scenarioTimer);
+  if (choice === 'timeout') { toast('Time\'s up! Next scenario loading…', 'warn'); scenIdx++; setTimeout(startScenario, 1000); return; }
+  const sc = SCENARIOS[scenIdx % SCENARIOS.length];
+  const correct = choice === sc.a;
+  document.querySelectorAll('.choice-btn').forEach((b, i) => {
+    const letter = ['A','B','C'][i];
+    if (letter === choice) b.classList.add('selected-' + choice.toLowerCase());
+  });
+  S.movesMade++;
+  const pm = S.movesMade;
+  if (pm === 1) advanceProgress(1);
+  else if (pm === 2) advanceProgress(2);
+  else if (pm >= 3) advanceProgress(3);
+  if (correct) { playSound('unlock'); toast('✓ Strong move — ' + sc.reason.slice(0,60) + '…', 'ok'); }
+  else { toast('Solid thinking — ' + sc.reason.slice(0,60) + '…', 'info'); }
+  scenIdx++;
+  setTimeout(startScenario, 2000);
+}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS / PITCH UNLOCK
+   ═══════════════════════════════════════════════ */
+function advanceProgress(level) {
+  // Update dots
+  for (let i = 0; i < 3; i++) {
+    const d = document.getElementById('md' + i);
+    d.classList.remove('done','active');
+    if (i < level) d.classList.add('done');
+    else if (i === level) d.classList.add('active');
+  }
+  // Update fill
+  const pct = Math.min(100, Math.round((level / 3) * 100));
+  document.getElementById('unlockFill').style.width = pct + '%';
+  document.getElementById('moveLabel').textContent = 'MOVE ' + level + '/3';
+
+  // Unlock pitch levels
+  if (level >= 1) unlockPitchLevel1();
+  if (level >= 2) unlockPitchLevel2();
+  if (level >= 3) unlockPitchLevel3();
+}
+
+function unlockPitchLevel1() {
+  document.getElementById('pitchLocked').classList.add('hidden');
+  const body = document.getElementById('pitchBody');
+  body.classList.remove('hidden');
+  // Populate person
+  document.getElementById('pitchAvatarEl').textContent = '👤';
+  document.getElementById('pitchName').textContent = MATCH.pitchName;
+  document.getElementById('pitchCompany').textContent = MATCH.pitchCompany;
+  document.getElementById('pitchSeeking').textContent = MATCH.pitchSeeking;
+  document.getElementById('pitchStatus').textContent = '🔓 Move 1 unlocked';
+  playSound('coin');
+  toast('Move 1 complete — pitch identity revealed!', 'ok');
+}
+
+function unlockPitchLevel2() {
+  const el = document.getElementById('pitchElevator');
+  if (el.classList.contains('visible')) return;
+  el.textContent = MATCH.elevator;
+  el.classList.add('visible');
+  document.getElementById('pitchStatus').textContent = '🔓 Move 2 unlocked';
+  playSound('coin');
+  toast('Move 2 complete — elevator pitch revealed!', 'ok');
+}
+
+function unlockPitchLevel3() {
+  const el = document.getElementById('pitchActions');
+  if (el.classList.contains('visible')) return;
+  el.classList.add('visible');
+  document.getElementById('pitchStatus').textContent = '✅ Deal Room ready';
+  playSound('unlock');
+  toast('🎉 Full access unlocked — request your intro!', 'ok');
+}
+
+/* ═══════════════════════════════════════════════
+   DEAL ROOM
+   ═══════════════════════════════════════════════ */
+let dealStartTime = Date.now();
+
+function openDealRoom() {
+  document.getElementById('dealMatchName').textContent = MATCH.name;
+  const elapsed = Math.round((Date.now() - dealStartTime) / 1000);
+  document.getElementById('dealTime').textContent = elapsed + 's';
+  document.getElementById('dealMoves').textContent = S.moveCount + ' moves';
+  openModal('dealModal');
+}
+
+function confirmIntro() {
+  if (S.coins < 100) { toast('Need 100 coins for escrow — top up now', 'warn'); closeModal('dealModal'); openModal('coinModal'); return; }
+  S.coins -= 100;
+  updateCoinDisplay();
+  playSound('unlock');
+  closeModal('dealModal');
+  toast('✓ Intro requested! 100 🪙 in escrow — released when meeting occurs.', 'ok');
+}
+
+/* ═══════════════════════════════════════════════
+   MODALS
+   ═══════════════════════════════════════════════ */
+function openModal(id) {
+  const m = document.getElementById(id);
+  m.classList.add('open');
+  if (id === 'coinModal') document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Close on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+
+/* ═══════════════════════════════════════════════
+   COIN STORE
+   ═══════════════════════════════════════════════ */
+function buyCoinPack(coins, price) {
+  // Demo only
+  S.coins += coins;
+  updateCoinDisplay();
+  playSound('coin');
+  toast('+' + coins + ' 🪙 added! (Demo — no real charge)', 'ok');
+  closeModal('coinModal');
+}
+
+/* ═══════════════════════════════════════════════
+   SETTINGS
+   ═══════════════════════════════════════════════ */
+function updateRole() { S.role = document.getElementById('settingsRole').value; try { localStorage.setItem('rk_intent', JSON.stringify({role:S.role,target:S.target,name:S.displayName,v:1})); } catch(e){} }
+function updateTarget() { S.target = document.getElementById('settingsTarget').value; try { localStorage.setItem('rk_intent', JSON.stringify({role:S.role,target:S.target,name:S.displayName,v:1})); } catch(e){} }
+
+/* ═══════════════════════════════════════════════
+   COIN DISPLAY
+   ═══════════════════════════════════════════════ */
+function updateCoinDisplay() {
+  document.getElementById('coinDisplay').textContent = S.coins;
+}
+
+/* ═══════════════════════════════════════════════
+   SOUND
+   ═══════════════════════════════════════════════ */
+function playSound(type) {
+  if (!document.getElementById('soundToggle').checked) return;
+  try {
+    if (!S.audioCtx) S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = S.audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    const t = ctx.currentTime;
+    const configs = {
+      move:   [osc => { osc.type='sine'; osc.frequency.setValueAtTime(160,t); osc.frequency.exponentialRampToValueAtTime(50,t+0.08); }, g => { g.gain.setValueAtTime(0.25,t); g.gain.linearRampToValueAtTime(0,t+0.08); }, 0.08],
+      coin:   [osc => { osc.type='sine'; osc.frequency.setValueAtTime(1100,t); osc.frequency.exponentialRampToValueAtTime(2200,t+0.12); }, g => { g.gain.setValueAtTime(0.22,t); g.gain.linearRampToValueAtTime(0,t+0.12); }, 0.12],
+      unlock: [osc => { osc.type='triangle'; osc.frequency.setValueAtTime(880,t); osc.frequency.exponentialRampToValueAtTime(1760,t+0.3); }, g => { g.gain.setValueAtTime(0.35,t); g.gain.linearRampToValueAtTime(0,t+0.3); }, 0.3],
+      resign: [osc => { osc.type='sawtooth'; osc.frequency.setValueAtTime(200,t); osc.frequency.exponentialRampToValueAtTime(60,t+0.25); }, g => { g.gain.setValueAtTime(0.15,t); g.gain.linearRampToValueAtTime(0,t+0.25); }, 0.25],
+    };
+    const c = configs[type];
+    if (!c) return;
+    c[0](osc); c[1](gain); osc.start(t); osc.stop(t + c[2]);
+  } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════ */
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'ok' ? ' success' : type === 'warn' ? ' warn' : '');
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 250); }, 3200);
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
+function init() {
+  checkFirstVisit();
+  newGame();
+  dealStartTime = Date.now();
+  // Ensure chess stage visible
+  document.getElementById('chessStage').style.display = '';
+  document.getElementById('aiStage').style.display = 'none';
+}
+
+init();
+</script>
 </body>
 </html>
