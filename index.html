@@ -210,7 +210,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 }
 .match-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .match-badge {
-  position: absolute; -bottom: 4px; -right: 4px;
+  position: absolute;
   bottom: -4px; right: -4px;
   padding: 2px 6px; border-radius: 4px;
   font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
@@ -273,9 +273,9 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 /* CHESS STAGE */
 #chessStage {}
 .board-feedback {
-  text-align: center; font-size: 12px; font-weight: 600;
+  text-align: center; font-size: 13px; font-weight: 600;
   color: var(--text-2); margin-bottom: 10px; letter-spacing: 0.02em;
-  height: 20px;
+  min-height: 22px; line-height: 1.4;
 }
 .board-feedback.your-turn { color: var(--gold); }
 .board-feedback.thinking { color: var(--purple); }
@@ -506,6 +506,17 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 .toast.success { border-color: var(--green); color: var(--green); }
 .toast.warn { border-color: var(--gold); color: var(--gold); }
 
+/* ─── RESPONSIVE ─────────────────────────────── */
+@media (max-width: 430px) {
+  .board-controls {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .diff-group { flex: 1 0 100%; }
+  .rank-btn, .resign-btn { flex: 1; }
+  .mode-tab { font-size: 11px; }
+}
+
 /* ─── FOOTER SPACER ──────────────────────────── */
 .bottom-safe { height: max(24px, env(safe-area-inset-bottom, 0px)); }
 
@@ -537,9 +548,9 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
     <!-- Slide 1 — How it works -->
     <div class="ob-slide" id="slide1">
       <div class="ob-icon">🔓</div>
-      <div class="ob-title">Three moves.<br>Full access.</div>
+      <div class="ob-title">Three moves.<br>Full profile. Real intro.</div>
       <p class="ob-sub">
-        Make 3 meaningful moves in a chess duel or business scenario. Each move <span class="ob-highlight">unlocks more</span> of your match's pitch, portfolio, or goals — and earns you the right to request a real intro.
+        Make 3 meaningful moves in a chess duel or business scenario. Each move <span class="ob-highlight">progressively reveals</span> your match's goals, pitch, and contact — then unlocks the Deal Room for a verified intro request.
       </p>
     </div>
 
@@ -607,7 +618,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   <!-- FOOTER -->
   <div class="ob-footer">
     <button class="btn btn-primary btn-lg btn-full" id="obNextBtn" onclick="obNext()">Continue →</button>
-    <button class="btn btn-ghost btn-sm" style="align-self:center;" onclick="obSkip()">Skip intro — just play</button>
+    <button class="btn btn-ghost btn-sm" style="align-self:center;" onclick="obSkip()">Skip — use defaults &amp; play</button>
   </div>
 </div><!-- /onboard -->
 
@@ -662,8 +673,8 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
     </div>
 
     <div class="match-actions">
-      <button class="btn btn-ghost" onclick="skipMatch()">Skip match</button>
-      <button class="btn btn-primary" style="flex:2;" onclick="acceptChallenge()">⚔ Accept challenge</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--text-3);font-size:12px;" onclick="skipMatch()">Skip</button>
+      <button class="btn btn-primary btn-lg" style="flex:1;" onclick="acceptChallenge()">⚔ Accept challenge</button>
     </div>
   </div>
 </section>
@@ -706,7 +717,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 
   <!-- CHESS STAGE -->
   <div id="chessStage">
-    <div class="board-feedback your-turn" id="boardFeedback">Your move (White) — make 3 moves to unlock the Deal Room</div>
+    <div class="board-feedback your-turn" id="boardFeedback">Accept the challenge above — then make 3 moves to unlock the Deal Room</div>
     <div class="board-wrap">
       <div id="board"></div>
     </div>
@@ -756,14 +767,14 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 <section id="pitchDock">
   <div class="pitch-container">
     <div class="pitch-header">
-      <span class="pitch-title">Their pitch</span>
+      <span class="pitch-title">Deal intel — unlocks with moves</span>
       <span class="pitch-unlock-indicator" id="pitchStatus">🔒 Locked</span>
     </div>
 
     <!-- LOCKED STATE (Level 0) -->
     <div class="pitch-locked" id="pitchLocked">
       <div class="lock-icon">🔒</div>
-      <div class="lock-msg">Make your <strong>first move</strong> to start unlocking Elena's pitch deck and contact details.</div>
+      <div class="lock-msg">Make your <strong>first move</strong> to reveal who Elena is looking for — and whether you're a fit.</div>
     </div>
 
     <!-- REVEALED CONTENT (Level 1+) -->
@@ -1016,8 +1027,8 @@ function obNext() {
 }
 
 function obSkip() {
-  obIdx = OB_COUNT - 1;
-  obGo(obIdx);
+  // Skip directly to app with form defaults — don't force the setup slide
+  finishOnboard();
 }
 
 function obGo(idx) {
@@ -1048,7 +1059,7 @@ function finishOnboard() {
   try { localStorage.setItem('rk_intent', JSON.stringify({role,target,name,v:1})); } catch(e){}
   // Hide onboard
   document.getElementById('onboard').classList.add('hidden');
-  toast('Welcome to Rookie & King™ ♟', 'ok');
+  toast('Welcome. Accept a challenge and make your first move.', 'ok');
 }
 
 function resetOnboarding() {
@@ -1086,12 +1097,22 @@ function skipMatch() {
 }
 
 function acceptChallenge() {
-  if (S.matchAccepted) { toast('Challenge already accepted — play on!', 'warn'); return; }
+  if (S.matchAccepted) {
+    document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   S.matchAccepted = true;
-  toast('Challenge accepted! Make your first move.', 'ok');
-  document.querySelector('.match-actions .btn-primary').textContent = '✓ Challenge accepted';
-  document.querySelector('.match-actions .btn-primary').disabled = true;
-  document.querySelector('.match-actions .btn-primary').style.opacity = '0.6';
+  dealStartTime = Date.now(); // FIX: start timer at challenge accept, not page load
+  toast('Challenge accepted — make your first move!', 'ok');
+  const btn = document.querySelector('.match-actions .btn-primary');
+  btn.textContent = '♟ In play — scroll to board ↓';
+  btn.disabled = false; // keep clickable so it scrolls
+  btn.style.opacity = '0.75';
+  btn.onclick = () => document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  updateFeedback('your-turn', 'Your move (White) — make 3 moves to unlock the Deal Room');
+  setTimeout(() => {
+    document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 500);
 }
 
 /* ═══════════════════════════════════════════════
@@ -1120,7 +1141,10 @@ function newGame() {
   selectedSq = lastFrom = lastTo = null;
   S.moveCount = 0;
   S.gameOver = false;
-  updateFeedback('your-turn', 'Your move (White) — make 3 moves to unlock the Deal Room');
+  const msg = S.matchAccepted
+    ? 'Your move (White) — make 3 moves to unlock the Deal Room'
+    : 'Accept the challenge above — then make 3 moves to unlock the Deal Room';
+  updateFeedback('your-turn', msg);
   renderBoard();
 }
 
@@ -1352,12 +1376,12 @@ function submitScenario(choice) {
    PROGRESS / PITCH UNLOCK
    ═══════════════════════════════════════════════ */
 function advanceProgress(level) {
-  // Update dots
+  // Update dots (level = 1/2/3 after each player move)
   for (let i = 0; i < 3; i++) {
     const d = document.getElementById('md' + i);
     d.classList.remove('done','active');
     if (i < level) d.classList.add('done');
-    else if (i === level) d.classList.add('active');
+    else if (i === level && level < 3) d.classList.add('active');
   }
   // Update fill
   const pct = Math.min(100, Math.round((level / 3) * 100));
@@ -1507,9 +1531,21 @@ function toast(msg, type='info') {
    ═══════════════════════════════════════════════ */
 function init() {
   checkFirstVisit();
-  newGame();
-  dealStartTime = Date.now();
-  // Ensure chess stage visible
+  // Guard against chess.js CDN failure
+  if (typeof Chess === 'undefined' && !(window.Chess)) {
+    const fb = document.getElementById('boardFeedback');
+    fb.textContent = 'Chess engine failed to load — reload to retry.';
+    fb.className = 'board-feedback lose';
+    const boardEl = document.getElementById('board');
+    boardEl.style.cssText = 'display:flex;align-items:center;justify-content:center;background:var(--surface);border-radius:8px;';
+    boardEl.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:24px;line-height:1.6;">Chess engine unavailable.<br>Check connection &amp; reload.</div>';
+  } else {
+    try { newGame(); } catch(e) {
+      document.getElementById('boardFeedback').textContent = 'Board error — reload to retry.';
+      document.getElementById('boardFeedback').className = 'board-feedback lose';
+    }
+  }
+  dealStartTime = Date.now(); // fallback; reset to real value on acceptChallenge()
   document.getElementById('chessStage').style.display = '';
   document.getElementById('aiStage').style.display = 'none';
 }
