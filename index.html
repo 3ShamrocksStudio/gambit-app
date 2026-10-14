@@ -360,6 +360,9 @@
 
             <!-- ACTION CONTROLS -->
             <div class="space-y-2.5">
+                <div class="mb-1">
+                    <input id="introNoteInput" type="text" maxlength="160" placeholder="One line: what do you want from this intro?" class="w-full bg-obsidian border border-gray-700 focus:border-royalPurple text-titanium text-xs font-mono p-2.5 rounded-xl outline-none transition-colors placeholder-gray-600">
+                </div>
                 <button onclick="requestIntro()" class="w-full bg-royalPurple hover:bg-purple-600 text-white font-mono font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg">
                     <span>🤝</span>
                     <span>REQUEST INTRO · STAKE 100🪙 ESCROW</span>
@@ -526,6 +529,17 @@
             }
         }
 
+        // ─── TOAST NOTIFICATION SYSTEM (replaces all alert/prompt) ───
+        function toast(msg, type) {
+            const colors = { ok:'#5E9C7C', warn:'#C2A661', info:'rgba(194,166,97,0.5)' };
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(8px);background:#1A1D23;color:#ECEAE3;border:1px solid '+(colors[type]||colors.info)+';padding:11px 20px;border-radius:12px;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;z-index:99999;letter-spacing:0.3px;text-align:center;max-width:88vw;box-shadow:0 8px 32px rgba(0,0,0,0.6);opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+            setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(8px)'; setTimeout(()=>t.remove(),250); }, 3000);
+        }
+
         // ─── REAL CHESS ENGINE (chess.js 0.13.x) + computer opponent ───
         let game = null, selectedSq = null;
         const FILES = ['a','b','c','d','e','f','g','h'];
@@ -654,13 +668,13 @@
 
         function actionRequestDeck() {
             playSound('coin');
-            alert('📄 Deck Request Signal Sent! The Executive has been notified.');
+            toast('📄 Deck request sent — the executive will be notified.', 'ok');
         }
 
         function actionOfferCoins() {
             playSound('coin');
             setCoins(coinBalance + 50);
-            alert('🪙 50 Pass Coins added.');
+            toast('🪙 50 Pass Coins added to your vault.', 'ok');
         }
 
         function actionProposeMeeting() {
@@ -670,7 +684,7 @@
 
         function triggerHandshake() {
             playSound('resign');
-            alert('🤝 Gentleman\'s Handshake Sent. Match ended politely with courtesy gesture.');
+            toast('🤝 Gentleman\'s Handshake — match ended with a courtesy gesture.', 'warn');
             resetPuzzle();
         }
 
@@ -701,12 +715,12 @@
             }catch(e){}
             closeModal('intentModal');
             playSound('unlock');
-            alert('⚙️ Intent saved. Your match board is tuned to it.');
+            toast('⚙️ Intent saved — your match board is tuned.', 'ok');
         }
 
         function triggerCalendlyMock() {
             playSound('unlock');
-            alert('📅 Redirecting to Elena Rostova\'s Verified Calendly Page...');
+            toast('📅 Opening Elena Rostova\'s verified calendar…', 'ok');
         }
 
         function copyExecutiveBrief() {
@@ -767,7 +781,7 @@
         }
         function startCheckout(i){ const p=COIN_PACKS[i]; playSound('coin');
             // Stripe Checkout wires in here (one line) once the account is connected.
-            alert('🔒 Secure checkout for '+p.coins+' coins ($'+p.price+') opens here once Stripe is connected.');
+            toast('🔒 '+p.coins+' coins ($'+p.price+') — Stripe checkout coming soon.', 'warn');
         }
 
         // ─── COIN HELPER + RANKED STAKES + CONCIERGE INTRO ───
@@ -776,7 +790,7 @@
         try{ rkStaked = localStorage.getItem('rk_staked')==='1'; }catch(e){}
         function setStaked(v){ rkStaked=!!v; try{localStorage.setItem('rk_staked', v?'1':'0');}catch(e){} }
         function startRanked(){
-            if(coinBalance<50){ alert('You need 50 coins to enter a ranked duel.'); openModal('coinStoreModal'); return; }
+            if(coinBalance<50){ toast('You need 50 coins to enter a ranked duel.','warn'); openModal('coinStoreModal'); return; }
             setCoins(coinBalance-50); setStaked(true); newGame();
             var mf=document.getElementById('moveFeedback'); if(mf) mf.textContent='⚔ RANKED — 50🪙 staked. Checkmate to win 100🪙 + rating.';
             playSound('coin');
@@ -789,15 +803,18 @@
             setStaked(false);
         }
         function requestIntro(){
-            if(coinBalance<100){ alert('You need 100 coins to stake an intro request.'); openModal('coinStoreModal'); return; }
-            var note=prompt('One line: what do you want from this intro?',''); if(note===null) return;
+            if(coinBalance<100){ toast('You need 100 coins to stake an intro request.','warn'); openModal('coinStoreModal'); return; }
+            var noteEl=document.getElementById('introNoteInput');
+            var note=noteEl ? noteEl.value.trim() : '';
+            if(!note){ toast('Add a one-line intent note first.','warn'); if(noteEl)noteEl.focus(); return; }
             setCoins(coinBalance-100);
             var q=[]; try{ q=JSON.parse(localStorage.getItem('rk_intro_requests')||'[]'); }catch(e){}
-            q.push({ts:Date.now(), note:String(note||'').slice(0,200), staked:100, status:'queued'});
+            q.push({ts:Date.now(), note:String(note).slice(0,200), staked:100, status:'queued'});
             try{ localStorage.setItem('rk_intro_requests', JSON.stringify(q)); }catch(e){}
             playSound('unlock');
-            alert('🤝 Intro request received — 100🪙 held in escrow. We broker the intro and release escrow on a confirmed meeting. You will be contacted.');
+            toast('🤝 100🪙 staked — intro queued. Escrow releases on confirmed meeting.','ok');
             closeModal('dealRoomModal');
+            if(noteEl) noteEl.value='';
         }
 
         // ─── INTRO / ONBOARDING ───
