@@ -14,6 +14,7 @@
 <meta property="og:description" content="Chess-based LinkedIn ice-breaker. Make your move — make a connection.">
 <meta property="og:url" content="https://3shamrocksstudio.github.io/gambit-app/">
 <meta property="og:type" content="website">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
@@ -848,8 +849,8 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
         <button class="btn btn-success btn-full btn-lg" onclick="confirmIntro()">
           🤝 Request intro — stake 100 🪙
         </button>
-        <button class="btn btn-secondary btn-full" onclick="closeModal('dealModal')">
-          📋 Copy executive brief first
+        <button class="btn btn-secondary btn-full" id="copyBriefBtn" onclick="copyBrief()">
+          📋 Copy executive brief
         </button>
       </div>
     </div>
@@ -1449,6 +1450,29 @@ function openDealRoom() {
   openModal('dealModal');
 }
 
+function copyBrief() {
+  const brief = [
+    MATCH.pitchName + ' · ' + MATCH.pitchCompany,
+    MATCH.pitchSeeking,
+    MATCH.elevator,
+  ].join('\n');
+  const btn = document.getElementById('copyBriefBtn');
+  navigator.clipboard.writeText(brief).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy executive brief'; }, 2000);
+    toast('Executive brief copied to clipboard', 'ok');
+  }).catch(() => {
+    // Fallback: select from a temp textarea
+    const ta = document.createElement('textarea');
+    ta.value = brief;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('Executive brief copied!', 'ok'); } catch(e) {}
+    ta.remove();
+  });
+}
+
 function confirmIntro() {
   if (S.coins < 100) { toast('Need 100 coins for escrow — top up now', 'warn'); closeModal('dealModal'); openModal('coinModal'); return; }
   S.coins -= 100;
@@ -1560,6 +1584,13 @@ function init() {
 }
 
 init();
+
+// Service Worker registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
