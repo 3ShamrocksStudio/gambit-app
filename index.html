@@ -635,7 +635,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 
 <!-- ─── MAIN APP ────────────────────────────── -->
 <header id="header">
-  <div class="rk-logo" onclick="openModal('settingsModal')">
+  <div class="rk-logo" onclick="openSettings()">
     <div class="rk-shield"></div>
     <div>
       <div class="rk-wordmark">Rookie &amp; King<span>™</span></div>
@@ -650,7 +650,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
         <div class="vault-label">coins</div>
       </div>
     </div>
-    <button class="icon-btn" onclick="openModal('settingsModal')" title="Settings">⚙</button>
+    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙</button>
   </div>
 </header>
 
@@ -978,6 +978,13 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
         <div><div class="setting-label">Connect LinkedIn</div><div class="setting-sub">Verify your profile for real matches</div></div>
         <button class="btn btn-sm btn-secondary" style="font-size:11px;" onclick="toast('LinkedIn connection coming soon.','warn')">Connect</button>
       </div>
+      <div class="divider"></div>
+      <div class="t-label" style="margin-bottom:10px;">Challenge Link ♟</div>
+      <p style="font-size:12px;color:var(--text-3);margin:0 0 10px;line-height:1.5;">Share a chess challenge — anyone who opens your link plays against your profile.</p>
+      <input id="clName" class="form-input" type="text" placeholder="Your name" style="margin-bottom:8px;width:100%;box-sizing:border-box;" />
+      <input id="clCompany" class="form-input" type="text" placeholder="Company / role (e.g. Founder @ Acme)" style="margin-bottom:8px;width:100%;box-sizing:border-box;" />
+      <input id="clPitch" class="form-input" type="text" placeholder="What you're seeking (e.g. $500K Seed round)" style="margin-bottom:10px;width:100%;box-sizing:border-box;" />
+      <button class="btn btn-primary btn-full" id="clCopyBtn" onclick="copyChallenge()">🔗 Copy my challenge link</button>
       <div style="height:8px;"></div>
       <button class="btn btn-ghost btn-full" onclick="resetOnboarding()">↩ Redo onboarding</button>
     </div>
@@ -1023,6 +1030,33 @@ const MATCH = {
   pitchSeeking: 'Seeking: $1.5M Seed · B2B Infrastructure',
   elevator: '"NeuralPulse reduces LLM API latency by 64% using real-time edge quantization. $45k MRR, growing 28% MoM, 12 enterprise contracts closed."',
 };
+
+// ─── Challenge Link ─────────────────────────────────────
+const CHALLENGER = (() => {
+  try {
+    const c = new URLSearchParams(location.search).get('c');
+    if (!c) return null;
+    const d = JSON.parse(atob(c.replace(/-/g, '+').replace(/_/g, '/')));
+    return (d && d.n) ? d : null;
+  } catch(e) { return null; }
+})();
+
+function roleLabel(r) {
+  const map = {founder:'Founder/CEO',investor:'Investor',operator:'Operator/Exec',recruiter:'Recruiter',jobseeker:'Job Seeker',freelancer:'Freelancer/Consultant',sales:'Sales/BizDev',partner:'Partnerships',other:'Professional'};
+  return map[r] || r;
+}
+
+if (CHALLENGER) {
+  MATCH.name        = CHALLENGER.n;
+  MATCH.role        = [CHALLENGER.co, CHALLENGER.r ? roleLabel(CHALLENGER.r) : ''].filter(Boolean).join(' · ');
+  MATCH.badge       = (['investors','mentors'].includes(CHALLENGER.t)) ? 'KING' : 'ROOKIE';
+  MATCH.tags        = [];
+  MATCH.intent      = CHALLENGER.s || '';
+  MATCH.pitchName   = CHALLENGER.n;
+  MATCH.pitchCompany = CHALLENGER.co || '';
+  MATCH.pitchSeeking = CHALLENGER.s || '';
+  MATCH.elevator    = CHALLENGER.el || ('"' + CHALLENGER.n + (CHALLENGER.co ? ' — ' + CHALLENGER.co : '') + '"');
+}
 
 /* ═══════════════════════════════════════════════
    ONBOARDING
@@ -1548,6 +1582,75 @@ function playSound(type) {
 }
 
 /* ═══════════════════════════════════════════════
+   MATCH CARD + CHALLENGE LINK
+   ═══════════════════════════════════════════════ */
+function renderMatchCard() {
+  document.getElementById('matchName').textContent = MATCH.name;
+  document.getElementById('matchRole').textContent = MATCH.role;
+  const badge = document.getElementById('matchBadgeEl');
+  badge.textContent = MATCH.badge;
+  badge.className = 'match-badge badge-' + (MATCH.badge === 'KING' ? 'king' : 'rookie');
+  const tagsEl = document.getElementById('matchTags');
+  tagsEl.innerHTML = (MATCH.tags||[]).map(t => `<span class="match-tag">${t}</span>`).join('');
+  const intentEl = document.getElementById('matchIntent');
+  if (intentEl && MATCH.intent) {
+    intentEl.innerHTML = '<strong>' + (CHALLENGER ? 'Their pitch:' : 'Looking for:') + '</strong> ' + MATCH.intent;
+  }
+  if (CHALLENGER) {
+    const card = document.querySelector('.match-card-inner');
+    let banner = document.getElementById('challengeBanner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'challengeBanner';
+      banner.style.cssText = 'background:var(--gold);color:var(--void);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:8px 8px 0 0;text-align:center;margin:-1px -1px 12px;';
+      card.insertBefore(banner, card.firstChild);
+    }
+    banner.textContent = '⚔ ' + CHALLENGER.n + ' challenged you to a chess game — make your move';
+    const acceptBtn = document.querySelector('.match-actions .btn-primary');
+    if (acceptBtn) acceptBtn.textContent = '⚔ Accept ' + CHALLENGER.n + "'s challenge";
+  }
+}
+
+function copyChallenge() {
+  const name = (document.getElementById('clName').value.trim()) || S.displayName || 'You';
+  const company = document.getElementById('clCompany').value.trim();
+  const seeking = document.getElementById('clPitch').value.trim();
+  const payload = {
+    n: name,
+    co: company,
+    r: S.role,
+    s: seeking ? 'Seeking: ' + seeking : '',
+    el: company ? '"' + name + ' — ' + company + '"' : '"' + name + '"',
+    t: S.target,
+    v: 1
+  };
+  try {
+    const encoded = btoa(JSON.stringify(payload)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const url = location.origin + location.pathname + '?c=' + encoded;
+    const btn = document.getElementById('clCopyBtn');
+    navigator.clipboard.writeText(url).then(() => {
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = '🔗 Copy my challenge link'; }, 2500);
+      toast('Challenge link copied! Share it to challenge anyone ♟', 'ok');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('Challenge link copied!', 'ok'); } catch(e) {}
+      ta.remove();
+    });
+  } catch(e) { toast('Could not generate link', 'warn'); }
+}
+
+function openSettings() {
+  try {
+    const nameEl = document.getElementById('clName');
+    if (nameEl && !nameEl.value && S.displayName && S.displayName !== 'You') nameEl.value = S.displayName;
+  } catch(e) {}
+  openModal('settingsModal');
+}
+
+/* ═══════════════════════════════════════════════
    TOAST
    ═══════════════════════════════════════════════ */
 function toast(msg, type='info') {
@@ -1564,6 +1667,7 @@ function toast(msg, type='info') {
    ═══════════════════════════════════════════════ */
 function init() {
   checkFirstVisit();
+  renderMatchCard();
   // Guard against chess.js CDN failure
   if (typeof Chess === 'undefined' && !(window.Chess)) {
     const fb = document.getElementById('boardFeedback');
