@@ -1528,11 +1528,14 @@ function mkChess(fen) {
 
 function sqName(r, c) { return FILES[c] + (8 - r); }
 
+let aiTimer = null, resignTimer = null;
 function newGame() {
+  clearTimeout(aiTimer); clearTimeout(resignTimer); aiTimer = resignTimer = null; // a pending AI reply must never land on the new board
   game = mkChess();
   selectedSq = lastFrom = lastTo = null;
   S.moveCount = 0;
   S.gameOver = false;
+  setResignLabel(false);
   const msg = S.matchAccepted
     ? 'Your move (White) — make 3 moves to unlock the Deal Room'
     : 'Accept the challenge above — then make 3 moves to unlock the Deal Room';
@@ -1588,7 +1591,9 @@ function handleSqClick(name) {
       onPlayerMove();
       renderBoard();
       if (checkGameOver()) return;
-      setTimeout(aiMove, 480);
+      clearTimeout(aiTimer);
+      const g = game;
+      aiTimer = setTimeout(() => { if (g === game) aiMove(); }, 480);
       return;
     }
     if (piece && piece.color === 'w') { selectedSq = name; renderBoard(); return; }
@@ -1598,7 +1603,8 @@ function handleSqClick(name) {
 }
 
 function aiMove() {
-  if (!game || S.gameOver || game.game_over()) return;
+  aiTimer = null;
+  if (!game || S.gameOver || game.game_over() || game.turn() !== 'b') return; // AI only ever plays Black
   const moves = game.moves({ verbose: true });
   if (!moves.length) return;
   let mv;
@@ -1633,16 +1639,27 @@ function checkGameOver() {
       if (rankedStake) { walletTx(() => { S.coins += 100; }); toast('Ranked win — +100 🪙 (stake returned + 50)', 'ok'); }
       updateFeedback('win', '♔ Checkmate! You win — Deal Room unlocked!');
       advanceProgress(3); playSound('unlock');
-      setTimeout(() => openDealRoom(), 1200);
+      const g = game;
+      setTimeout(() => { if (g === game) openDealRoom(); }, 1200);
     } else {
-      updateFeedback('lose', '♚ Checkmate — you were beaten. Try again.');
+      updateFeedback('lose', '♚ Checkmate — you were beaten. Tap New game to try again.');
       playSound('resign');
+      if (rankedStake) { walletTx(() => {}); toast('Ranked game lost — your 50 🪙 stake is forfeited', 'warn'); }
     }
-  } else if (game.in_draw()) {
-    updateFeedback('win', '½–½ Draw — partial unlock granted');
+  } else {
+    const why = game.in_stalemate() ? 'stalemate' : game.in_threefold_repetition() ? 'threefold repetition' : game.insufficient_material() ? 'insufficient material' : '50-move rule';
+    updateFeedback('win', '½–½ Draw by ' + why + ' — tap New game to play again');
+    if (rankedStake) { walletTx(() => { S.coins += 50; }); toast('Ranked draw — your 50 🪙 stake is returned', 'ok'); }
   }
+  setResignLabel(true);
   updateCoinDisplay();
   return true;
+}
+
+// After mate/draw/resign the Resign button becomes "New game".
+function setResignLabel(over) {
+  const b = document.querySelector('.resign-btn');
+  if (b) b.textContent = over ? '↻ New game' : '↩ Resign';
 }
 
 function onPlayerMove() {
@@ -1673,18 +1690,22 @@ function setDiff(d) {
 }
 
 function resignGame() {
-  if (!game || S.gameOver) return;
+  if (!game) return;
+  if (S.gameOver) { newGame(); return; } // button reads "New game" once the game is over
   S.gameOver = true;
+  clearTimeout(aiTimer); aiTimer = null;
   updateFeedback('lose', '↩ You resigned. Try again!');
   playSound('resign');
+  setResignLabel(true);
   if (S.ranked) {
     walletTx(() => { S.ranked = false; });
     toast('Ranked game lost — 50 coins forfeited', 'warn');
   }
-  setTimeout(() => { newGame(); }, 2000);
+  resignTimer = setTimeout(() => { newGame(); }, 2000);
 }
 
 function startRanked() {
+  if (S.ranked && !S.gameOver) { toast('Ranked game in progress — 50 🪙 already at stake', 'info'); return; }
   applyWallet(readWallet());
   if (S.coins < 50) { toast('Not enough coins — top up to play ranked', 'warn'); openModal('coinModal'); return; }
   walletTx(() => { S.ranked = 'r' + Date.now(); S.coins -= 50; });
@@ -2592,6 +2613,7 @@ function init() {
   checkFirstVisit();
   renderMatchCard();
   initIntroNotes();
+  if (rankedForfeitOnLoad) setTimeout(() => toast('Unfinished ranked game from your last visit was forfeited — 50 🪙 stake lost', 'warn'), 400);
   renderBellStrip();
   // "Beat my time" link: land straight in the puzzle, no onboarding
   if (CHALLENGER && CHALLENGER.bd) {
