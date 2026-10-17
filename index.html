@@ -1947,7 +1947,7 @@ const B = { n: 0, p: null, g: null, i: 0, sel: null, lf: null, lt: null, busy: f
 
 function bellDayNum(d) {
   d = d || new Date();
-  return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - BELL_EPOCH) / 864e5) + 1;
+  return Math.max(1, Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - BELL_EPOCH) / 864e5) + 1); // never < #1 (clock set before launch)
 }
 function bellWeekday(n) { return new Date(BELL_EPOCH + (n - 1) * 864e5).getUTCDay(); }
 function bellPuzzle(n) {
@@ -1969,10 +1969,20 @@ function fmtSecs(t) {
   return h ? h + ':' + String(m).padStart(2, '0') + ':' + s : m + ':' + s;
 }
 
+const STORAGE_OK = (() => { try { localStorage.setItem('rk_probe', '1'); localStorage.removeItem('rk_probe'); return true; } catch(e) { return false; } })();
 function loadBellStore() {
   try {
     const s = JSON.parse(localStorage.getItem(BELL_KEY) || 'null');
-    if (s && s.v === 1 && s.days && typeof s.days === 'object') return s;
+    if (s && s.v === 1 && s.days && typeof s.days === 'object' && !Array.isArray(s.days)) {
+      Object.keys(s.days).forEach(k => { // sanitize each day so corrupt data can't break the board or the clock
+        const r = s.days[k];
+        if (!r || typeof r !== 'object' || !['play', 'won', 'lost'].includes(r.st)) { delete s.days[k]; return; }
+        r.lives = (Number.isInteger(r.lives) && r.lives >= 0 && r.lives <= 3) ? r.lives : (r.st === 'lost' ? 0 : 3);
+        if (!Number.isFinite(r.t0)) r.t0 = Date.now();
+        if (r.st !== 'play' && !(Number.isFinite(r.secs) && r.secs >= 0)) r.secs = 0;
+      });
+      return s;
+    }
   } catch(e){}
   return { v: 1, days: {}, solves: 0 };
 }
@@ -1995,15 +2005,28 @@ function goBell() {
   document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function bellUnavailable(msg) {
+  bellClockStop(); B.g = null; B.busy = false;
+  bellFeedback('lose', msg);
+  document.getElementById('bellResult').classList.add('hidden');
+  const el = document.getElementById('bellBoard');
+  el.innerHTML = '<div style="grid-column:1/-1;grid-row:1/-1;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--text-3);font-size:12px;text-align:center;padding:24px;line-height:1.6;">Opening Bell unavailable</div>';
+}
+
 function openBell() {
   const tok = ++B.token;
   B.n = bellDayNum(); B.p = bellPuzzle(B.n);
+  document.getElementById('bellNum').textContent = 'OPENING BELL #' + B.n;
+  if (!window.Chess) { bellUnavailable('Chess engine failed to load — check your connection and reload to retry.'); return; }
+  if (!STORAGE_OK) { bellUnavailable('Opening Bell needs browser storage to keep your lives and streak. Allow site data for this page, then reload.'); return; }
   let r = bellRec();
   if (!r) r = bellPatch({ st: 'play', lives: 3, t0: Date.now() });
   B.g = mkChess(B.p.fen); B.i = 0; B.sel = B.lf = B.lt = null;
-  document.getElementById('bellNum').textContent = 'OPENING BELL #' + B.n;
   bellLives(r.lives);
   renderBellVs();
+  if (r.st === 'play' && r.lives <= 0) { // out of lives but never settled (e.g. reload mid-animation) → settle now
+    bellShowLine(); bellFinish(false); return;
+  }
   if (r.st === 'play') {
     document.getElementById('bellResult').classList.add('hidden');
     B.busy = true;
@@ -2033,7 +2056,7 @@ function bellFeedback(cls, msg) {
 function bellLives(n) { document.getElementById('bellLives').textContent = '❤️'.repeat(Math.max(0, n)) + '🖤'.repeat(Math.max(0, 3 - n)); }
 function bellClockStart() {
   bellClockStop();
-  const tick = () => { const r = bellRec(); if (r) document.getElementById('bellClock').textContent = fmtSecs((Date.now() - r.t0) / 1000); };
+  const tick = () => { const r = bellRec(); if (r) document.getElementById('bellClock').textContent = fmtSecs((Date.now() - r.t0) / 1000); bellDayCheck(); };
   tick(); B.clock = setInterval(tick, 1000);
 }
 function bellClockStop() { clearInterval(B.clock); B.clock = null; }
@@ -2093,8 +2116,14 @@ function bellTry(from, to) {
     bellPatch({ lives }); bellLives(lives);
     B.busy = true;
     if (lives <= 0) {
+      bellFinish(false); // settle the loss in storage now — a reload can't undo it
+      B.busy = true;
       bellFeedback('lose', '✗ Out of lives — here is the line');
-      setTimeout(() => { if (tok !== B.token) return; B.g.undo(); bellShowLine(); bellFinish(false); }, 800);
+      setTimeout(() => {
+        if (tok !== B.token) return;
+        B.g.undo(); bellShowLine(); B.busy = false;
+        bellFeedback('lose', 'Missed today — new bell at midnight');
+      }, 800);
     } else {
       bellFeedback('lose', '✗ Not the move — ' + lives + (lives === 1 ? ' life' : ' lives') + ' left');
       setTimeout(() => {
@@ -2146,8 +2175,13 @@ function bellFinish(won) {
     return u;
   });
   if (used) toast('🧊 ' + used + (used === 1 ? ' streak freeze' : ' streak freezes') + ' used — streak saved', 'ok');
-  setTimeout(() => toast((earned ? '+' + earned + ' 🪙 · ' : '') + '🔥 ' + S.streak + '-day streak', 'ok'), used ? 700 : 0);
+  // A missed bell still counts for the streak (practice counts) — say so plainly.
+  const stMsg = won ? (earned ? '+' + earned + ' 🪙 · ' : '') + '🔥 ' + S.streak + '-day streak'
+                    : '🔥 Streak kept — you showed up (' + S.streak + (S.streak === 1 ? ' day)' : ' days)');
+  setTimeout(() => toast(stMsg, 'ok'), used ? 700 : 0);
   document.getElementById('bellClock').textContent = fmtSecs(r.secs);
+  bellLives(r.lives);
+  if (bellDayNum() !== B.n) setTimeout(() => toast('🔔 A new Opening Bell is ready', 'info'), 1400); // solved across midnight
   if (won) {
     playSound('unlock');
     bellFeedback('win', '✓ Solved in ' + fmtSecs(r.secs));
@@ -2241,8 +2275,23 @@ function shareBellLinkedIn() {
   window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(bellShareUrl()), '_blank', 'noopener');
 }
 
+// Midnight rollover while the page stays open: refresh the strip (and an idle/finished bell) for the new day.
+let bellStripDay = 0;
+function bellDayCheck() {
+  if (bellDayNum() === bellStripDay) return;
+  renderBellStrip();
+  if (S.gameMode === 'bell') {
+    const r = bellRec();
+    if (!(B.g && r && r.st === 'play')) openBell(); // never yank a puzzle that is mid-solve
+  }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) bellDayCheck(); });
+window.addEventListener('focus', bellDayCheck);
+setInterval(bellDayCheck, 60000);
+
 function renderBellStrip() {
   const n = bellDayNum(), p = bellPuzzle(n);
+  bellStripDay = n;
   const r = loadBellStore().days[n];
   document.getElementById('bellStripTitle').textContent = 'Opening Bell #' + n;
   let sub = bellLabel(p), btn = 'Play';
@@ -2483,7 +2532,11 @@ window.addEventListener('storage', e => {
     applyWallet(readWallet()); updateCoinDisplay();
     try { renderFreeze(); renderBellStrip(); } catch(err){}
   } else if (e.key === BELL_KEY) {
-    try { renderBellStrip(); } catch(err){}
+    try {
+      renderBellStrip();
+      const r = bellRec(); // today's bell was finished in another tab → show the result here too
+      if (S.gameMode === 'bell' && r && r.st !== 'play' && document.getElementById('bellResult').classList.contains('hidden')) openBell();
+    } catch(err){}
   }
 });
 
