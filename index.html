@@ -918,7 +918,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
     <!-- LOCKED STATE (Level 0) -->
     <div class="pitch-locked" id="pitchLocked">
       <div class="lock-icon">🔒</div>
-      <div class="lock-msg">Make your <strong>first move</strong> to reveal who Elena is looking for — and whether you're a fit.</div>
+      <div class="lock-msg">Make your <strong>first move</strong> to reveal who <span id="lockName">Elena</span> is looking for — and whether you're a fit.</div>
     </div>
 
     <!-- REVEALED CONTENT (Level 1+) -->
@@ -1780,13 +1780,14 @@ function submitScenario(choice) {
     const letter = ['A','B','C'][i];
     if (letter === choice) b.classList.add('selected-' + choice.toLowerCase());
   });
-  S.movesMade++;
-  const pm = S.movesMade;
-  if (pm === 1) advanceProgress(1);
-  else if (pm === 2) advanceProgress(2);
-  else if (pm >= 3) advanceProgress(3);
-  if (correct) { playSound('unlock'); toast('✓ Strong move — ' + sc.reason.slice(0,60) + '…', 'ok'); }
-  else { toast('Solid thinking — ' + sc.reason.slice(0,60) + '…', 'info'); }
+  // Only the strongest answer counts as a move toward the Deal Room.
+  if (correct) {
+    S.movesMade++;
+    advanceProgress(Math.min(3, S.movesMade));
+    playSound('unlock'); toast('✓ Strong move — ' + sc.reason, 'ok');
+  } else {
+    toast('Not the strongest move — no unlock. ' + sc.reason, 'info');
+  }
   scenIdx++;
   setTimeout(startScenario, 2000);
 }
@@ -2326,8 +2327,9 @@ function advanceProgress(level) {
 }
 
 function unlockPitchLevel1() {
-  document.getElementById('pitchLocked').classList.add('hidden');
   const body = document.getElementById('pitchBody');
+  if (!body.classList.contains('hidden')) return; // reveal (and its toast) happens once
+  document.getElementById('pitchLocked').classList.add('hidden');
   body.classList.remove('hidden');
   // Populate person
   document.getElementById('pitchAvatarEl').textContent = '👤';
@@ -2569,6 +2571,7 @@ function playSound(type) {
    ═══════════════════════════════════════════════ */
 function renderMatchCard() {
   document.getElementById('matchName').textContent = MATCH.name;
+  document.getElementById('lockName').textContent = MATCH.name.split(/\s+/)[0] || MATCH.name; // was hard-coded "Elena"
   document.getElementById('matchRole').textContent = MATCH.role;
   const badge = document.getElementById('matchBadgeEl');
   badge.textContent = MATCH.badge;
