@@ -353,7 +353,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 .bell-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .bell-lives { font-size: 12px; letter-spacing: 2px; }
 .bell-result { background: var(--surface); border: 1px solid var(--border-gold); border-radius: var(--r); padding: 14px; margin-bottom: 14px; }
-.bell-result-text { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; margin-top: 6px; }
+.bell-result-text { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; margin-top: 6px; }
 .bell-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 
 /* AI SCENARIO STAGE */
@@ -844,6 +844,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <span class="bell-lives" id="bellLives" title="Lives">❤️❤️❤️</span>
       <span class="scenario-timer t-mono" id="bellClock">0:00</span>
     </div>
+    <div class="match-intent hidden" id="bellVs" style="margin:0 0 10px;text-align:center;"></div>
     <div class="board-feedback your-turn" id="bellFeedback">White to move</div>
     <div class="board-wrap"><div id="bellBoard"></div></div>
     <div class="bell-result hidden" id="bellResult">
@@ -852,6 +853,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <div class="bell-actions">
         <button class="btn btn-linkedin btn-full" onclick="shareBellLinkedIn()">Share on LinkedIn</button>
         <button class="btn btn-secondary btn-full" id="bellCopyBtn" onclick="copyBellResult()">📋 Copy result</button>
+        <button class="btn btn-ghost btn-full hidden" id="bellBeatBtn" onclick="copyBeatLink()">⚔ Copy “Beat my time” link</button>
       </div>
       <div class="action-note" style="margin-top:8px;">New bell at midnight · Puzzle from the Lichess database (CC0)</div>
     </div>
@@ -1333,12 +1335,23 @@ function safeImgSrc(u) {
 }
 
 // ─── Challenge Link ─────────────────────────────────────
+// Payload is untrusted: decode, keep only known fields, coerce types, cap lengths.
+// Rendering still goes through textContent / esc().
 const CHALLENGER = (() => {
   try {
     const c = new URLSearchParams(location.search).get('c');
-    if (!c) return null;
-    const d = JSON.parse(atob(c.replace(/-/g, '+').replace(/_/g, '/')));
-    return (d && d.n) ? d : null;
+    if (!c || c.length > 2000) return null;
+    const raw = atob(c.replace(/-/g, '+').replace(/_/g, '/'));
+    let json; try { json = decodeURIComponent(escape(raw)); } catch(e) { json = raw; } // UTF-8 (v1 links were ASCII)
+    const d = JSON.parse(json);
+    const str = (v, max) => typeof v === 'string' ? v.trim().slice(0, max) : '';
+    const int = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi) ? v : null;
+    const out = { n: str(d && d.n, 60), co: str(d.co, 100), r: str(d.r, 20), s: str(d.s, 160), el: str(d.el, 240), t: str(d.t, 20), v: 1 };
+    if (!out.n) return null;
+    out.bd = int(d.bd, 1, 100000); // "Beat my time": Opening Bell day number
+    out.bt = int(d.bt, 1, 86400);  // …and the challenger's solve time in seconds
+    if (out.bd === null || out.bt === null) out.bd = out.bt = null;
+    return out;
   } catch(e) { return null; }
 })();
 
@@ -1950,6 +1963,7 @@ function openBell() {
   B.g = mkChess(B.p.fen); B.i = 0; B.sel = B.lf = B.lt = null;
   document.getElementById('bellNum').textContent = 'OPENING BELL #' + B.n;
   bellLives(r.lives);
+  renderBellVs();
   if (r.st === 'play') {
     document.getElementById('bellResult').classList.add('hidden');
     B.busy = true;
@@ -2128,7 +2142,27 @@ function bellStreakAdvance(n) { // returns freezes used
   return used;
 }
 
-function bellShareUrl() { return location.origin + location.pathname; }
+function bellShareUrl() {
+  const r = bellRec();
+  if (r && r.st === 'won' && r.secs) {
+    try { return challengeUrl({ bd: B.n, bt: Math.min(86400, r.secs) }, 'A friend'); } catch(e) {}
+  }
+  return location.origin + location.pathname;
+}
+function copyBeatLink() { copyText(bellShareUrl(), '“Beat my time” link copied — send it to a friend'); }
+function renderBellVs() {
+  const el = document.getElementById('bellVs');
+  if (!CHALLENGER || !CHALLENGER.bd) { el.classList.add('hidden'); return; }
+  const r = bellRec();
+  const who = '\u2068' + CHALLENGER.n + '\u2069'; // bidi-isolate (Hebrew/Arabic names)
+  let msg;
+  if (CHALLENGER.bd !== B.n) msg = who + ' solved Opening Bell #' + CHALLENGER.bd + ' in ' + fmtSecs(CHALLENGER.bt) + '. Today is #' + B.n + ' — your move.';
+  else if (r && r.st === 'won') msg = 'You ' + fmtSecs(r.secs) + ' vs ' + who + ' ' + fmtSecs(CHALLENGER.bt) + (r.secs === CHALLENGER.bt ? ' 🤝 Dead heat' : r.secs < CHALLENGER.bt ? ' 🏆 You win' : ' — ' + who + ' wins this one');
+  else if (r && r.st === 'lost') msg = who + ' wins this one (' + fmtSecs(CHALLENGER.bt) + '). New bell at midnight.';
+  else msg = '⚔ Beat ' + who + "'s " + fmtSecs(CHALLENGER.bt);
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
 function bellShareText() {
   const r = bellRec() || {};
   const lines = [
@@ -2140,6 +2174,9 @@ function bellShareText() {
 }
 function showBellResult() {
   document.getElementById('bellResultText').textContent = bellShareText();
+  const r = bellRec();
+  document.getElementById('bellBeatBtn').classList.toggle('hidden', !(r && r.st === 'won'));
+  renderBellVs();
   document.getElementById('bellResult').classList.remove('hidden');
   renderBellStrip();
 }
@@ -2402,17 +2439,19 @@ function renderMatchCard() {
       banner.style.cssText = 'background:var(--gold);color:var(--void);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:8px 8px 0 0;text-align:center;margin:-1px -1px 12px;';
       card.insertBefore(banner, card.firstChild);
     }
-    banner.textContent = '⚔ ' + CHALLENGER.n + ' challenged you to a chess game — make your move';
+    banner.textContent = CHALLENGER.bd
+      ? '⚔ Beat \u2068' + CHALLENGER.n + "\u2069's " + fmtSecs(CHALLENGER.bt) + ' on Opening Bell #' + CHALLENGER.bd
+      : '⚔ ' + CHALLENGER.n + ' challenged you to a chess game — make your move';
     const acceptBtn = document.querySelector('.match-actions .btn-primary');
     if (acceptBtn) acceptBtn.textContent = '⚔ Accept ' + CHALLENGER.n + "'s challenge";
   }
 }
 
-function copyChallenge() {
-  const name = (document.getElementById('clName').value.trim()) || S.displayName || 'You';
+function challengeUrl(extra, fallbackName) {
+  const name = (document.getElementById('clName').value.trim()) || (S.displayName && S.displayName !== 'You' ? S.displayName : '') || fallbackName;
   const company = document.getElementById('clCompany').value.trim();
   const seeking = document.getElementById('clPitch').value.trim();
-  const payload = {
+  const payload = Object.assign({
     n: name,
     co: company,
     r: S.role,
@@ -2420,10 +2459,14 @@ function copyChallenge() {
     el: company ? '"' + name + ' — ' + company + '"' : '"' + name + '"',
     t: S.target,
     v: 1
-  };
+  }, extra || {});
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  return location.origin + location.pathname + '?c=' + encoded;
+}
+
+function copyChallenge() {
   try {
-    const encoded = btoa(JSON.stringify(payload)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-    const url = location.origin + location.pathname + '?c=' + encoded;
+    const url = challengeUrl(null, 'You');
     const btn = document.getElementById('clCopyBtn');
     navigator.clipboard.writeText(url).then(() => {
       btn.textContent = '✓ Copied!';
@@ -2467,6 +2510,11 @@ function init() {
   checkFirstVisit();
   renderMatchCard();
   renderBellStrip();
+  // "Beat my time" link: land straight in the puzzle, no onboarding
+  if (CHALLENGER && CHALLENGER.bd) {
+    document.getElementById('onboard').classList.add('hidden');
+    setTimeout(goBell, 0);
+  }
   // Guard against chess.js CDN failure
   if (typeof Chess === 'undefined' && !(window.Chess)) {
     const fb = document.getElementById('boardFeedback');
