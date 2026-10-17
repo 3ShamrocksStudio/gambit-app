@@ -627,7 +627,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       </div>
       <div class="ob-title">Stop cold DMing.<br>Earn the meeting.</div>
       <p class="ob-sub">
-        <span class="ob-highlight">Rookie &amp; King™</span> is the chess-based LinkedIn ice-breaker for founders and professionals. Make 3 moves — unlock a verified intro.
+        <span class="ob-highlight">Rookie &amp; King™</span> is the chess-based LinkedIn ice-breaker for founders and professionals. Make 3 moves — unlock an intro request.
       </p>
       <div class="ob-li-cta">
         <button class="btn btn-linkedin btn-lg btn-full" onclick="linkedInAuth()">
@@ -643,7 +643,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <div class="ob-icon">🔓</div>
       <div class="ob-title">Three moves.<br>Full profile. Real intro.</div>
       <p class="ob-sub">
-        Make 3 meaningful moves in a chess duel or business scenario. Each move <span class="ob-highlight">progressively reveals</span> your match's goals, pitch, and contact — then unlocks the Deal Room for a verified intro request.
+        Make 3 meaningful moves in a chess duel or business scenario. Each move <span class="ob-highlight">progressively reveals</span> your match's goals, pitch, and contact — then unlocks the Deal Room for an intro request.
       </p>
     </div>
 
@@ -652,7 +652,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <div class="ob-icon">🪙</div>
       <div class="ob-title">Both sides<br>have skin in the game.</div>
       <p class="ob-sub">
-        Stake coins to request a meeting. Coins <span class="ob-highlight">stay in escrow</span> until the meeting actually happens — then they're returned. Spam has a cost. Real intent gets rewarded.
+        Stake coins on <span class="ob-highlight">ranked duels</span> — win and you double them. Coins also buy streak freezes. Intro requests are free during beta.
       </p>
     </div>
 
@@ -940,15 +940,15 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <!-- Level 3 reveal — actions -->
       <div class="pitch-actions" id="pitchActions">
         <div class="intro-input-wrap">
-          <input class="intro-input" id="introNote" type="text" maxlength="160" placeholder="What do you want from this intro? (one line)">
+          <input class="intro-input" id="introNote" type="text" maxlength="160" aria-label="What you want from this intro" placeholder="What do you want from this intro? (one line)">
         </div>
         <button class="btn btn-success btn-full btn-lg" onclick="openDealRoom()">
-          🤝 Request intro — 100 🪙 escrow
+          🤝 Request intro — free in beta
         </button>
         <button class="btn btn-secondary btn-full" onclick="openDealRoom()">
           📅 Book 15-min meeting
         </button>
-        <div class="action-note">Coins held in escrow until meeting occurs, then returned.</div>
+        <div class="action-note">Intro requests are free during beta. No coins are taken.</div>
       </div>
     </div>
   </div>
@@ -968,20 +968,19 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
     <div class="modal-body">
       <div class="deal-badge">🤝</div>
       <div class="modal-title">Deal Room Unlocked</div>
-      <div class="modal-sub">Match solved · Escrow pending release</div>
+      <div class="modal-sub">Match solved · Intro requests are free during beta</div>
 
       <div class="deal-summary">
         <div class="deal-row"><span class="deal-row-label">Match</span><span class="deal-row-val" id="dealMatchName">—</span></div>
         <div class="deal-row"><span class="deal-row-label">Solved in</span><span class="deal-row-val" id="dealTime">—</span></div>
         <div class="deal-row"><span class="deal-row-label">Move count</span><span class="deal-row-val" id="dealMoves">—</span></div>
-        <div class="deal-row"><span class="deal-row-label">Intent aligned</span><span class="deal-row-val" style="color:var(--green);">✓ Yes</span></div>
       </div>
 
-      <input class="intro-input" id="dealNote" type="text" maxlength="160" placeholder="One line: what do you want from this intro?">
+      <input class="intro-input" id="dealNote" type="text" maxlength="160" aria-label="What you want from this intro" placeholder="One line: what do you want from this intro?">
 
       <div style="display:flex; flex-direction:column; gap:8px;">
-        <button class="btn btn-success btn-full btn-lg" onclick="confirmIntro()">
-          🤝 Request intro — stake 100 🪙
+        <button class="btn btn-success btn-full btn-lg" id="introBtn" onclick="confirmIntro()">
+          🤝 Request intro — free in beta
         </button>
         <button class="btn btn-secondary btn-full" id="copyBriefBtn" onclick="copyBrief()">
           📋 Copy executive brief
@@ -999,7 +998,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <button class="modal-close" onclick="closeModal('coinModal')">✕</button>
       <div style="text-align:center; padding: 4px 0 16px;">
         <div class="modal-title" style="font-size:18px;">Coin Vault</div>
-        <div class="modal-sub" style="margin-bottom:0;">Stake to play ranked · Escrow for real intros</div>
+        <div class="modal-sub" style="margin-bottom:0;">Stake to play ranked · Buy streak freezes</div>
       </div>
     </div>
     <div class="modal-body" style="padding-top:0;">
@@ -1037,7 +1036,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
             <div class="coin-pack-icon">💰</div>
             <div>
               <div class="coin-pack-coins">350 Coins <span style="font-size:10px;background:var(--gold-bg);color:var(--gold);padding:1px 5px;border-radius:3px;">POPULAR</span></div>
-              <div class="coin-pack-bonus">3 intros + 5 ranked matches</div>
+              <div class="coin-pack-bonus">Good for 7 ranked duels</div>
             </div>
           </div>
           <div class="coin-pack-price">$14.99</div>
@@ -1047,7 +1046,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
             <div class="coin-pack-icon">💎</div>
             <div>
               <div class="coin-pack-coins">1,200 Coins <span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px;">BEST VALUE</span></div>
-              <div class="coin-pack-bonus">12 intros + unlimited ranked for a month</div>
+              <div class="coin-pack-bonus">Good for 24 ranked duels</div>
             </div>
           </div>
           <div class="coin-pack-price">$49.99</div>
@@ -2293,7 +2292,32 @@ function openDealRoom() {
   const elapsed = Math.round((Date.now() - dealStartTime) / 1000);
   document.getElementById('dealTime').textContent = elapsed + 's';
   document.getElementById('dealMoves').textContent = S.moveCount + ' moves';
+  const dn = document.getElementById('dealNote'), pn = document.getElementById('introNote');
+  if (!dn.value.trim() && pn.value.trim()) dn.value = pn.value; // carry the note typed in the dock
+  const sent = introSent();
+  document.getElementById('introBtn').textContent = sent ? '✓ Intro requested' : '🤝 Request intro — free in beta';
   openModal('dealModal');
+}
+
+/* Intro notes + requests persist per match (local only — nothing is sent anywhere yet). */
+const INTRO_KEY = 'rk_intro';
+function introStore() { try { const s = JSON.parse(localStorage.getItem(INTRO_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){} return {}; }
+function introRec() { const r = introStore()[MATCH.name]; return (r && typeof r === 'object') ? r : {}; }
+function introSave(fields) {
+  const s = introStore(); s[MATCH.name] = Object.assign(introRec(), fields);
+  try { localStorage.setItem(INTRO_KEY, JSON.stringify(s)); } catch(e){}
+}
+function introSent() { return !!introRec().sent; }
+function initIntroNotes() {
+  const note = typeof introRec().note === 'string' ? introRec().note.slice(0, 160) : '';
+  ['introNote', 'dealNote'].forEach(id => {
+    const el = document.getElementById(id);
+    if (note && !el.value) el.value = note;
+    el.addEventListener('input', () => {
+      const other = document.getElementById(id === 'introNote' ? 'dealNote' : 'introNote');
+      other.value = el.value; introSave({ note: el.value.slice(0, 160) });
+    });
+  });
 }
 
 function copyBrief() {
@@ -2320,12 +2344,12 @@ function copyBrief() {
 }
 
 function confirmIntro() {
-  if (S.coins < 100) { toast('Need 100 coins for escrow — top up now', 'warn'); closeModal('dealModal'); openModal('coinModal'); return; }
-  S.coins -= 100;
-  updateCoinDisplay();
+  // No real escrow or intro delivery exists yet: requests are free and no coins leave the wallet.
+  if (introSent()) { closeModal('dealModal'); toast('You already requested an intro to ' + MATCH.name, 'info'); return; }
+  introSave({ sent: Date.now(), note: document.getElementById('dealNote').value.trim().slice(0, 160) });
   playSound('unlock');
   closeModal('dealModal');
-  toast('✓ Intro requested! 100 🪙 in escrow — released when meeting occurs.', 'ok');
+  toast('✓ Intro request saved — free during beta. Live delivery is coming soon.', 'ok');
 }
 
 /* ═══════════════════════════════════════════════
@@ -2529,6 +2553,7 @@ function init() {
   loadWallet();
   checkFirstVisit();
   renderMatchCard();
+  initIntroNotes();
   renderBellStrip();
   // "Beat my time" link: land straight in the puzzle, no onboarding
   if (CHALLENGER && CHALLENGER.bd) {
