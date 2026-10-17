@@ -1812,6 +1812,24 @@ function updateTarget() { S.target = document.getElementById('settingsTarget').v
    ═══════════════════════════════════════════════ */
 function updateCoinDisplay() {
   document.getElementById('coinDisplay').textContent = S.coins;
+  saveWallet();
+}
+
+/* Wallet persistence — schema v1: {v, coins, rankedId}
+   rankedId = id of an unsettled ranked stake. A stake still open on load
+   was abandoned by reload → forfeited (never refunded or paid twice). */
+const WALLET_KEY = 'rk_wallet';
+const WALLET_V = 1;
+function saveWallet() {
+  try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: S.ranked || null })); } catch(e){}
+}
+function loadWallet() {
+  try {
+    const w = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
+    if (w && w.v === WALLET_V && Number.isFinite(w.coins) && w.coins >= 0) S.coins = Math.floor(w.coins);
+  } catch(e){}
+  S.ranked = false; // any open stake from a previous page load is forfeited
+  updateCoinDisplay();
 }
 
 /* ═══════════════════════════════════════════════
@@ -1923,6 +1941,7 @@ function toast(msg, type='info') {
    INIT
    ═══════════════════════════════════════════════ */
 function init() {
+  loadWallet();
   checkFirstVisit();
   renderMatchCard();
   // Guard against chess.js CDN failure
