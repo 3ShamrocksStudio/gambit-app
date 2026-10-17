@@ -751,9 +751,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <div class="match-info">
         <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
           <div class="match-name" id="matchName">Elena Rostova</div>
-          <span style="font-size:10px; background:var(--green-bg); color:var(--green); border:1px solid rgba(47,176,106,0.25); padding:2px 7px; border-radius:4px; font-weight:700;">
-            <span class="verified-dot"></span>VERIFIED
-          </span>
+          <span id="matchStatusEl" style="font-size:10px; background:var(--raised); color:var(--text-2); border:1px solid var(--border-md); padding:2px 7px; border-radius:4px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;">Demo match</span>
         </div>
         <div class="match-role" id="matchRole">Managing Partner @ Apex Cyber Ventures</div>
         <div class="match-tags" id="matchTags">
@@ -1874,6 +1872,9 @@ function renderMatchCard() {
     intentEl.innerHTML = '<strong>' + (CHALLENGER ? 'Their pitch:' : 'Looking for:') + '</strong> ' + esc(MATCH.intent);
   }
   if (CHALLENGER) {
+    // Challenge-link profiles are self-described, not verified
+    const st = document.getElementById('matchStatusEl');
+    if (st) st.textContent = 'Via link';
     const card = document.querySelector('.match-card-inner');
     let banner = document.getElementById('challengeBanner');
     if (!banner) {
