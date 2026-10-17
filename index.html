@@ -1658,7 +1658,7 @@ function switchMode(m) {
   document.getElementById('tabChess').classList.toggle('active', m === 'chess');
   document.getElementById('tabAI').classList.toggle('active', m === 'ai');
   document.getElementById('chessStage').style.display = m === 'chess' ? '' : 'none';
-  document.getElementById('aiStage').style.display = m === 'ai' ? '' : 'none';
+  document.getElementById('aiStage').style.display = m === 'ai' ? 'block' : 'none';
   document.getElementById('tabBell').classList.toggle('active', m === 'bell');
   document.getElementById('bellStage').style.display = m === 'bell' ? 'block' : 'none';
   if (m === 'ai') startScenario(); else clearInterval(S.scenarioTimer);
