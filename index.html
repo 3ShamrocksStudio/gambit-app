@@ -485,6 +485,8 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   border-radius: var(--r-sm); margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
 }
 .coin-pack:hover { border-color: var(--border-gold); }
+.coin-pack.soon { opacity: .55; cursor: not-allowed; }
+.coin-pack.soon:hover { border-color: var(--border); }
 .coin-pack-info { display: flex; align-items: center; gap: 10px; }
 .coin-pack-icon { font-size: 20px; }
 .coin-pack-coins { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -958,9 +960,9 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
         <div style="font-size:11px; color:var(--text-3); margin-top:2px;">Current balance</div>
       </div>
 
-      <div class="t-label" style="margin-bottom:10px;">Top up</div>
+      <div class="t-label" style="margin-bottom:10px;">Top up <span style="font-size:10px;background:var(--gold-bg);color:var(--gold);padding:1px 5px;border-radius:3px;letter-spacing:0;">COMING SOON</span></div>
       <div id="coinPacks">
-        <div class="coin-pack" onclick="buyCoinPack(100,4.99)">
+        <div class="coin-pack soon" aria-disabled="true" onclick="buyCoinPack(100,4.99)">
           <div class="coin-pack-info">
             <div class="coin-pack-icon">🪙</div>
             <div>
@@ -970,7 +972,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
           </div>
           <div class="coin-pack-price">$4.99</div>
         </div>
-        <div class="coin-pack" onclick="buyCoinPack(350,14.99)" style="border-color:var(--border-gold);">
+        <div class="coin-pack soon" aria-disabled="true" onclick="buyCoinPack(350,14.99)" style="border-color:var(--border-gold);">
           <div class="coin-pack-info">
             <div class="coin-pack-icon">💰</div>
             <div>
@@ -980,7 +982,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
           </div>
           <div class="coin-pack-price">$14.99</div>
         </div>
-        <div class="coin-pack" onclick="buyCoinPack(1200,49.99)">
+        <div class="coin-pack soon" aria-disabled="true" onclick="buyCoinPack(1200,49.99)">
           <div class="coin-pack-info">
             <div class="coin-pack-icon">💎</div>
             <div>
@@ -1797,12 +1799,8 @@ document.querySelectorAll('.modal-backdrop').forEach(el => {
    COIN STORE
    ═══════════════════════════════════════════════ */
 function buyCoinPack(coins, price) {
-  // Demo only
-  S.coins += coins;
-  updateCoinDisplay();
-  playSound('coin');
-  toast('+' + coins + ' 🪙 added! (Demo — no real charge)', 'ok');
-  closeModal('coinModal');
+  // No payment provider yet — grants nothing, charges nothing.
+  toast('Coin packs coming soon — no charge made', 'info');
 }
 
 /* ═══════════════════════════════════════════════
