@@ -1630,7 +1630,7 @@ function checkGameOver() {
   const rankedStake = S.ranked; S.ranked = false; // settle once
   if (game.in_checkmate()) {
     if (game.turn() === 'b') {
-      if (rankedStake) { S.coins += 100; toast('Ranked win — +100 🪙 (stake returned + 50)', 'ok'); }
+      if (rankedStake) { walletTx(() => { S.coins += 100; }); toast('Ranked win — +100 🪙 (stake returned + 50)', 'ok'); }
       updateFeedback('win', '♔ Checkmate! You win — Deal Room unlocked!');
       advanceProgress(3); playSound('unlock');
       setTimeout(() => openDealRoom(), 1200);
@@ -1678,17 +1678,16 @@ function resignGame() {
   updateFeedback('lose', '↩ You resigned. Try again!');
   playSound('resign');
   if (S.ranked) {
-    S.ranked = false; saveWallet();
+    walletTx(() => { S.ranked = false; });
     toast('Ranked game lost — 50 coins forfeited', 'warn');
   }
   setTimeout(() => { newGame(); }, 2000);
 }
 
 function startRanked() {
+  applyWallet(readWallet());
   if (S.coins < 50) { toast('Not enough coins — top up to play ranked', 'warn'); openModal('coinModal'); return; }
-  S.ranked = 'r' + Date.now();
-  S.coins -= 50;
-  updateCoinDisplay();
+  walletTx(() => { S.ranked = 'r' + Date.now(); S.coins -= 50; });
   toast('Ranked mode: 50 🪙 at stake — win to get 100 🪙', 'ok');
   newGame();
 }
@@ -1942,7 +1941,12 @@ function bellGoal(p) {
   return m ? 'Mate in ' + m.slice(6) : 'Find the best line';
 }
 function bellLabel(p) { return ((p.wd === 0 || p.wd === 6) ? 'The Long Game · ' : '') + 'White to move · ' + bellGoal(p); }
-function fmtSecs(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
+function fmtSecs(t) {
+  t = Number(t); if (!Number.isFinite(t)) t = 0; // NaN / corrupt storage guard
+  t = Math.min(359999, Math.max(0, Math.floor(t)));
+  const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = String(t % 60).padStart(2, '0');
+  return h ? h + ':' + String(m).padStart(2, '0') + ':' + s : m + ':' + s;
+}
 
 function loadBellStore() {
   try {
@@ -2114,10 +2118,12 @@ function bellFinish(won) {
   if (won) s.solves = (s.solves | 0) + 1;
   saveBellStore(s);
   // Streak + coin drip — runs once per bell day (guarded by the st check above)
-  const used = bellStreakAdvance(B.n);
   let earned = 0;
-  if (won) { earned = 10; if (S.streak % 7 === 0) earned += 50; S.coins += earned; }
-  updateCoinDisplay();
+  const used = walletTx(() => {
+    const u = bellStreakAdvance(B.n);
+    if (won) { earned = 10; if (S.streak > 0 && S.streak % 7 === 0) earned += 50; S.coins += earned; }
+    return u;
+  });
   if (used) toast('🧊 ' + used + (used === 1 ? ' streak freeze' : ' streak freezes') + ' used — streak saved', 'ok');
   setTimeout(() => toast((earned ? '+' + earned + ' 🪙 · ' : '') + '🔥 ' + S.streak + '-day streak', 'ok'), used ? 700 : 0);
   document.getElementById('bellClock').textContent = fmtSecs(r.secs);
@@ -2376,10 +2382,11 @@ function renderFreeze() {
   if (el) el.textContent = 'Covers one missed weekday · ' + S.freezes + '/' + FREEZE_MAX + ' held';
 }
 function buyFreeze() {
+  applyWallet(readWallet());
   if (S.freezes >= FREEZE_MAX) { toast('You already hold ' + FREEZE_MAX + ' freezes (max)', 'warn'); return; }
   if (S.coins < FREEZE_COST) { toast('Need ' + FREEZE_COST + ' coins — solve the Opening Bell to earn more', 'warn'); return; }
-  S.coins -= FREEZE_COST; S.freezes++;
-  updateCoinDisplay(); renderFreeze();
+  walletTx(() => { S.coins -= FREEZE_COST; S.freezes++; });
+  renderFreeze();
   document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙';
   renderBellStrip();
   toast('🧊 Streak freeze ready (' + S.freezes + '/' + FREEZE_MAX + ')', 'ok');
@@ -2399,9 +2406,11 @@ function updateTarget() { S.target = document.getElementById('settingsTarget').v
 /* ═══════════════════════════════════════════════
    COIN DISPLAY
    ═══════════════════════════════════════════════ */
+// Display only. Wallet writes go through walletTx() so a stale tab never overwrites another.
 function updateCoinDisplay() {
   document.getElementById('coinDisplay').textContent = S.coins;
-  saveWallet();
+  const mb = document.getElementById('coinModalBalance');
+  if (mb) mb.textContent = S.coins + ' 🪙';
 }
 
 /* Wallet persistence — schema v2: {v, coins, rankedId, streak, last, freezes}
@@ -2411,22 +2420,51 @@ function updateCoinDisplay() {
 const WALLET_KEY = 'rk_wallet';
 const WALLET_V = 2;
 const FREEZE_COST = 100, FREEZE_MAX = 2;
+const COINS_MAX = 1e9; // anything above is corrupt/tampered storage
 function saveWallet() {
   try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: S.ranked || null, streak: S.streak, last: S.streakLast, freezes: S.freezes })); } catch(e){}
 }
-function loadWallet() {
-  const nat = x => (Number.isInteger(x) && x >= 0) ? x : 0;
+function readWallet() {
   try {
     const w = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
-    if (w && (w.v === 1 || w.v === 2) && Number.isFinite(w.coins) && w.coins >= 0) S.coins = Math.floor(w.coins);
-    if (w && w.v === 2) {
-      S.streak = nat(w.streak); S.streakLast = nat(w.last);
-      S.freezes = Math.min(FREEZE_MAX, nat(w.freezes));
-    }
-  } catch(e){}
-  S.ranked = false; // any open stake from a previous page load is forfeited
+    return (w && typeof w === 'object' && (w.v === 1 || w.v === 2)) ? w : null;
+  } catch(e) { return null; }
+}
+function applyWallet(w) { // copy valid stored fields into S (never S.ranked — that is per-tab)
+  if (!w) return;
+  const nat = x => (Number.isSafeInteger(x) && x >= 0) ? x : 0;
+  if (Number.isFinite(w.coins) && w.coins >= 0 && w.coins <= COINS_MAX) S.coins = Math.floor(w.coins);
+  if (w.v === 2) {
+    S.streak = Math.min(100000, nat(w.streak)); S.streakLast = Math.min(100000, nat(w.last));
+    S.freezes = Math.min(FREEZE_MAX, nat(w.freezes));
+  }
+}
+// Read-modify-write: re-read storage, apply the change, write back.
+function walletTx(fn) {
+  applyWallet(readWallet());
+  const out = fn();
+  saveWallet();
+  updateCoinDisplay();
+  return out;
+}
+let rankedForfeitOnLoad = false;
+function loadWallet() {
+  const w = readWallet();
+  applyWallet(w);
+  // An open stake from a previous page load is forfeited (never refunded or paid twice) — tell the user.
+  if (w && w.rankedId) { rankedForfeitOnLoad = true; S.ranked = false; saveWallet(); }
+  S.ranked = false;
   updateCoinDisplay();
 }
+// Another tab changed the wallet → adopt it so this tab never shows or writes stale numbers.
+window.addEventListener('storage', e => {
+  if (e.key === WALLET_KEY || e.key === null) {
+    applyWallet(readWallet()); updateCoinDisplay();
+    try { renderFreeze(); renderBellStrip(); } catch(err){}
+  } else if (e.key === BELL_KEY) {
+    try { renderBellStrip(); } catch(err){}
+  }
+});
 
 /* ═══════════════════════════════════════════════
    SOUND
