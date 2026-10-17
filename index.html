@@ -994,7 +994,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <div class="divider"></div>
       <div class="t-label" style="margin-bottom:8px;">Earn free coins</div>
       <div style="font-size:12px; color:var(--text-2); line-height:1.6;">
-        Win a ranked duel → +25 coins · Refer a colleague → +50 coins · Complete your profile → +10 coins
+        Win a ranked duel → +50 coins · Refer a colleague → +50 coins · Complete your profile → +10 coins
       </div>
     </div>
   </div>
@@ -1536,8 +1536,10 @@ function aiMove() {
 function checkGameOver() {
   if (!game.game_over()) return false;
   S.gameOver = true;
+  const rankedStake = S.ranked; S.ranked = false; // settle once
   if (game.in_checkmate()) {
     if (game.turn() === 'b') {
+      if (rankedStake) { S.coins += 100; toast('Ranked win — +100 🪙 (stake returned + 50)', 'ok'); }
       updateFeedback('win', '♔ Checkmate! You win — Deal Room unlocked!');
       advanceProgress(3); playSound('unlock');
       setTimeout(() => openDealRoom(), 1200);
@@ -1548,6 +1550,7 @@ function checkGameOver() {
   } else if (game.in_draw()) {
     updateFeedback('win', '½–½ Draw — partial unlock granted');
   }
+  updateCoinDisplay();
   return true;
 }
 
@@ -1583,7 +1586,8 @@ function resignGame() {
   S.gameOver = true;
   updateFeedback('lose', '↩ You resigned. Try again!');
   playSound('resign');
-  if (S.ranked && S.coins >= 0) {
+  if (S.ranked) {
+    S.ranked = false; saveWallet();
     toast('Ranked game lost — 50 coins forfeited', 'warn');
   }
   setTimeout(() => { newGame(); }, 2000);
@@ -1591,7 +1595,7 @@ function resignGame() {
 
 function startRanked() {
   if (S.coins < 50) { toast('Not enough coins — top up to play ranked', 'warn'); openModal('coinModal'); return; }
-  S.ranked = true;
+  S.ranked = 'r' + Date.now();
   S.coins -= 50;
   updateCoinDisplay();
   toast('Ranked mode: 50 🪙 at stake — win to get 100 🪙', 'ok');
