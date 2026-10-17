@@ -230,7 +230,10 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 .badge-rookie { background: var(--gold-bg); color: var(--gold); border-color: var(--border-gold); }
 
 .match-info { flex: 1; min-width: 0; }
-.match-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.match-name { font-size: 15px; font-weight: 700; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+#challengeBanner, .match-intent, .lock-msg, .pitch-name, .pitch-company, .pitch-seeking, .pitch-elevator { overflow-wrap: anywhere; }
+.match-actions .btn-primary { min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.3; }
+.deal-row { gap: 12px; } .deal-row-val { min-width: 0; text-align: right; overflow-wrap: anywhere; }
 .match-role { font-size: 12px; color: var(--text-2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .match-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
 .match-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; background: var(--raised); border: 1px solid var(--border); color: var(--text-2); }
@@ -516,7 +519,8 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 
 /* ─── TOAST ──────────────────────────────────── */
 #toastContainer {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px)); left: 50%; transform: translateX(-50%);
+  width: min(440px, calc(100vw - 32px));
   z-index: 500; display: flex; flex-direction: column; align-items: center; gap: 6px;
   pointer-events: none;
 }
@@ -527,7 +531,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   opacity: 0; transform: translateY(8px);
   transition: all 0.2s ease;
-  pointer-events: none; white-space: nowrap;
+  pointer-events: none; white-space: normal; overflow-wrap: anywhere; text-align: center; max-width: 100%;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.success { border-color: var(--green); color: var(--green); }
@@ -1944,6 +1948,7 @@ const BELL = {
 
 const BELL_EPOCH = Date.UTC(2026, 9, 17); // Opening Bell #1 = 2026-10-17 (local date)
 const BELL_KEY = 'rk_bell';
+const BEAT_MAX_SECS = 4 * 3600; // longer "Beat my time" times are treated as invalid
 const B = { n: 0, p: null, g: null, i: 0, sel: null, lf: null, lt: null, busy: false, clock: null, token: 0 };
 
 function bellDayNum(d) {
@@ -2222,7 +2227,7 @@ function bellStreakAdvance(n) { // returns freezes used
 function bellShareUrl() {
   const r = bellRec();
   if (r && r.st === 'won' && r.secs) {
-    try { return challengeUrl({ bd: B.n, bt: Math.min(86400, r.secs) }, 'A friend'); } catch(e) {}
+    if (r.secs <= BEAT_MAX_SECS) { try { return challengeUrl({ bd: B.n, bt: r.secs }, 'A friend'); } catch(e) {} }
   }
   return location.origin + location.pathname;
 }
@@ -2547,6 +2552,7 @@ window.addEventListener('storage', e => {
    ═══════════════════════════════════════════════ */
 function playSound(type) {
   if (!document.getElementById('soundToggle').checked) return;
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return; // no audio before a user gesture (avoids console noise)
   try {
     if (!S.audioCtx) S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const ctx = S.audioCtx;
@@ -2598,7 +2604,8 @@ function renderMatchCard() {
       ? '⚔ Beat \u2068' + CHALLENGER.n + "\u2069's " + fmtSecs(CHALLENGER.bt) + ' on Opening Bell #' + CHALLENGER.bd
       : '⚔ ' + CHALLENGER.n + ' challenged you to a chess game — make your move';
     const acceptBtn = document.querySelector('.match-actions .btn-primary');
-    if (acceptBtn) acceptBtn.textContent = '⚔ Accept ' + CHALLENGER.n + "'s challenge";
+    const short = [...CHALLENGER.n].length > 22 ? [...CHALLENGER.n].slice(0, 21).join('') + '…' : CHALLENGER.n;
+    if (acceptBtn) acceptBtn.textContent = '⚔ Accept \u2068' + short + "\u2069's challenge";
   }
 }
 
@@ -2648,7 +2655,12 @@ function openSettings() {
 /* ═══════════════════════════════════════════════
    TOAST
    ═══════════════════════════════════════════════ */
+const TOAST_MAX = 3;
 function toast(msg, type='info') {
+  const box = document.getElementById('toastContainer');
+  const live = [...box.children].filter(t => !t.dataset.gone);
+  if (live.some(t => t.textContent === msg)) return; // same message already showing
+  live.slice(0, Math.max(0, live.length - TOAST_MAX + 1)).forEach(t => { t.dataset.gone = '1'; t.remove(); }); // keep the stack short
   const el = document.createElement('div');
   el.className = 'toast' + (type === 'ok' ? ' success' : type === 'warn' ? ' warn' : '');
   el.textContent = msg;
@@ -2667,8 +2679,17 @@ function init() {
   }
   loadWallet();
   checkFirstVisit();
+  // "Beat my time" links: a bell from the future or an absurd time is not trusted → today's bell instead
+  let badBeat = false;
+  if (CHALLENGER && CHALLENGER.bd && (CHALLENGER.bd > bellDayNum() + 1 || CHALLENGER.bt > BEAT_MAX_SECS)) {
+    CHALLENGER.bd = CHALLENGER.bt = null; badBeat = true;
+  }
   renderMatchCard();
   initIntroNotes();
+  if (badBeat) {
+    document.getElementById('onboard').classList.add('hidden');
+    setTimeout(() => { goBell(); toast('That “Beat my time” link looks invalid — here’s today’s Opening Bell', 'warn'); }, 0);
+  }
   if (rankedForfeitOnLoad) setTimeout(() => toast('Unfinished ranked game from your last visit was forfeited — 50 🪙 stake lost', 'warn'), 400);
   renderBellStrip();
   // "Beat my time" link: land straight in the puzzle, no onboarding
