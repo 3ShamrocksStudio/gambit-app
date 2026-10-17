@@ -1250,7 +1250,7 @@ function handleLinkedInCallback() {
   if (LI_PROFILE) {
     try { localStorage.setItem('rk_li_profile', JSON.stringify(LI_PROFILE)); } catch(e){}
     updateLIBadge();
-    toast('LinkedIn connected! Real matches unlocked. ♟', 'ok');
+    toast(LI_PROFILE.demo ? 'Demo profile active. Real LinkedIn matching is coming soon. ♟' : 'LinkedIn connected! ♟', 'ok');
   }
 
   // Clean ?code= from URL so refresh doesn't re-trigger
