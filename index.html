@@ -15,6 +15,9 @@
 <meta property="og:url" content="https://3shamrocksstudio.github.io/gambit-app/">
 <meta property="og:type" content="website">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
@@ -1117,14 +1120,10 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 
       <div class="divider"></div>
       <div class="t-label" style="margin-bottom:10px;">Game</div>
-      <div class="setting-row">
+      <label class="setting-row" for="soundToggle" style="cursor:pointer;">
         <div><div class="setting-label">Sound effects</div><div class="setting-sub">Move, unlock, and win sounds</div></div>
         <input type="checkbox" id="soundToggle" checked style="accent-color:var(--gold); width:18px; height:18px; cursor:pointer;">
-      </div>
-      <div class="setting-row">
-        <div><div class="setting-label">Auto-flip board</div><div class="setting-sub">Show your colour at bottom</div></div>
-        <input type="checkbox" id="flipToggle" style="accent-color:var(--gold); width:18px; height:18px; cursor:pointer;">
-      </div>
+      </label>
 
       <div class="divider"></div>
       <div class="t-label" style="margin-bottom:10px;">Account</div>
@@ -2438,17 +2437,45 @@ function confirmIntro() {
 /* ═══════════════════════════════════════════════
    MODALS
    ═══════════════════════════════════════════════ */
+// Each open dialog owns one history entry, so the phone Back button closes it instead of leaving the app.
+let modalPopPending = false;
 function openModal(id) {
   const m = document.getElementById(id);
   m.classList.add('open');
   if (id === 'coinModal') { document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙'; renderFreeze(); }
+  try {
+    if (history.state && history.state.rkModal) history.replaceState({ rkModal: id }, '');
+    else history.pushState({ rkModal: id }, '');
+  } catch(e){}
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+  if (history.state && history.state.rkModal === id) { modalPopPending = true; history.back(); }
 }
+window.addEventListener('popstate', () => {
+  if (modalPopPending) { // our own back() after a UI close; re-arm if another dialog opened meanwhile
+    modalPopPending = false;
+    const still = document.querySelector('.modal-backdrop.open');
+    if (still) { try { history.pushState({ rkModal: still.id }, ''); } catch(e){} }
+    return;
+  }
+  document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); // hardware/browser Back
+});
 // Close on backdrop click
 document.querySelectorAll('.modal-backdrop').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+// Escape closes the top dialog; Enter/Space activate non-button controls marked role="button"
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const open = [...document.querySelectorAll('.modal-backdrop.open')].pop();
+    if (open) { e.preventDefault(); closeModal(open.id); }
+    return;
+  }
+  const t = e.target;
+  if ((e.key === 'Enter' || e.key === ' ') && t && t.getAttribute && t.getAttribute('role') === 'button' && t.tagName !== 'BUTTON') {
+    e.preventDefault(); t.click();
+  }
 });
 
 /* ═══════════════════════════════════════════════
@@ -2678,6 +2705,10 @@ function init() {
     document.getElementById('liConnectSub').textContent = 'Demo only — real LinkedIn sign-in coming soon';
   }
   loadWallet();
+  // Sound preference persists across visits
+  const snd = document.getElementById('soundToggle');
+  try { if (localStorage.getItem('rk_sound') === '0') snd.checked = false; } catch(e){}
+  snd.addEventListener('change', () => { try { localStorage.setItem('rk_sound', snd.checked ? '1' : '0'); } catch(e){} });
   checkFirstVisit();
   // "Beat my time" links: a bell from the future or an absurd time is not trusted → today's bell instead
   let badBeat = false;
