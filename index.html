@@ -1006,6 +1006,18 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
         <div style="font-size:11px; color:var(--text-3); margin-top:2px;">Current balance</div>
       </div>
 
+      <div class="t-label" style="margin-bottom:10px;">Spend coins</div>
+      <div class="coin-pack" id="freezePack" onclick="buyFreeze()">
+        <div class="coin-pack-info">
+          <div class="coin-pack-icon">🧊</div>
+          <div>
+            <div class="coin-pack-coins">Streak freeze</div>
+            <div class="coin-pack-bonus" id="freezeHeld">Covers one missed weekday · 0/2 held</div>
+          </div>
+        </div>
+        <div class="coin-pack-price">100 🪙</div>
+      </div>
+      <div class="divider"></div>
       <div class="t-label" style="margin-bottom:10px;">Top up <span style="font-size:10px;background:var(--gold-bg);color:var(--gold);padding:1px 5px;border-radius:3px;letter-spacing:0;">COMING SOON</span></div>
       <div id="coinPacks">
         <div class="coin-pack soon" aria-disabled="true" onclick="buyCoinPack(100,4.99)">
@@ -1042,7 +1054,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
       <div class="divider"></div>
       <div class="t-label" style="margin-bottom:8px;">Earn free coins</div>
       <div style="font-size:12px; color:var(--text-2); line-height:1.6;">
-        Win a ranked duel → +50 coins · Refer a colleague → +50 coins · Complete your profile → +10 coins
+        Solve the daily Opening Bell → +10 coins · Every 7-day streak → +50 coins · Win a ranked duel → +50 coins · Refer a colleague → +50 coins · Complete your profile → +10 coins
       </div>
     </div>
   </div>
@@ -1169,6 +1181,9 @@ const S = {
   scenarioTimer: null,
   scenarioSec: 15,
   audioCtx: null,
+  streak: 0,      // Opening Bell streak (days)
+  streakLast: 0,  // bell day number of the last finished bell
+  freezes: 0,     // streak freezes held (max 2)
 };
 
 /* ═══════════════════════════════════════════════
@@ -2069,6 +2084,13 @@ function bellFinish(won) {
   r.secs = Math.max(1, Math.round((Date.now() - r.t0) / 1000));
   if (won) s.solves = (s.solves | 0) + 1;
   saveBellStore(s);
+  // Streak + coin drip — runs once per bell day (guarded by the st check above)
+  const used = bellStreakAdvance(B.n);
+  let earned = 0;
+  if (won) { earned = 10; if (S.streak % 7 === 0) earned += 50; S.coins += earned; }
+  updateCoinDisplay();
+  if (used) toast('🧊 ' + used + (used === 1 ? ' streak freeze' : ' streak freezes') + ' used — streak saved', 'ok');
+  setTimeout(() => toast((earned ? '+' + earned + ' 🪙 · ' : '') + '🔥 ' + S.streak + '-day streak', 'ok'), used ? 700 : 0);
   document.getElementById('bellClock').textContent = fmtSecs(r.secs);
   if (won) {
     playSound('unlock');
@@ -2079,12 +2101,39 @@ function bellFinish(won) {
   showBellResult();
 }
 
+/* Weekend-safe streak: rest days never break it (Sat/Sun; Fri/Sat for Hebrew locale).
+   Each missed working day costs one freeze; not enough freezes → streak restarts. */
+function bellIsRestDay(n) {
+  const wd = bellWeekday(n);
+  return /^he\b/i.test(navigator.language || '') ? (wd === 5 || wd === 6) : (wd === 6 || wd === 0);
+}
+function bellMissed(n) {
+  if (!S.streakLast || S.streakLast >= n) return 0;
+  if (n - S.streakLast > 30) return Infinity;
+  let missed = 0;
+  for (let d = S.streakLast + 1; d < n; d++) if (!bellIsRestDay(d)) missed++;
+  return missed;
+}
+function bellStreakNow(n) { // streak as it stands today, before today's bell
+  if (!S.streakLast || S.streakLast > n) return S.streak;
+  return bellMissed(n) <= S.freezes ? S.streak : 0;
+}
+function bellStreakAdvance(n) { // returns freezes used
+  if (S.streakLast === n || S.streakLast > n) return 0;
+  const missed = bellMissed(n);
+  let used = 0;
+  if (S.streakLast && missed <= S.freezes) { used = missed; S.freezes -= missed; S.streak += 1; }
+  else S.streak = 1;
+  S.streakLast = n;
+  return used;
+}
+
 function bellShareUrl() { return location.origin + location.pathname; }
 function bellShareText() {
   const r = bellRec() || {};
   const lines = [
     'Rookie & King · Opening Bell #' + B.n + ' ♟',
-    bellGoal(B.p) + ' · ' + (r.st === 'won' ? '✅ ' + fmtSecs(r.secs) : '❌ missed') + ' · ' + '❤️'.repeat(Math.max(0, r.lives | 0)) + '🖤'.repeat(Math.max(0, 3 - (r.lives | 0))),
+    bellGoal(B.p) + ' · ' + (r.st === 'won' ? '✅ ' + fmtSecs(r.secs) : '❌ missed') + ' · ' + '❤️'.repeat(Math.max(0, r.lives | 0)) + '🖤'.repeat(Math.max(0, 3 - (r.lives | 0))) + ' · 🔥 ' + S.streak,
     'Can you beat it? → ' + bellShareUrl(),
   ];
   return lines.join('\n');
@@ -2120,6 +2169,8 @@ function renderBellStrip() {
   let sub = bellLabel(p), btn = 'Play';
   if (r && r.st === 'won') { sub = '✓ Solved in ' + fmtSecs(r.secs); btn = 'View'; }
   else if (r && r.st === 'lost') { sub = 'Missed today · new bell at midnight'; btn = 'View'; }
+  const st = bellStreakNow(n);
+  if (st > 0) sub = '🔥 ' + st + (S.freezes ? ' · 🧊 ' + S.freezes : '') + ' · ' + sub;
   document.getElementById('bellStripSub').textContent = sub;
   document.getElementById('bellStripBtn').textContent = btn;
 }
@@ -2230,7 +2281,7 @@ function confirmIntro() {
 function openModal(id) {
   const m = document.getElementById(id);
   m.classList.add('open');
-  if (id === 'coinModal') document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙';
+  if (id === 'coinModal') { document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙'; renderFreeze(); }
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
@@ -2243,6 +2294,20 @@ document.querySelectorAll('.modal-backdrop').forEach(el => {
 /* ═══════════════════════════════════════════════
    COIN STORE
    ═══════════════════════════════════════════════ */
+function renderFreeze() {
+  const el = document.getElementById('freezeHeld');
+  if (el) el.textContent = 'Covers one missed weekday · ' + S.freezes + '/' + FREEZE_MAX + ' held';
+}
+function buyFreeze() {
+  if (S.freezes >= FREEZE_MAX) { toast('You already hold ' + FREEZE_MAX + ' freezes (max)', 'warn'); return; }
+  if (S.coins < FREEZE_COST) { toast('Need ' + FREEZE_COST + ' coins — solve the Opening Bell to earn more', 'warn'); return; }
+  S.coins -= FREEZE_COST; S.freezes++;
+  updateCoinDisplay(); renderFreeze();
+  document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙';
+  renderBellStrip();
+  toast('🧊 Streak freeze ready (' + S.freezes + '/' + FREEZE_MAX + ')', 'ok');
+}
+
 function buyCoinPack(coins, price) {
   // No payment provider yet — grants nothing, charges nothing.
   toast('Coin packs coming soon — no charge made', 'info');
@@ -2262,18 +2327,25 @@ function updateCoinDisplay() {
   saveWallet();
 }
 
-/* Wallet persistence — schema v1: {v, coins, rankedId}
+/* Wallet persistence — schema v2: {v, coins, rankedId, streak, last, freezes}
+   (v1 {v, coins, rankedId} migrates with streak 0 / no freezes.)
    rankedId = id of an unsettled ranked stake. A stake still open on load
    was abandoned by reload → forfeited (never refunded or paid twice). */
 const WALLET_KEY = 'rk_wallet';
-const WALLET_V = 1;
+const WALLET_V = 2;
+const FREEZE_COST = 100, FREEZE_MAX = 2;
 function saveWallet() {
-  try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: S.ranked || null })); } catch(e){}
+  try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: S.ranked || null, streak: S.streak, last: S.streakLast, freezes: S.freezes })); } catch(e){}
 }
 function loadWallet() {
+  const nat = x => (Number.isInteger(x) && x >= 0) ? x : 0;
   try {
     const w = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
-    if (w && w.v === WALLET_V && Number.isFinite(w.coins) && w.coins >= 0) S.coins = Math.floor(w.coins);
+    if (w && (w.v === 1 || w.v === 2) && Number.isFinite(w.coins) && w.coins >= 0) S.coins = Math.floor(w.coins);
+    if (w && w.v === 2) {
+      S.streak = nat(w.streak); S.streakLast = nat(w.last);
+      S.freezes = Math.min(FREEZE_MAX, nat(w.freezes));
+    }
   } catch(e){}
   S.ranked = false; // any open stake from a previous page load is forfeited
   updateCoinDisplay();
