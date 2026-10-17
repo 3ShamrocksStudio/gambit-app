@@ -1221,9 +1221,9 @@ function updateLIBadge() {
     const avEl = document.getElementById('liHeaderAv');
     if (avEl) {
       if (LI_PROFILE.picture) {
-        avEl.innerHTML = '<img src="' + LI_PROFILE.picture + '" alt="">';
+        avEl.innerHTML = '<img src="' + safeImgSrc(LI_PROFILE.picture) + '" alt="">';
       } else {
-        avEl.innerHTML = '<span>' + (LI_PROFILE.initials || 'in') + '</span>';
+        avEl.innerHTML = '<span>' + esc(LI_PROFILE.initials || 'in') + '</span>';
       }
     }
   }
@@ -1241,9 +1241,9 @@ function updateLIBadge() {
     const saEl = document.getElementById('liSettingsAv');
     if (saEl) {
       if (LI_PROFILE.picture) {
-        saEl.innerHTML = '<img src="' + LI_PROFILE.picture + '" alt="">';
+        saEl.innerHTML = '<img src="' + safeImgSrc(LI_PROFILE.picture) + '" alt="">';
       } else {
-        saEl.innerHTML = '<span>' + (LI_PROFILE.initials || 'in') + '</span>';
+        saEl.innerHTML = '<span>' + esc(LI_PROFILE.initials || 'in') + '</span>';
       }
     }
   }
@@ -1260,6 +1260,14 @@ const MATCH = {
   pitchSeeking: 'Seeking: $1.5M Seed · B2B Infrastructure',
   elevator: '"NeuralPulse reduces LLM API latency by 64% using real-time edge quantization. $45k MRR, growing 28% MoM, 12 enterprise contracts closed."',
 };
+
+// ─── HTML escaping (XSS guard for challenge-link + profile data) ───
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function safeImgSrc(u) {
+  return /^https:\/\//i.test(String(u || '')) ? esc(u) : '';
+}
 
 // ─── Challenge Link ─────────────────────────────────────
 const CHALLENGER = (() => {
@@ -1840,10 +1848,10 @@ function renderMatchCard() {
   badge.textContent = MATCH.badge;
   badge.className = 'match-badge badge-' + (MATCH.badge === 'KING' ? 'king' : 'rookie');
   const tagsEl = document.getElementById('matchTags');
-  tagsEl.innerHTML = (MATCH.tags||[]).map(t => `<span class="match-tag">${t}</span>`).join('');
+  tagsEl.innerHTML = (MATCH.tags||[]).map(t => `<span class="match-tag">${esc(t)}</span>`).join('');
   const intentEl = document.getElementById('matchIntent');
   if (intentEl && MATCH.intent) {
-    intentEl.innerHTML = '<strong>' + (CHALLENGER ? 'Their pitch:' : 'Looking for:') + '</strong> ' + MATCH.intent;
+    intentEl.innerHTML = '<strong>' + (CHALLENGER ? 'Their pitch:' : 'Looking for:') + '</strong> ' + esc(MATCH.intent);
   }
   if (CHALLENGER) {
     const card = document.querySelector('.match-card-inner');
