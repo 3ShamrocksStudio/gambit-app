@@ -2751,7 +2751,7 @@ function renderMatchCard() {
   if (intentEl && MATCH.intent) {
     intentEl.innerHTML = '<strong>' + (CHALLENGER ? 'Their pitch:' : 'Looking for:') + '</strong> ' + esc(MATCH.intent);
   }
-  if (intentEl) intentEl.classList.toggle('hidden', !MATCH.intent); // link with no pitch: no demo "Looking for…" text
+  if (intentEl && !MATCH.intent) { intentEl.textContent = ''; intentEl.classList.add('hidden'); } // link with no pitch: no demo "Looking for…" text
   if (CHALLENGER) {
     // Challenge-link profiles are self-described, not verified
     const st = document.getElementById('matchStatusEl');
