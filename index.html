@@ -1198,6 +1198,7 @@ const S = {
   matchAccepted: false,
   gameOver: false,
   moveCount: 0,
+  dealMoves: 0,   // real moves (chess + strong scenario answers) made after accepting the challenge
   scenarioStep: 0,
   scenarioTimer: null,
   scenarioSec: 15,
@@ -1630,6 +1631,7 @@ function handleSqClick(name) {
       selectedSq = null;
       playSound('move');
       S.moveCount++;
+      if (S.matchAccepted) S.dealMoves++;
       onPlayerMove();
       renderBoard();
       if (checkGameOver()) return;
@@ -1833,6 +1835,7 @@ function submitScenario(choice) {
   // Only the strongest answer counts as a move toward the Deal Room.
   if (correct) {
     S.movesMade++;
+    if (S.matchAccepted) S.dealMoves++;
     advanceProgress(Math.min(3, S.movesMade));
     playSound('unlock'); toast('✓ Strong move — ' + sc.reason, 'ok');
   } else {
@@ -2423,11 +2426,18 @@ function unlockPitchLevel3() {
    ═══════════════════════════════════════════════ */
 let dealStartTime = Date.now();
 
+// The Deal Room needs an accepted challenge plus at least one real move; time counts from the accept.
 function openDealRoom() {
+  if (!S.matchAccepted) {
+    toast('Accept the challenge first — then make a move to open the Deal Room', 'warn');
+    document.getElementById('matchCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (S.dealMoves < 1) { toast('Make at least one move to open the Deal Room', 'warn'); return; }
   document.getElementById('dealMatchName').textContent = MATCH.name;
-  const elapsed = Math.round((Date.now() - dealStartTime) / 1000);
+  const elapsed = Math.max(0, Math.round((Date.now() - dealStartTime) / 1000));
   document.getElementById('dealTime').textContent = elapsed + 's';
-  document.getElementById('dealMoves').textContent = S.moveCount + ' moves';
+  document.getElementById('dealMoves').textContent = S.dealMoves + (S.dealMoves === 1 ? ' move' : ' moves');
   const dn = document.getElementById('dealNote'), pn = document.getElementById('introNote');
   if (!dn.value.trim() && pn.value.trim()) dn.value = pn.value; // carry the note typed in the dock
   const sent = introSent();
@@ -2842,7 +2852,6 @@ function init() {
       document.getElementById('boardFeedback').className = 'board-feedback lose';
     }
   }
-  dealStartTime = Date.now(); // fallback; reset to real value on acceptChallenge()
   document.getElementById('chessStage').style.display = '';
   document.getElementById('aiStage').style.display = 'none';
 }
