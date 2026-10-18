@@ -2575,15 +2575,41 @@ function updateCoinDisplay() {
 
 /* Wallet persistence — schema v2: {v, coins, rankedId, streak, last, freezes}
    (v1 {v, coins, rankedId} migrates with streak 0 / no freezes.)
-   rankedId = id of an unsettled ranked stake. A stake still open on load
-   was abandoned by reload → forfeited (never refunded or paid twice). */
+   Open ranked stakes live per tab in rk_stakes {tabId: {id, hb}} (tab id in sessionStorage,
+   heartbeat while the game runs). On load, this tab's own stake (reload) or another tab's
+   stale one (tab closed) is forfeited — a live game in another tab is left alone.
+   (Legacy rankedId in the wallet is forfeited once.) */
 const WALLET_KEY = 'rk_wallet';
 const WALLET_V = 2;
 const FREEZE_COST = 100, FREEZE_MAX = 2;
 const COINS_MAX = 1e9; // anything above is corrupt/tampered storage
 function saveWallet() {
-  try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: S.ranked || null, streak: S.streak, last: S.streakLast, freezes: S.freezes })); } catch(e){}
+  try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: null, streak: S.streak, last: S.streakLast, freezes: S.freezes })); } catch(e){}
+  markStake();
 }
+const STAKES_KEY = 'rk_stakes', STAKE_HB_MS = 5000, STAKE_STALE_MS = 90000; // background tabs still tick ≥1/min
+const TAB_ID = (() => {
+  try {
+    let t = sessionStorage.getItem('rk_tab');
+    if (!t) { t = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('rk_tab', t); }
+    return t;
+  } catch(e) { return 't' + Math.random().toString(36).slice(2); }
+})();
+function readStakes() {
+  try { const s = JSON.parse(localStorage.getItem(STAKES_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){}
+  return {};
+}
+function writeStakes(s) {
+  try { if (Object.keys(s).length) localStorage.setItem(STAKES_KEY, JSON.stringify(s)); else localStorage.removeItem(STAKES_KEY); } catch(e){}
+}
+function markStake() {
+  const s = readStakes();
+  if (S.ranked) s[TAB_ID] = { id: S.ranked, hb: Date.now() };
+  else if (!Object.prototype.hasOwnProperty.call(s, TAB_ID)) return;
+  else delete s[TAB_ID];
+  writeStakes(s);
+}
+setInterval(() => { if (S.ranked) markStake(); }, STAKE_HB_MS);
 function readWallet() {
   try {
     const w = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
@@ -2612,8 +2638,16 @@ function loadWallet() {
   const w = readWallet();
   applyWallet(w);
   // An open stake from a previous page load is forfeited (never refunded or paid twice) — tell the user.
-  if (w && w.rankedId) { rankedForfeitOnLoad = true; S.ranked = false; saveWallet(); }
   S.ranked = false;
+  if (w && w.rankedId) { rankedForfeitOnLoad = true; saveWallet(); }
+  const st = readStakes(), now = Date.now();
+  let changed = false;
+  Object.keys(st).forEach(k => {
+    const e = st[k];
+    const stale = !e || typeof e.hb !== 'number' || now - e.hb > STAKE_STALE_MS || e.hb - now > STAKE_STALE_MS;
+    if (k === TAB_ID || stale) { delete st[k]; changed = true; rankedForfeitOnLoad = true; }
+  });
+  if (changed) writeStakes(st);
   updateCoinDisplay();
 }
 // Another tab changed the wallet → adopt it so this tab never shows or writes stale numbers.
