@@ -19,8 +19,12 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<!-- Fonts load without blocking first paint (font-display: swap); the engine is deferred (board starts on DOMContentLoaded). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700&display=swap"></noscript>
+<script defer crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.1/chess.min.js"></script>
 <style>
 /* ─── DESIGN TOKENS ─────────────────────────────── */
 :root {
@@ -2073,7 +2077,10 @@ function openBell() {
   const tok = ++B.token;
   B.n = bellDayNum(); B.p = bellPuzzle(B.n);
   document.getElementById('bellNum').textContent = 'OPENING BELL #' + B.n;
-  if (!window.Chess) { bellUnavailable('Chess engine failed to load — check your connection and reload to retry.'); return; }
+  if (!window.Chess) {
+    B.needEngine = document.readyState === 'loading'; // still loading → startBoard() reopens the bell once it lands
+    bellUnavailable(B.needEngine ? 'Chess engine still loading…' : 'Chess engine failed to load — check your connection and reload to retry.'); return;
+  }
   if (!STORAGE_OK) { bellUnavailable('Opening Bell needs browser storage to keep your lives and streak. Allow site data for this page, then reload.'); return; }
   let r = bellRec();
   if (!r) r = bellPatch({ st: 'play', lives: 3, t0: Date.now() });
@@ -2849,15 +2856,27 @@ function init() {
   initIntroNotes();
   if (badBeat) {
     document.getElementById('onboard').classList.add('hidden');
-    setTimeout(() => { goBell(); toast('That “Beat my time” link looks invalid — here’s today’s Opening Bell', 'warn'); }, 0);
+    whenEngine(() => { goBell(); toast('That “Beat my time” link looks invalid — here’s today’s Opening Bell', 'warn'); });
   }
   if (rankedForfeitOnLoad) setTimeout(() => toast('Unfinished ranked game from your last visit was forfeited — 50 🪙 stake lost', 'warn'), 400);
   renderBellStrip();
   // "Beat my time" link: land straight in the puzzle, no onboarding
   if (CHALLENGER && CHALLENGER.bd) {
     document.getElementById('onboard').classList.add('hidden');
-    setTimeout(goBell, 0);
+    whenEngine(goBell);
   }
+  whenEngine(startBoard);
+  document.getElementById('chessStage').style.display = '';
+  document.getElementById('aiStage').style.display = 'none';
+}
+
+// chess.js is deferred: it has run (or failed) by DOMContentLoaded.
+function whenEngine(fn) {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(fn, 0), { once: true });
+  else setTimeout(fn, 0);
+}
+function startBoard() {
+  if (B.needEngine) { B.needEngine = false; if (S.gameMode === 'bell') openBell(); } // bell tab tapped while the engine was still loading
   // Guard against chess.js CDN failure
   if (typeof Chess === 'undefined' && !(window.Chess)) {
     const fb = document.getElementById('boardFeedback');
@@ -2872,8 +2891,6 @@ function init() {
       document.getElementById('boardFeedback').className = 'board-feedback lose';
     }
   }
-  document.getElementById('chessStage').style.display = '';
-  document.getElementById('aiStage').style.display = 'none';
 }
 
 init();
