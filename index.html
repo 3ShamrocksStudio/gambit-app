@@ -2438,9 +2438,18 @@ function openDealRoom() {
 /* Intro notes + requests persist per match (local only — nothing is sent anywhere yet). */
 const INTRO_KEY = 'rk_intro';
 function introStore() { try { const s = JSON.parse(localStorage.getItem(INTRO_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){} return {}; }
-function introRec() { const r = introStore()[MATCH.name]; return (r && typeof r === 'object') ? r : {}; }
+// Prefixed key: a name like "__proto__" can't hit Object.prototype. Older records (raw name) are still read.
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+function introKey() { return 'n:' + MATCH.name; }
+function introRec() {
+  const s = introStore();
+  const r = hasOwn(s, introKey()) ? s[introKey()] : (MATCH.name !== '__proto__' && hasOwn(s, MATCH.name) ? s[MATCH.name] : null);
+  return (r && typeof r === 'object' && !Array.isArray(r)) ? r : {};
+}
 function introSave(fields) {
-  const s = introStore(); s[MATCH.name] = Object.assign(introRec(), fields);
+  const s = introStore(); const rec = Object.assign({}, introRec(), fields);
+  if (MATCH.name !== '__proto__' && hasOwn(s, MATCH.name)) delete s[MATCH.name];
+  s[introKey()] = rec;
   try { localStorage.setItem(INTRO_KEY, JSON.stringify(s)); } catch(e){}
 }
 function introSent() { return !!introRec().sent; }
