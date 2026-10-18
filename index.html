@@ -1541,6 +1541,16 @@ const GLYPHS = {
   b: { k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' }
 };
 
+// Engine missing (CDN blocked / offline): show the existing failure message and stop — never stake coins or build a board.
+function engineMissing() {
+  if (window.Chess) return false;
+  const loading = document.readyState === 'loading';
+  const msg = loading ? 'Chess engine still loading — try again in a moment.' : 'Chess engine failed to load — reload to retry.';
+  updateFeedback(loading ? 'thinking' : 'lose', msg);
+  toast(msg, 'warn');
+  return true;
+}
+
 function mkChess(fen) {
   const C = window.Chess;
   const Ctor = typeof C === 'function' ? C : (C && C.Chess);
@@ -1714,6 +1724,13 @@ function updateFeedback(cls, msg) {
 }
 
 function setDiff(d) {
+  if (engineMissing()) return;
+  if (S.ranked && !S.gameOver) { // leaving a ranked game = forfeit (same as reload)
+    if (!confirm("Leave ranked game? You'll lose your 50-coin stake")) return;
+    clearTimeout(aiTimer); aiTimer = null;
+    walletTx(() => { S.ranked = false; });
+    toast('Ranked game forfeited — 50 coins lost', 'warn');
+  }
   S.difficulty = d;
   document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('diff-'+d).classList.add('active');
@@ -1738,6 +1755,7 @@ function resignGame() {
 
 function startRanked() {
   if (S.ranked && !S.gameOver) { toast('Ranked game in progress — 50 🪙 already at stake', 'info'); return; }
+  if (engineMissing()) return;
   applyWallet(readWallet());
   if (S.coins < 50) { toast('Not enough coins — top up to play ranked', 'warn'); openModal('coinModal'); return; }
   walletTx(() => { S.ranked = 'r' + Date.now(); S.coins -= 50; });
