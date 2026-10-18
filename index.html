@@ -2016,7 +2016,8 @@ function bellGoal(p) {
   const m = p.themes.find(t => /^mateIn\d$/.test(t));
   return m ? 'Mate in ' + m.slice(6) : 'Find the best line';
 }
-function bellLabel(p) { return ((p.wd === 0 || p.wd === 6) ? 'The Long Game · ' : '') + 'White to move · ' + bellGoal(p); }
+function bellRestWd(wd) { return /^he\b/i.test(navigator.language || '') ? (wd === 5 || wd === 6) : (wd === 6 || wd === 0); } // Fri/Sat for Hebrew
+function bellLabel(p) { return (bellRestWd(p.wd) ? 'The Long Game · ' : '') + 'White to move · ' + bellGoal(p); }
 function fmtSecs(t) {
   t = Number(t); if (!Number.isFinite(t)) t = 0; // NaN / corrupt storage guard
   t = Math.min(359999, Math.max(0, Math.floor(t)));
@@ -2256,8 +2257,7 @@ function bellFinish(won) {
 /* Weekend-safe streak: rest days never break it (Sat/Sun; Fri/Sat for Hebrew locale).
    Each missed working day costs one freeze; not enough freezes → streak restarts. */
 function bellIsRestDay(n) {
-  const wd = bellWeekday(n);
-  return /^he\b/i.test(navigator.language || '') ? (wd === 5 || wd === 6) : (wd === 6 || wd === 0);
+  return bellRestWd(bellWeekday(n));
 }
 function bellMissed(n) {
   if (!S.streakLast || S.streakLast >= n) return 0;
@@ -2271,7 +2271,8 @@ function bellStreakNow(n) { // streak as it stands today, before today's bell
   return bellMissed(n) <= S.freezes ? S.streak : 0;
 }
 function bellStreakAdvance(n) { // returns freezes used
-  if (S.streakLast === n || S.streakLast > n) return 0;
+  if (S.streakLast === n) return 0;
+  if (S.streakLast > n) { S.streak += 1; S.streakLast = n; return 0; } // last solve dated in the future (clock jump): re-anchor to today, no penalty
   const missed = bellMissed(n);
   let used = 0;
   if (S.streakLast && missed <= S.freezes) { used = missed; S.freezes -= missed; S.streak += 1; }
