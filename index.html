@@ -2513,8 +2513,14 @@ function confirmIntro() {
    ═══════════════════════════════════════════════ */
 // Each open dialog owns one history entry, so the phone Back button closes it instead of leaving the app.
 let modalPopPending = false;
+const modalOpener = {}; // dialog id → element that had focus when it opened (focus returns there on close)
+function restoreFocus(id) {
+  const o = modalOpener[id]; delete modalOpener[id];
+  if (o && o.isConnected && typeof o.focus === 'function') setTimeout(() => { if (!document.querySelector('.modal-backdrop.open') || o.closest('.modal-backdrop.open')) o.focus({ preventScroll: true }); }, 0);
+}
 function openModal(id) {
   const m = document.getElementById(id);
+  if (!m.classList.contains('open')) { const a = document.activeElement; modalOpener[id] = (a && a !== document.body) ? a : null; }
   m.classList.add('open');
   if (id === 'coinModal') { document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙'; renderFreeze(); }
   const cb = m.querySelector('.modal-close');
@@ -2526,6 +2532,7 @@ function openModal(id) {
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+  restoreFocus(id);
   if (history.state && history.state.rkModal === id) { modalPopPending = true; history.back(); }
 }
 window.addEventListener('popstate', () => {
@@ -2535,7 +2542,7 @@ window.addEventListener('popstate', () => {
     if (still) { try { history.pushState({ rkModal: still.id }, ''); } catch(e){} }
     return;
   }
-  document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); // hardware/browser Back
+  document.querySelectorAll('.modal-backdrop.open').forEach(m => { m.classList.remove('open'); restoreFocus(m.id); }); // hardware/browser Back
 });
 // Close on backdrop click
 document.querySelectorAll('.modal-backdrop').forEach(el => {
@@ -2546,6 +2553,18 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const open = [...document.querySelectorAll('.modal-backdrop.open')].pop();
     if (open) { e.preventDefault(); closeModal(open.id); }
+    return;
+  }
+  if (e.key === 'Tab') { // keep keyboard focus inside the top dialog
+    const open = [...document.querySelectorAll('.modal-backdrop.open')].pop();
+    if (!open) return;
+    const f = [...open.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+      .filter(el => !el.disabled && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1], a = document.activeElement;
+    if (!open.contains(a)) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+    else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
     return;
   }
   const t = e.target;
