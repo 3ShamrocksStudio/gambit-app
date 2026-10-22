@@ -1163,6 +1163,8 @@ a.btn { text-decoration: none; }
       <div style="font-size:12px; color:var(--text-2); line-height:1.6;">
         Solve the daily Opening Bell → +10 coins · Every 7-day streak → +50 coins · Win a ranked duel → +50 coins<br><span style="color:var(--text-3);">Coming soon: refer a colleague · complete your profile</span>
       </div>
+      <!-- Rewarded ad slot: hidden unless RK_ADS is configured AND an ad is actually available -->
+      <button class="btn btn-secondary btn-full hidden" id="adRewardBtn" style="margin-top:12px;" onclick="Ads.watch()">▶ Watch a short ad · +<span id="adRewardAmt">0</span> 🪙</button>
     </div>
   </div>
 </div>
@@ -2705,7 +2707,7 @@ function openModal(id) {
   const m = document.getElementById(id);
   if (!m.classList.contains('open')) { const a = document.activeElement; modalOpener[id] = (a && a !== document.body) ? a : null; }
   m.classList.add('open');
-  if (id === 'coinModal') { document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙'; renderFreeze(); }
+  if (id === 'coinModal') { document.getElementById('coinModalBalance').textContent = S.coins + ' 🪙'; renderFreeze(); Ads.offerReward(); }
   const cb = m.querySelector('.modal-close');
   if (cb) setTimeout(() => { if (m.classList.contains('open')) cb.focus({ preventScroll: true }); }, 60);
   try {
@@ -2788,6 +2790,62 @@ function buyCoinPack(coins, price) {
   // No payment provider yet — grants nothing, charges nothing.
   toast('Coin packs coming soon — no charge made', 'info');
 }
+
+/* ═══════════════════════════════════════════════
+   ADS — OFF. Nothing loads, renders or calls out until RK_ADS is set.
+   Built for Google's H5 Games Ads (Ad Placement API: adBreak / adConfig), which needs an
+   approved AdSense account. Plug-in values: see README → "Ads (disabled)".
+   ═══════════════════════════════════════════════ */
+const RK_ADS = null;
+// Example (do not enable without Dave's go-ahead):
+// const RK_ADS = { client: 'ca-pub-0000000000000000', rewardCoins: 20, dailyCap: 5, test: true, frequencyHint: '30s', inApp: false };
+const Ads = {
+  loaded: false, showFn: null,
+  enabled() {
+    return !!(RK_ADS && /^ca-pub-\d{10,20}$/.test(String(RK_ADS.client || '')) && (RK_ADS.inApp || !IN_APP));
+  },
+  reward() { return Math.max(1, Math.min(100, (RK_ADS && RK_ADS.rewardCoins) | 0 || 20)); },
+  capLeft() {
+    let st = null; try { st = JSON.parse(LS.getItem('rk_ads') || 'null'); } catch(e) {}
+    const today = bellDayNum(), cap = Math.max(1, (RK_ADS && RK_ADS.dailyCap) | 0 || 5);
+    return (st && st.day === today) ? Math.max(0, cap - (st.n | 0)) : cap;
+  },
+  load() {
+    if (!this.enabled() || this.loaded) return;
+    this.loaded = true;
+    const sc = document.createElement('script');
+    sc.async = true; sc.crossOrigin = 'anonymous';
+    sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(RK_ADS.client);
+    sc.setAttribute('data-ad-client', RK_ADS.client);
+    sc.setAttribute('data-ad-frequency-hint', RK_ADS.frequencyHint || '30s');
+    if (RK_ADS.test) sc.setAttribute('data-adbreak-test', 'on');
+    document.head.appendChild(sc);
+    window.adsbygoogle = window.adsbygoogle || [];
+    window.adBreak = window.adConfig = o => window.adsbygoogle.push(o);
+    window.adConfig({ preloadAdBreaks: 'on', sound: document.getElementById('soundToggle').checked ? 'on' : 'off' });
+  },
+  // Ask for a rewarded ad. The API calls beforeReward only when an ad is ready → only then is the button shown.
+  offerReward() {
+    if (!this.enabled() || this.capLeft() <= 0) return;
+    this.load();
+    document.getElementById('adRewardAmt').textContent = this.reward();
+    window.adBreak({
+      type: 'reward', name: 'coin-vault-reward',
+      beforeAd: () => {},
+      afterAd: () => {},
+      beforeReward: showAdFn => { this.showFn = showAdFn; document.getElementById('adRewardBtn').classList.remove('hidden'); },
+      adDismissed: () => toast('Ad closed early — no coins this time', 'info'),
+      adViewed: () => {
+        const n = this.reward();
+        walletTx(() => { S.coins += n; });
+        try { const today = bellDayNum(); let st = JSON.parse(LS.getItem('rk_ads') || 'null'); if (!st || st.day !== today) st = { day: today, n: 0 }; st.n++; LS.setItem('rk_ads', JSON.stringify(st)); } catch(e) {}
+        toast('+' + n + ' 🪙 — thanks for watching', 'ok');
+      },
+      adBreakDone: () => { this.showFn = null; document.getElementById('adRewardBtn').classList.add('hidden'); },
+    });
+  },
+  watch() { if (this.showFn) { const f = this.showFn; this.showFn = null; f(); } },
+};
 
 /* ═══════════════════════════════════════════════
    SETTINGS
