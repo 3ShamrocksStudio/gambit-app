@@ -906,6 +906,7 @@ a.btn { text-decoration: none; }
       <div class="t-label">Today's result</div>
       <div class="bell-result-text" id="bellResultText"></div>
       <div class="bell-actions">
+        <button class="btn btn-primary btn-full" id="bellChalBtn" onclick="openShare(bellRec() && bellRec().st === 'won' ? 'beat' : 'challenge')">⚔ Challenge a colleague</button>
         <button class="btn btn-linkedin btn-full" onclick="shareBellLinkedIn()">Share on LinkedIn</button>
         <button class="btn btn-secondary btn-full" id="bellCopyBtn" onclick="copyBellResult()">📋 Copy result</button>
         <button class="btn btn-ghost btn-full hidden" id="bellBeatBtn" onclick="copyBeatLink()">⚔ Copy “Beat my time” link</button>
@@ -928,6 +929,14 @@ a.btn { text-decoration: none; }
       </div>
       <button class="rank-btn" onclick="startRanked()">⚔ Ranked +50🪙</button>
       <button class="resign-btn" onclick="resignGame()">↩ Resign</button>
+    </div>
+    <div class="bell-result hidden" id="gameResult" style="margin:14px 0 0;">
+      <div class="t-label">Last game</div>
+      <div class="bell-result-text" id="gameResultText"></div>
+      <div class="bell-actions">
+        <button class="btn btn-primary btn-full" id="gameChalBtn" onclick="openShare('challenge')">⚔ Challenge a colleague</button>
+        <button class="btn btn-secondary btn-full" id="gameShareBtn" onclick="openShare('result')">📣 Share result</button>
+      </div>
     </div>
   </div>
 
@@ -1053,6 +1062,7 @@ a.btn { text-decoration: none; }
         <button class="btn btn-secondary btn-full" id="copyBriefBtn" onclick="copyBrief()">
           📋 Copy executive brief
         </button>
+        <button class="btn btn-ghost btn-full" onclick="openShare('challenge')">⚔ Challenge a colleague</button>
       </div>
     </div>
   </div>
@@ -1216,6 +1226,33 @@ a.btn { text-decoration: none; }
       <button class="btn btn-primary btn-full" id="clCopyBtn" onclick="copyChallenge()">🔗 Copy my challenge link</button>
       <div style="height:8px;"></div>
       <button class="btn btn-ghost btn-full" onclick="resetOnboarding()">↩ Redo onboarding</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SHARE SHEET (no popups needed: native share, LinkedIn link, copy) ─── -->
+<div class="modal-backdrop" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <button class="modal-close" aria-label="Close" onclick="closeModal('shareModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-title" id="shareTitle">Share</div>
+      <div class="modal-sub" id="shareSub">Anyone with the link can play — no sign-up.</div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label" for="shareName">Your name (shown on the link)</label>
+        <input class="form-input" id="shareName" type="text" maxlength="30" autocomplete="name" placeholder="e.g. Alex M.">
+      </div>
+      <label class="form-label" for="shareText">Message</label>
+      <textarea class="intro-input" id="shareText" rows="4" readonly style="resize:none;line-height:1.5;"></textarea>
+      <div class="bell-actions" style="margin-top:4px;">
+        <button class="btn btn-primary btn-full hidden" id="shareNativeBtn" onclick="shareNative()">↗ Share…</button>
+        <a class="btn btn-linkedin btn-full" id="shareLiBtn" href="https://www.linkedin.com/sharing/share-offsite/" target="_blank" rel="noopener">Post on LinkedIn</a>
+        <button class="btn btn-secondary btn-full" id="shareCopyBtn" onclick="shareCopy(false)">📋 Copy message + link</button>
+        <button class="btn btn-ghost btn-full" id="shareLinkBtn" onclick="shareCopy(true)">🔗 Copy link only</button>
+      </div>
+      <div class="action-note" style="margin-top:10px;">LinkedIn posts take a link — the message is copied so you can paste it in.</div>
     </div>
   </div>
 </div>
@@ -1464,6 +1501,11 @@ const CHALLENGER = (() => {
     out.bd = int(d.bd, 1, 100000); // "Beat my time": Opening Bell day number
     out.bt = int(d.bt, 1, 86400);  // …and the challenger's solve time in seconds
     if (out.bd === null || out.bt === null) out.bd = out.bt = null;
+    // "Beat my game": the sender won a chess game against the bot at level gd in gm moves
+    out.gm = int(d.gm, 1, 500);
+    out.gd = ['easy', 'med', 'hard'].includes(d.gd) ? d.gd : null;
+    out.gr = (d.gr === 'w' && out.gm !== null && out.gd !== null) ? 'w' : null;
+    if (!out.gr) out.gm = out.gd = null;
     return out;
   } catch(e) { return null; }
 })();
@@ -1712,6 +1754,7 @@ function handleSqClick(name) {
       lastFrom = selectedSq; lastTo = name;
       selectedSq = null;
       playSound('move');
+      if (S.moveCount === 0) hideGameResult(); // a new game has started — the last result card goes
       S.moveCount++;
       if (S.matchAccepted) S.dealMoves++;
       onPlayerMove();
@@ -1779,6 +1822,7 @@ function checkGameOver() {
   }
   setResignLabel(true);
   updateCoinDisplay();
+  showGameResult(game.in_checkmate() ? (game.turn() === 'b' ? 'win' : 'loss') : 'draw');
   return true;
 }
 
@@ -1830,6 +1874,7 @@ function resignGame() {
   updateFeedback('lose', '↩ You resigned. Try again!');
   playSound('resign');
   setResignLabel(true);
+  showGameResult('resign');
   if (S.ranked) {
     walletTx(() => { S.ranked = false; });
     toast('Ranked game lost — 50 coins forfeited', 'warn');
@@ -2402,24 +2447,27 @@ function showBellResult() {
   document.getElementById('bellResult').classList.remove('hidden');
   renderBellStrip();
 }
-function copyText(text, okMsg) {
-  const fallback = () => {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast(okMsg, 'ok'); } catch(e) {}
-    ta.remove();
-  };
+// Synchronous copy (works inside a tap even where the async Clipboard API is missing, e.g. some WebViews).
+function copyTextSync(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) {}
+  ta.remove();
+  return ok;
+}
+function copyText(text, okMsg, onOk) {
+  const done = () => { toast(okMsg, 'ok'); if (onOk) onOk(); };
+  const fallback = () => { if (copyTextSync(text)) done(); else toast('Couldn’t copy here — press and hold the text to copy it', 'warn'); };
   try {
-    navigator.clipboard.writeText(text).then(() => toast(okMsg, 'ok')).catch(fallback);
+    if (!navigator.clipboard || !navigator.clipboard.writeText) { fallback(); return; }
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
   } catch(e) { fallback(); }
 }
 function copyBellResult() { copyText(bellShareText(), 'Result copied — paste it anywhere'); }
-function shareBellLinkedIn() {
-  // LinkedIn's share URL only takes a link, so the result text goes to the clipboard for the post body.
-  copyText(bellShareText(), 'Result copied — paste it into your LinkedIn post');
-  window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(bellShareUrl()), '_blank', 'noopener');
-}
+// No window.open (blocked in in-app browsers): the share sheet offers native share, a LinkedIn link and copy.
+function shareBellLinkedIn() { openShare('bell'); }
 
 // Midnight rollover while the page stays open: refresh the strip (and an idle/finished bell) for the new day.
 let bellStripDay = 0;
@@ -2566,19 +2614,9 @@ function copyBrief() {
     MATCH.elevator,
   ].join('\n');
   const btn = document.getElementById('copyBriefBtn');
-  navigator.clipboard.writeText(brief).then(() => {
+  copyText(brief, 'Executive brief copied to clipboard', () => {
     btn.textContent = '✓ Copied!';
     setTimeout(() => { btn.textContent = '📋 Copy executive brief'; }, 2000);
-    toast('Executive brief copied to clipboard', 'ok');
-  }).catch(() => {
-    // Fallback: select from a temp textarea
-    const ta = document.createElement('textarea');
-    ta.value = brief;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); toast('Executive brief copied!', 'ok'); } catch(e) {}
-    ta.remove();
   });
 }
 
@@ -2843,6 +2881,8 @@ function renderMatchCard() {
     document.title = (CHALLENGER.bd ? '⚔ Beat ' + CHALLENGER.n + '’s time' : '⚔ ' + CHALLENGER.n + ' challenged you') + ' · Rookie & King™';
     banner.textContent = CHALLENGER.bd
       ? '⚔ Beat \u2068' + CHALLENGER.n + "\u2069's " + fmtSecs(CHALLENGER.bt) + ' on Opening Bell #' + CHALLENGER.bd
+      : CHALLENGER.gr
+      ? '⚔ \u2068' + CHALLENGER.n + '\u2069 beat the ' + DIFF_LABEL[CHALLENGER.gd] + ' bot in ' + CHALLENGER.gm + ' moves — can you do it in fewer?'
       : '⚔ ' + CHALLENGER.n + ' challenged you to a chess game — make your move';
     const acceptBtn = document.querySelector('.match-actions .btn-primary');
     const short = [...CHALLENGER.n].length > 22 ? [...CHALLENGER.n].slice(0, 21).join('') + '…' : CHALLENGER.n;
@@ -2863,27 +2903,112 @@ function challengeUrl(extra, fallbackName) {
     t: S.target,
     v: 1
   }, extra || {});
+  Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; }); // shorter links
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-  return location.origin + location.pathname + '?c=' + encoded;
+  // Static share page with its own link-preview card (s/c|w|b.html), which forwards to the app with ?c=
+  const page = payload.bd ? 'b' : payload.gr ? 'w' : 'c';
+  return location.origin + location.pathname.replace(/[^/]*$/, '') + 's/' + page + '.html?c=' + encoded;
 }
 
 function copyChallenge() {
   try {
     const url = challengeUrl(null, 'You');
     const btn = document.getElementById('clCopyBtn');
-    navigator.clipboard.writeText(url).then(() => {
+    copyText(url, 'Challenge link copied! Share it to challenge anyone ♟', () => {
       btn.textContent = '✓ Copied!';
       setTimeout(() => { btn.textContent = '🔗 Copy my challenge link'; }, 2500);
-      toast('Challenge link copied! Share it to challenge anyone ♟', 'ok');
-    }).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = url; ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); toast('Challenge link copied!', 'ok'); } catch(e) {}
-      ta.remove();
     });
   } catch(e) { toast('Could not generate link', 'warn'); }
 }
+
+/* ═══════════════════════════════════════════════
+   SHARE SHEET — works inside LinkedIn's in-app browser (no popups, no window.open)
+   ═══════════════════════════════════════════════ */
+const DIFF_LABEL = { easy: 'Rookie', med: 'Pro', hard: 'Master' };
+let shareMode = 'challenge';
+let lastGame = null; // { kind: 'win'|'loss'|'draw'|'resign', moves, diff }
+function shareName() { return document.getElementById('shareName').value.trim(); }
+function shareData() {
+  const nm = shareName() || 'A colleague';
+  const mk = (extra) => challengeUrl(extra, nm);
+  if (shareMode === 'bell') {
+    return { title: 'Share your result', sub: 'Your Opening Bell result, with a link to today’s puzzle.', body: bellShareText().split('\n').slice(0, 2).join('\n') + '\nCan you beat it?', url: bellShareUrl() };
+  }
+  if (shareMode === 'beat') {
+    const r = bellRec() || {};
+    return { title: 'Challenge a colleague', sub: 'They get today’s puzzle and your time to beat.', body: '⚔ I solved today’s Opening Bell #' + B.n + ' on Rookie & King in ' + fmtSecs(r.secs) + '. Beat my time?', url: bellShareUrl() };
+  }
+  if (shareMode === 'result' && lastGame && lastGame.kind === 'win') {
+    const lv = DIFF_LABEL[lastGame.diff];
+    return { title: 'Share your result', sub: 'Whoever opens it plays the ' + lv + ' bot and tries to win in fewer moves.', body: '♔ I won a ' + lv + ' chess game on Rookie & King in ' + lastGame.moves + ' moves. Can you do it in fewer?', url: mk({ gr: 'w', gm: lastGame.moves, gd: lastGame.diff }) };
+  }
+  if (shareMode === 'result' && lastGame) {
+    const lv = DIFF_LABEL[lastGame.diff];
+    const how = lastGame.kind === 'draw' ? 'drew a ' + lv + ' chess game' : 'played a ' + lv + ' chess game — the bot got me this time';
+    return { title: 'Share your result', sub: 'Whoever opens it gets your challenge in one tap.', body: '♟ I ' + how + ' on Rookie & King. Your move?', url: mk(null) };
+  }
+  return { title: 'Challenge a colleague', sub: 'They open your link and play right away — no sign-up.', body: '♟ I’m challenging you to a quick chess game on Rookie & King. Your move — win it, then let’s talk.', url: mk(null) };
+}
+function shareFull(d) { return d.body + '\n→ ' + d.url; }
+function renderShare() {
+  const d = shareData();
+  document.getElementById('shareTitle').textContent = d.title;
+  document.getElementById('shareSub').textContent = d.sub;
+  document.getElementById('shareText').value = shareFull(d);
+  document.getElementById('shareLiBtn').href = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(d.url);
+  const can = !!navigator.share && (!navigator.canShare || navigator.canShare({ url: d.url }));
+  document.getElementById('shareNativeBtn').classList.toggle('hidden', !can);
+}
+function openShare(mode) {
+  shareMode = mode;
+  const n = document.getElementById('shareName');
+  if (!n.value) n.value = document.getElementById('clName').value.trim() || (S.displayName && S.displayName !== 'You' ? S.displayName : '') || (LI_PROFILE && !LI_PROFILE.demo ? LI_PROFILE.name || '' : '');
+  try { renderShare(); } catch(e) { toast('Could not build the link', 'warn'); return; }
+  openModal('shareModal');
+}
+function shareNative() {
+  const d = shareData();
+  navigator.share({ title: 'Rookie & King™', text: d.body, url: d.url }).catch(err => {
+    if (err && err.name === 'AbortError') return; // user closed the share sheet
+    shareCopy(false);
+  });
+}
+function shareCopy(linkOnly) {
+  const d = shareData();
+  copyText(linkOnly ? d.url : shareFull(d), linkOnly ? 'Link copied — paste it in a DM or post' : 'Message + link copied — paste it anywhere');
+}
+function initShare() {
+  const n = document.getElementById('shareName');
+  n.addEventListener('input', () => { document.getElementById('clName').value = n.value; renderShare(); });
+  // The LinkedIn button is a real link (no window.open): copy the message first so it can be pasted into the post.
+  document.getElementById('shareLiBtn').addEventListener('click', () => {
+    renderShare();
+    if (copyTextSync(shareFull(shareData()))) toast('Message copied — paste it into your LinkedIn post', 'ok');
+  });
+}
+
+/* Result card under the board after every game, with the "challenge a colleague" CTA. */
+function showGameResult(kind) {
+  lastGame = { kind, moves: S.moveCount, diff: S.difficulty };
+  const lv = DIFF_LABEL[S.difficulty], n = S.moveCount, mv = n + (n === 1 ? ' move' : ' moves');
+  let t = kind === 'win' ? '♔ You beat the ' + lv + ' bot in ' + mv + '.'
+        : kind === 'loss' ? '♚ The ' + lv + ' bot won this one (' + mv + ').'
+        : kind === 'draw' ? '½–½ Draw against the ' + lv + ' bot (' + mv + ').'
+        : '↩ You resigned after ' + mv + '.';
+  if (CHALLENGER && CHALLENGER.gr && CHALLENGER.gd === S.difficulty) {
+    const who = '\u2068' + CHALLENGER.n + '\u2069', their = CHALLENGER.gm;
+    t += '\n' + (kind !== 'win' ? who + ' won in ' + their + ' moves — still the one to beat.'
+      : n < their ? '🏆 You beat ' + who + '’s ' + their + ' moves.'
+      : n === their ? '🤝 Dead heat with ' + who + ' (' + their + ' moves).'
+      : who + ' did it in ' + their + ' — so close.');
+  }
+  document.getElementById('gameResultText').textContent = t;
+  document.getElementById('gameShareBtn').textContent = kind === 'win' ? '📣 Share result — “beat my game”' : '📣 Share result';
+  const card = document.getElementById('gameResult');
+  card.classList.remove('hidden');
+  setTimeout(() => { const r = card.getBoundingClientRect(); if (r.bottom > innerHeight) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 50);
+}
+function hideGameResult() { document.getElementById('gameResult').classList.add('hidden'); }
 
 function openSettings() {
   try {
@@ -2945,8 +3070,13 @@ function init() {
   if (CHALLENGER && CHALLENGER.bd && (CHALLENGER.bd > bellDayNum() + 1 || CHALLENGER.bt > BEAT_MAX_SECS)) {
     CHALLENGER.bd = CHALLENGER.bt = null; badBeat = true;
   }
+  if (CHALLENGER && CHALLENGER.gr) { // "beat my game" link: same bot level as the sender
+    S.difficulty = CHALLENGER.gd;
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.id === 'diff-' + CHALLENGER.gd));
+  }
   renderMatchCard();
   initIntroNotes();
+  initShare();
   if (badBeat) {
     document.getElementById('onboard').classList.add('hidden');
     whenEngine(() => { goBell(); toast('That “Beat my time” link looks invalid — here’s today’s Opening Bell', 'warn'); });
