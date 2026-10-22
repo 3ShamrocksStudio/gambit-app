@@ -1188,6 +1188,26 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 'use strict';
 
 /* ═══════════════════════════════════════════════
+   STORAGE — survives blocked storage (in-app browsers, private mode)
+   ═══════════════════════════════════════════════ */
+// localStorage/sessionStorage can throw (SecurityError) or refuse writes (quota) inside
+// LinkedIn's in-app browser and private windows. Fall back to memory so the whole
+// link → play → result → share loop still works for this page view.
+function rkStore(kind) {
+  const mem = new Map();
+  let real = null;
+  try { const s = window[kind]; s.setItem('rk_probe', '1'); s.removeItem('rk_probe'); real = s; } catch(e) {}
+  return {
+    persistent: !!real,
+    getItem(k) { if (mem.has(k)) return mem.get(k); if (real) { try { return real.getItem(k); } catch(e) {} } return null; },
+    setItem(k, v) { v = String(v); if (real) { try { real.setItem(k, v); mem.delete(k); return; } catch(e) {} } mem.set(k, v); },
+    removeItem(k) { mem.delete(k); if (real) { try { real.removeItem(k); } catch(e) {} } },
+  };
+}
+const LS = rkStore('localStorage');
+const SS = rkStore('sessionStorage');
+
+/* ═══════════════════════════════════════════════
    APP STATE
    ═══════════════════════════════════════════════ */
 const S = {
@@ -1228,7 +1248,7 @@ const LI_DEMO      = LI_CLIENT_ID === 'YOUR_LI_CLIENT_ID'; // no real LinkedIn a
 // Run an honest, clearly-labelled local demo sign-in instead.
 function liDemoSignIn() {
   LI_PROFILE = { name: 'Demo User', headline: 'Demo profile — not verified', initials: 'DU', picture: null, demo: true };
-  try { localStorage.setItem('rk_li_profile', JSON.stringify(LI_PROFILE)); } catch(e){}
+  try { LS.setItem('rk_li_profile', JSON.stringify(LI_PROFILE)); } catch(e){}
   updateLIBadge();
   toast('Demo sign-in — LinkedIn isn’t connected yet. Nothing was shared.', 'ok');
   const ob = document.getElementById('onboard');
@@ -1238,7 +1258,7 @@ function liDemoSignIn() {
 function linkedInAuth() {
   if (LI_DEMO) { liDemoSignIn(); return; }
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  try { sessionStorage.setItem('rk_li_state', state); } catch(e){}
+  try { SS.setItem('rk_li_state', state); } catch(e){}
   // Build the OAuth2 authorization URL
   const params = new URLSearchParams({
     response_type: 'code',
@@ -1268,8 +1288,8 @@ function handleLinkedInCallback() {
 
   // State validation
   try {
-    const savedState = sessionStorage.getItem('rk_li_state');
-    sessionStorage.removeItem('rk_li_state');
+    const savedState = SS.getItem('rk_li_state');
+    SS.removeItem('rk_li_state');
     // In production, exchange code for token via your backend.
     // Demo mode: treat successful redirect as profile connected.
     if (LI_CLIENT_ID === 'YOUR_LI_CLIENT_ID') {
@@ -1286,7 +1306,7 @@ function handleLinkedInCallback() {
 
   // If we got a code and have a profile object, persist it
   if (LI_PROFILE) {
-    try { localStorage.setItem('rk_li_profile', JSON.stringify(LI_PROFILE)); } catch(e){}
+    try { LS.setItem('rk_li_profile', JSON.stringify(LI_PROFILE)); } catch(e){}
     updateLIBadge();
     toast(LI_PROFILE.demo ? 'Demo profile active. Real LinkedIn matching is coming soon. ♟' : 'LinkedIn connected! ♟', 'ok');
   }
@@ -1298,7 +1318,7 @@ function handleLinkedInCallback() {
 
 function loadLIProfile() {
   try {
-    const raw = localStorage.getItem('rk_li_profile');
+    const raw = LS.getItem('rk_li_profile');
     if (!raw) return;
     LI_PROFILE = JSON.parse(raw);
     updateLIBadge();
@@ -1307,7 +1327,7 @@ function loadLIProfile() {
 
 function liDisconnect() {
   LI_PROFILE = null;
-  try { localStorage.removeItem('rk_li_profile'); } catch(e){}
+  try { LS.removeItem('rk_li_profile'); } catch(e){}
   updateLIBadge();
   toast('LinkedIn disconnected.', 'info');
 }
@@ -1455,7 +1475,7 @@ function finishOnboard() {
   try { document.getElementById('settingsRole').value = role; } catch(e){}
   try { document.getElementById('settingsTarget').value = target; } catch(e){}
   // Persist
-  try { localStorage.setItem('rk_intent', JSON.stringify({role,target,name,v:1})); } catch(e){}
+  try { LS.setItem('rk_intent', JSON.stringify({role,target,name,v:1})); } catch(e){}
   // Hide onboard
   document.getElementById('onboard').classList.add('hidden');
   toast('Welcome. Accept a challenge and make your first move.', 'ok');
@@ -1465,7 +1485,7 @@ function resetOnboarding() {
   closeModal('settingsModal');
   obGo(0);
   document.getElementById('onboard').classList.remove('hidden');
-  try { localStorage.removeItem('rk_intent'); } catch(e){}
+  try { LS.removeItem('rk_intent'); } catch(e){}
 }
 
 function checkFirstVisit() {
@@ -1477,7 +1497,7 @@ function checkFirstVisit() {
 
   // 3. Check saved onboarding intent
   try {
-    const saved = localStorage.getItem('rk_intent');
+    const saved = LS.getItem('rk_intent');
     if (saved) {
       const d = JSON.parse(saved);
       S.role = d.role || 'founder';
@@ -2029,10 +2049,9 @@ function fmtSecs(t) {
   return h ? h + ':' + String(m).padStart(2, '0') + ':' + s : m + ':' + s;
 }
 
-const STORAGE_OK = (() => { try { localStorage.setItem('rk_probe', '1'); localStorage.removeItem('rk_probe'); return true; } catch(e) { return false; } })();
 function loadBellStore() {
   try {
-    const s = JSON.parse(localStorage.getItem(BELL_KEY) || 'null');
+    const s = JSON.parse(LS.getItem(BELL_KEY) || 'null');
     if (s && s.v === 1 && s.days && typeof s.days === 'object' && !Array.isArray(s.days)) {
       Object.keys(s.days).forEach(k => { // sanitize each day so corrupt data can't break the board or the clock
         const r = s.days[k];
@@ -2049,7 +2068,7 @@ function loadBellStore() {
 function saveBellStore(s) {
   const cut = bellDayNum() - 60;
   Object.keys(s.days).forEach(k => { if (+k < cut) delete s.days[k]; });
-  try { localStorage.setItem(BELL_KEY, JSON.stringify(s)); } catch(e){}
+  try { LS.setItem(BELL_KEY, JSON.stringify(s)); } catch(e){}
 }
 function bellRec() { return loadBellStore().days[B.n] || null; }
 function bellPatch(fields) {
@@ -2081,7 +2100,6 @@ function openBell() {
     B.needEngine = document.readyState === 'loading'; // still loading → startBoard() reopens the bell once it lands
     bellUnavailable(B.needEngine ? 'Chess engine still loading…' : 'Chess engine failed to load — check your connection and reload to retry.'); return;
   }
-  if (!STORAGE_OK) { bellUnavailable('Opening Bell needs browser storage to keep your lives and streak. Allow site data for this page, then reload.'); return; }
   let r = bellRec();
   if (!r) r = bellPatch({ st: 'play', lives: 3, t0: Date.now() });
   B.g = mkChess(B.p.fen); B.i = 0; B.sel = B.lf = B.lt = null;
@@ -2455,7 +2473,7 @@ function openDealRoom() {
 
 /* Intro notes + requests persist per match (local only — nothing is sent anywhere yet). */
 const INTRO_KEY = 'rk_intro';
-function introStore() { try { const s = JSON.parse(localStorage.getItem(INTRO_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){} return {}; }
+function introStore() { try { const s = JSON.parse(LS.getItem(INTRO_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){} return {}; }
 // Prefixed key: a name like "__proto__" can't hit Object.prototype. Older records (raw name) are still read.
 const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 function introKey() { return 'n:' + MATCH.name; }
@@ -2468,7 +2486,7 @@ function introSave(fields) {
   const s = introStore(); const rec = Object.assign({}, introRec(), fields);
   if (MATCH.name !== '__proto__' && hasOwn(s, MATCH.name)) delete s[MATCH.name];
   s[introKey()] = rec;
-  try { localStorage.setItem(INTRO_KEY, JSON.stringify(s)); } catch(e){}
+  try { LS.setItem(INTRO_KEY, JSON.stringify(s)); } catch(e){}
 }
 function introSent() { return !!introRec().sent; }
 function initIntroNotes() {
@@ -2606,8 +2624,8 @@ function buyCoinPack(coins, price) {
 /* ═══════════════════════════════════════════════
    SETTINGS
    ═══════════════════════════════════════════════ */
-function updateRole() { S.role = document.getElementById('settingsRole').value; try { localStorage.setItem('rk_intent', JSON.stringify({role:S.role,target:S.target,name:S.displayName,v:1})); } catch(e){} }
-function updateTarget() { S.target = document.getElementById('settingsTarget').value; try { localStorage.setItem('rk_intent', JSON.stringify({role:S.role,target:S.target,name:S.displayName,v:1})); } catch(e){} }
+function updateRole() { S.role = document.getElementById('settingsRole').value; try { LS.setItem('rk_intent', JSON.stringify({role:S.role,target:S.target,name:S.displayName,v:1})); } catch(e){} }
+function updateTarget() { S.target = document.getElementById('settingsTarget').value; try { LS.setItem('rk_intent', JSON.stringify({role:S.role,target:S.target,name:S.displayName,v:1})); } catch(e){} }
 
 /* ═══════════════════════════════════════════════
    COIN DISPLAY
@@ -2630,23 +2648,23 @@ const WALLET_V = 2;
 const FREEZE_COST = 100, FREEZE_MAX = 2;
 const COINS_MAX = 1e9; // anything above is corrupt/tampered storage
 function saveWallet() {
-  try { localStorage.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: null, streak: S.streak, last: S.streakLast, freezes: S.freezes })); } catch(e){}
+  try { LS.setItem(WALLET_KEY, JSON.stringify({ v: WALLET_V, coins: S.coins, rankedId: null, streak: S.streak, last: S.streakLast, freezes: S.freezes })); } catch(e){}
   markStake();
 }
 const STAKES_KEY = 'rk_stakes', STAKE_HB_MS = 5000, STAKE_STALE_MS = 90000; // background tabs still tick ≥1/min
 const TAB_ID = (() => {
   try {
-    let t = sessionStorage.getItem('rk_tab');
-    if (!t) { t = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('rk_tab', t); }
+    let t = SS.getItem('rk_tab');
+    if (!t) { t = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); SS.setItem('rk_tab', t); }
     return t;
   } catch(e) { return 't' + Math.random().toString(36).slice(2); }
 })();
 function readStakes() {
-  try { const s = JSON.parse(localStorage.getItem(STAKES_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){}
+  try { const s = JSON.parse(LS.getItem(STAKES_KEY) || 'null'); if (s && typeof s === 'object' && !Array.isArray(s)) return s; } catch(e){}
   return {};
 }
 function writeStakes(s) {
-  try { if (Object.keys(s).length) localStorage.setItem(STAKES_KEY, JSON.stringify(s)); else localStorage.removeItem(STAKES_KEY); } catch(e){}
+  try { if (Object.keys(s).length) LS.setItem(STAKES_KEY, JSON.stringify(s)); else LS.removeItem(STAKES_KEY); } catch(e){}
 }
 function markStake() {
   const s = readStakes();
@@ -2658,7 +2676,7 @@ function markStake() {
 setInterval(() => { if (S.ranked) markStake(); }, STAKE_HB_MS);
 function readWallet() {
   try {
-    const w = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
+    const w = JSON.parse(LS.getItem(WALLET_KEY) || 'null');
     return (w && typeof w === 'object' && (w.v === 1 || w.v === 2)) ? w : null;
   } catch(e) { return null; }
 }
@@ -2844,8 +2862,8 @@ function init() {
   loadWallet();
   // Sound preference persists across visits
   const snd = document.getElementById('soundToggle');
-  try { if (localStorage.getItem('rk_sound') === '0') snd.checked = false; } catch(e){}
-  snd.addEventListener('change', () => { try { localStorage.setItem('rk_sound', snd.checked ? '1' : '0'); } catch(e){} });
+  try { if (LS.getItem('rk_sound') === '0') snd.checked = false; } catch(e){}
+  snd.addEventListener('change', () => { try { LS.setItem('rk_sound', snd.checked ? '1' : '0'); } catch(e){} });
   checkFirstVisit();
   // "Beat my time" links: a bell from the future or an absurd time is not trusted → today's bell instead
   let badBeat = false;
@@ -2858,6 +2876,7 @@ function init() {
     document.getElementById('onboard').classList.add('hidden');
     whenEngine(() => { goBell(); toast('That “Beat my time” link looks invalid — here’s today’s Opening Bell', 'warn'); });
   }
+  if (!LS.persistent) setTimeout(() => toast('This browser isn’t saving site data — your progress lasts until you close this page.', 'warn'), 1500);
   if (rankedForfeitOnLoad) setTimeout(() => toast('Unfinished ranked game from your last visit was forfeited — 50 🪙 stake lost', 'warn'), 400);
   renderBellStrip();
   // "Beat my time" link: land straight in the puzzle, no onboarding
