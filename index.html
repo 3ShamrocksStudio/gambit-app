@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Rookie & King™</title>
 <meta name="description" content="A chess-based LinkedIn ice-breaker for founders and professionals. Make your move — and make a connection.">
@@ -92,7 +92,12 @@ body {
 .t-mono   { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
 
 /* ─── LAYOUT ─────────────────────────────────── */
-#app { display: flex; flex-direction: column; min-height: 100vh; }
+#app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+main { display: flex; flex-direction: column; }
+/* Arriving from a challenge link: the challenge comes first, the daily bell drops below. */
+.rk-link #matchCard { order: -1; }
+.rk-link #bellStrip { order: 1; }
+#arena, #matchCard, #gameResult { scroll-margin-top: 64px; }
 .container { width: 100%; max-width: 480px; margin: 0 auto; padding: 0 16px; }
 
 /* ─── SCROLLBAR ──────────────────────────────── */
@@ -118,6 +123,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 .btn-lg { padding: 14px 24px; font-size: 15px; border-radius: var(--r); }
 .btn-full { width: 100%; }
 .btn-sm { padding: 6px 12px; font-size: 12px; }
+a.btn { text-decoration: none; }
 
 /* ─── HEADER ─────────────────────────────────── */
 #header {
@@ -127,6 +133,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   padding: 10px 16px;
+  padding-top: max(10px, env(safe-area-inset-top, 0px));
   display: flex; align-items: center; justify-content: space-between;
 }
 .rk-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
@@ -305,9 +312,13 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 .board-wrap {
   display: flex; justify-content: center; margin-bottom: 14px;
 }
+/* Board size: 44px squares where the screen allows; never wider than the screen (360–430 phones),
+   and short enough that board + tabs fit under the sticky header in LinkedIn's in-app viewport. */
+:root { --bs: min(358px, calc(100vw - 32px), max(240px, calc(100vh - 160px))); }
+@supports (height: 100dvh) { :root { --bs: min(358px, calc(100vw - 32px), max(240px, calc(100dvh - 160px))); } }
 #board, #bellBoard {
-  width: min(358px, calc(100vw - 32px));  /* 44px squares (inside the 3px frame) where the screen allows */
-  height: min(358px, calc(100vw - 32px));
+  width: var(--bs);
+  height: var(--bs);
   display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
   border-radius: 8px; overflow: hidden;
   border: 3px solid #4a3520;
@@ -322,7 +333,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 .sq.last-from { background: rgba(255,214,0,0.35) !important; }
 .sq.last-to   { background: rgba(255,214,0,0.35) !important; }
 .piece {
-  font-size: clamp(22px, 7vw, 30px); line-height: 1;
+  font-size: max(20px, calc(var(--bs) * 0.084)); line-height: 1;
   user-select: none; pointer-events: none;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
   transition: transform 0.1s ease;
@@ -468,7 +479,7 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   border-radius: 24px 24px 16px 16px;
   overflow: hidden;
   transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-  max-height: 90vh; overflow-y: auto;
+  max-height: 90vh; max-height: 90dvh; overflow-y: auto;
 }
 .modal-backdrop.center .modal-sheet { border-radius: 20px; transform: scale(0.97); }
 .modal-backdrop.open .modal-sheet { transform: translateY(0) !important; }
@@ -630,6 +641,13 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
 .ob-li-note { font-size: 11px; color: var(--text-3); text-align: center; }
+
+/* ─── IN-APP BROWSER (LinkedIn etc.) ─────────── */
+#openExt { padding: 0 16px 16px; }
+.ext-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.ext-title { font-size: 12px; font-weight: 700; color: var(--text); }
+.ext-sub { font-size: 11px; color: var(--text-2); line-height: 1.45; margin-top: 2px; }
+.ext-card .btn { margin-left: auto; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -980,6 +998,17 @@ button { cursor: pointer; font-family: inherit; border: none; outline: none; }
   </div>
 </section>
 
+<!-- IN-APP BROWSER: optional "open in browser" (shown only inside LinkedIn / other in-app browsers) -->
+<section id="openExt" class="hidden">
+  <div class="ext-card">
+    <div>
+      <div class="ext-title" id="openExtTitle">Playing inside LinkedIn</div>
+      <div class="ext-sub" id="openExtSub">Everything works right here. To keep your streak and coins between visits, open it in your browser.</div>
+    </div>
+    <a class="btn btn-secondary btn-sm" id="openExtBtn" href="#" rel="noopener">Open in browser ↗</a>
+  </div>
+</section>
+
 </main>
 
 <div class="bottom-safe"></div>
@@ -1206,6 +1235,18 @@ function rkStore(kind) {
 }
 const LS = rkStore('localStorage');
 const SS = rkStore('sessionStorage');
+
+/* In-app browsers: most challenge links are opened from the LinkedIn mobile app, inside its
+   WebView (UA contains "LinkedInApp"). There: no popups, no PWA install, storage may not stick. */
+const UA = navigator.userAgent || '';
+const IN_LI = /LinkedInApp/i.test(UA);
+const IN_APP = IN_LI || /FBAN|FBAV|Instagram|; wv\)/i.test(UA);
+const IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/i.test(UA);
+document.documentElement.classList.toggle('in-app', IN_APP);
+document.documentElement.classList.toggle('in-li', IN_LI);
+// Never offer "install app" inside an in-app browser (it can't install a PWA).
+window.addEventListener('beforeinstallprompt', e => { if (IN_APP) e.preventDefault(); });
 
 /* ═══════════════════════════════════════════════
    APP STATE
@@ -1517,7 +1558,10 @@ function checkFirstVisit() {
     return;
   }
 
-  // 5. First visit — show onboarding from slide 0
+  // 5. Arrived from a challenge link: show the challenge first — onboarding can wait (Settings → Redo onboarding)
+  if (CHALLENGER) { document.getElementById('onboard').classList.add('hidden'); return; }
+
+  // 6. First visit — show onboarding from slide 0
   document.getElementById('onboard').classList.remove('hidden');
 }
 
@@ -1534,23 +1578,24 @@ function skipMatch() {
   }
 }
 
-function acceptChallenge() {
+function acceptChallenge(quiet) {
   if (S.matchAccepted) {
-    document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!quiet) document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
   S.matchAccepted = true;
   dealStartTime = Date.now(); // FIX: start timer at challenge accept, not page load
-  toast('Challenge accepted — make your first move!', 'ok');
+  if (!quiet) toast('Challenge accepted — make your first move!', 'ok');
   const btn = document.querySelector('.match-actions .btn-primary');
   btn.textContent = '♟ In play — scroll to board ↓';
   btn.disabled = false; // keep clickable so it scrolls
   btn.style.opacity = '0.75';
   btn.onclick = () => document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (quiet) return;
   updateFeedback('your-turn', 'Your move (White) — make 3 moves to unlock the Deal Room');
   setTimeout(() => {
     document.getElementById('arena').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 500);
+  }, 150);
 }
 
 /* ═══════════════════════════════════════════════
@@ -1602,6 +1647,7 @@ function newGame() {
   setResignLabel(false);
   const msg = S.matchAccepted
     ? 'Your move (White) — make 3 moves to unlock the Deal Room'
+    : CHALLENGER ? 'Your move (White) — it accepts the challenge'
     : 'Accept the challenge above — then make 3 moves to unlock the Deal Room';
   updateFeedback('your-turn', msg);
   renderBoard();
@@ -1650,6 +1696,7 @@ function handleSqClick(name) {
   if (selectedSq) {
     const mv = game.moves({ square: selectedSq, verbose: true }).find(m => m.to === name);
     if (mv) {
+      if (CHALLENGER && !S.matchAccepted) acceptChallenge(true); // challenge links: the first move is the accept (≤2 taps to play)
       game.move({ from: selectedSq, to: name, promotion: 'q' });
       lastFrom = selectedSq; lastTo = name;
       selectedSq = null;
@@ -2782,6 +2829,7 @@ function renderMatchCard() {
       banner.style.cssText = 'background:var(--gold);color:var(--void);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:8px 8px 0 0;text-align:center;margin:-1px -1px 12px;';
       card.insertBefore(banner, card.firstChild);
     }
+    document.title = (CHALLENGER.bd ? '⚔ Beat ' + CHALLENGER.n + '’s time' : '⚔ ' + CHALLENGER.n + ' challenged you') + ' · Rookie & King™';
     banner.textContent = CHALLENGER.bd
       ? '⚔ Beat \u2068' + CHALLENGER.n + "\u2069's " + fmtSecs(CHALLENGER.bt) + ' on Opening Bell #' + CHALLENGER.bd
       : '⚔ ' + CHALLENGER.n + ' challenged you to a chess game — make your move';
@@ -2854,7 +2902,23 @@ function toast(msg, type='info') {
 /* ═══════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════ */
+// Optional "open in your browser" — never required; the whole loop works in the in-app browser.
+function initInApp() {
+  if (!IN_APP) return;
+  const box = document.getElementById('openExt'), btn = document.getElementById('openExtBtn');
+  if (!IN_LI) document.getElementById('openExtTitle').textContent = 'Playing inside an app browser';
+  if (IS_ANDROID) { // Android intent trick: hand the same URL to Chrome; falls back to this page if Chrome is missing
+    btn.href = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
+  } else {
+    btn.removeAttribute('href'); btn.setAttribute('role', 'button'); btn.tabIndex = 0;
+    btn.addEventListener('click', () => toast(IS_IOS ? 'Tap ••• (top right), then “Open in Safari”' : 'Use the ••• menu and choose “Open in browser”', 'info'));
+  }
+  box.classList.remove('hidden');
+}
+
 function init() {
+  if (CHALLENGER && !CHALLENGER.bd) document.documentElement.classList.add('rk-link'); // challenge card first
+  initInApp();
   if (LI_DEMO) { // label the sign-in honestly while no real LinkedIn app exists
     document.getElementById('obLiNote').textContent = 'Demo mode — real LinkedIn sign-in isn’t live yet. This creates a local demo profile.';
     document.getElementById('liConnectSub').textContent = 'Demo only — real LinkedIn sign-in coming soon';
@@ -2915,7 +2979,7 @@ function startBoard() {
 init();
 
 // Service Worker registration
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !IN_APP) { // in-app WebViews: no offline install, avoid stale caches
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
