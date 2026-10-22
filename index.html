@@ -653,6 +653,30 @@ a.btn { text-decoration: none; }
 }
 .ob-li-note { font-size: 11px; color: var(--text-3); text-align: center; }
 
+/* ─── KEYBOARD PLAY (mouse/keyboard devices only) ─ */
+.kbd-only { display: none; }
+@media (hover: hover) and (pointer: fine) { .kbd-only { display: block; } }
+.kbd-move { margin-top: 12px; }
+#gameResult { margin: 14px 0 0; }
+.kbd-move .form-input { padding: 10px 12px; font-size: 13px; }
+.kbd-hint { font-size: 11px; color: var(--text-3); margin-top: 6px; text-align: center; }
+
+/* ─── DESKTOP: board left, challenge / Opening Bell / Deal intel right ─── */
+@media (min-width: 1024px) {
+  :root { --bs: min(560px, max(360px, calc(100vh - 262px))); }
+  #header { padding-left: max(24px, calc((100vw - 1040px) / 2 + 24px)); padding-right: max(24px, calc((100vw - 1040px) / 2 + 24px)); }
+  main {
+    display: grid; grid-template-columns: minmax(0, 1fr) 372px; grid-template-rows: auto auto auto 1fr;
+    column-gap: 28px; align-items: start;
+    width: 100%; max-width: 1040px; margin: 0 auto; padding: 20px 24px 0;
+  }
+  #arena { grid-column: 1; grid-row: 1 / span 4; padding: 0; }
+  #matchCard, #progressBar, #bellStrip, #pitchDock, #openExt { grid-column: 2; padding: 0; margin: 0 0 14px; }
+  #matchCard { grid-row: 1; } #progressBar { grid-row: 2; } #bellStrip { grid-row: 3; } #pitchDock { grid-row: 4; } #openExt { grid-row: 5; }
+  .match-actions { flex-wrap: wrap; }
+  #arena .board-controls, #arena .kbd-move, #arena .bell-result { max-width: var(--bs); margin-left: auto; margin-right: auto; }
+}
+
 /* ─── IN-APP BROWSER (LinkedIn etc.) ─────────── */
 #openExt { padding: 0 16px 16px; }
 .ext-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
@@ -930,7 +954,11 @@ a.btn { text-decoration: none; }
       <button class="rank-btn" onclick="startRanked()">⚔ Ranked +50🪙</button>
       <button class="resign-btn" onclick="resignGame()">↩ Resign</button>
     </div>
-    <div class="bell-result hidden" id="gameResult" style="margin:14px 0 0;">
+    <form class="kbd-only kbd-move" id="moveForm" onsubmit="return typedMove(event)">
+      <input class="form-input" id="moveInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type a move, then press Enter" placeholder="Type a move — e4, Nf3, O-O — then Enter">
+      <div class="kbd-hint">Keyboard: Tab to the board · arrows move · Enter picks up / drops · Esc cancels</div>
+    </form>
+    <div class="bell-result hidden" id="gameResult">
       <div class="t-label">Last game</div>
       <div class="bell-result-text" id="gameResultText"></div>
       <div class="bell-actions">
@@ -1687,6 +1715,16 @@ function sqA11y(sq, name, cell) {
   sq.setAttribute('role', 'button'); sq.tabIndex = 0;
   sq.setAttribute('aria-label', name + (cell ? ', ' + (cell.color === 'w' ? 'white ' : 'black ') + PIECE_NAMES[cell.type] : ''));
 }
+// Roving tab stop: one square per board is in the Tab order; arrow keys move between squares.
+const KB = { board: 'e2', bellBoard: 'e2' };
+function rove(el) {
+  const want = KB[el.id] || 'e2';
+  el.querySelectorAll('.sq').forEach(q => { q.tabIndex = q.dataset.sq === want ? 0 : -1; });
+}
+['board', 'bellBoard'].forEach(id => document.getElementById(id).addEventListener('focusin', e => {
+  const sq = e.target && e.target.dataset && e.target.dataset.sq;
+  if (sq && KB[id] !== sq) { KB[id] = sq; rove(e.currentTarget); }
+}));
 function focusedSq(el) { const a = document.activeElement; return (a && el.contains(a) && a.dataset) ? a.dataset.sq : null; }
 function refocusSq(el, name) { if (name) { const t = el.querySelector('[data-sq="' + name + '"]'); if (t) t.focus({ preventScroll: true }); } }
 
@@ -1738,6 +1776,7 @@ function renderBoard() {
       el.appendChild(sq);
     }
   }
+  rove(el);
   refocusSq(el, hadFocus);
 }
 
@@ -1748,27 +1787,49 @@ function handleSqClick(name) {
 
   if (selectedSq) {
     const mv = game.moves({ square: selectedSq, verbose: true }).find(m => m.to === name);
-    if (mv) {
-      if (CHALLENGER && !S.matchAccepted) acceptChallenge(true); // challenge links: the first move is the accept (≤2 taps to play)
-      game.move({ from: selectedSq, to: name, promotion: 'q' });
-      lastFrom = selectedSq; lastTo = name;
-      selectedSq = null;
-      playSound('move');
-      if (S.moveCount === 0) hideGameResult(); // a new game has started — the last result card goes
-      S.moveCount++;
-      if (S.matchAccepted) S.dealMoves++;
-      onPlayerMove();
-      renderBoard();
-      if (checkGameOver()) return;
-      clearTimeout(aiTimer);
-      const g = game;
-      aiTimer = setTimeout(() => { if (g === game) aiMove(); }, 480);
-      return;
-    }
+    if (mv) { playerMove(selectedSq, name, 'q'); return; }
     if (piece && piece.color === 'w') { selectedSq = name; renderBoard(); return; }
     selectedSq = null; renderBoard(); return;
   }
   if (piece && piece.color === 'w') { selectedSq = name; renderBoard(); }
+}
+
+// One path for every player move (tap, click, keyboard, typed).
+function playerMove(from, to, promo) {
+  if (CHALLENGER && !S.matchAccepted) acceptChallenge(true); // challenge links: the first move is the accept (≤2 taps to play)
+  game.move({ from, to, promotion: promo || 'q' });
+  lastFrom = from; lastTo = to;
+  selectedSq = null;
+  playSound('move');
+  if (S.moveCount === 0) hideGameResult(); // a new game has started — the last result card goes
+  S.moveCount++;
+  if (S.matchAccepted) S.dealMoves++;
+  onPlayerMove();
+  renderBoard();
+  if (checkGameOver()) return;
+  clearTimeout(aiTimer);
+  const g = game;
+  aiTimer = setTimeout(() => { if (g === game) aiMove(); }, 480);
+}
+
+// Keyboard play (desktop): type a move in SAN ("e4", "Nf3", "O-O") or from-to ("e2e4", "e7e8q").
+function typedMove(e) {
+  if (e) e.preventDefault();
+  const inp = document.getElementById('moveInput');
+  const v = inp.value.trim().replace(/[+#!?]/g, '').replace(/0/g, 'O');
+  if (!v) return false;
+  if (!game) { engineMissing(); return false; }
+  if (S.gameOver || game.game_over()) { toast('Game over — start a new game first', 'info'); return false; }
+  if (game.turn() !== 'w') { toast('Wait for the bot’s move', 'info'); return false; }
+  const all = game.moves({ verbose: true });
+  const san = m => m.san.replace(/[+#]/g, '');
+  const lc = v.toLowerCase();
+  const mv = all.find(m => san(m) === v) || all.find(m => (m.from + m.to + (m.promotion || '')) === lc || (!m.promotion && m.from + m.to === lc))
+          || all.find(m => san(m).toLowerCase() === lc);
+  if (!mv) { toast('“' + inp.value.trim().slice(0, 12) + '” isn’t a legal move here', 'warn'); return false; }
+  inp.value = '';
+  playerMove(mv.from, mv.to, mv.promotion || 'q');
+  return false;
 }
 
 function aiMove() {
@@ -2277,6 +2338,7 @@ function renderBell() {
       el.appendChild(sq);
     }
   }
+  rove(el);
   refocusSq(el, hadFocus);
 }
 
@@ -2674,6 +2736,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const open = [...document.querySelectorAll('.modal-backdrop.open')].pop();
     if (open) { e.preventDefault(); closeModal(open.id); }
+    else if (selectedSq) { selectedSq = null; renderBoard(); } // drop the picked-up piece
+    else if (B.sel) { B.sel = null; renderBell(); }
+    return;
+  }
+  const sqEl = e.target && e.target.dataset && e.target.dataset.sq ? e.target : null;
+  if (sqEl && /^Arrow(Up|Down|Left|Right)$/.test(e.key)) { // board is White-at-bottom
+    const d = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    const f = sqEl.dataset.sq.charCodeAt(0) - 97 + d[0], r = +sqEl.dataset.sq[1] + d[1];
+    e.preventDefault();
+    if (f >= 0 && f < 8 && r >= 1 && r <= 8) { const n = sqEl.parentElement.querySelector('[data-sq="' + String.fromCharCode(97 + f) + r + '"]'); if (n) n.focus(); }
     return;
   }
   if (e.key === 'Tab') { // keep keyboard focus inside the top dialog
