@@ -36,7 +36,9 @@ self.addEventListener('fetch', e => {
           if (res && (res.ok || res.type === 'opaque')) c.put(e.request, res.clone());
           return res;
         });
-        if (cached) { if (url.hostname === 'fonts.googleapis.com') net().catch(() => {}); return cached; }
+        // An opaque (no-cors) copy can't answer a CORS request (e.g. a script fetching the stylesheet) — go to the network.
+        const usable = cached && (cached.type !== 'opaque' || e.request.mode === 'no-cors');
+        if (usable) { if (url.hostname === 'fonts.googleapis.com') net().catch(() => {}); return cached; }
         return net();
       }))
     );
