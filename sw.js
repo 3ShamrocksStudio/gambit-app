@@ -1,4 +1,4 @@
-const CACHE = 'rk-2026-10-18a';
+const CACHE = 'rk-2026-10-22a';
 const SHELL = [
   './',
   './index.html',
